@@ -47,16 +47,19 @@ public class WorkflowNotification {
     @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message;
 
+    @Builder.Default
     @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
 
     @Column(name = "read_at")
     private LocalDateTime readAt;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "channel", nullable = false, length = 50)
     private WorkflowChannel channel = WorkflowChannel.IN_APP;
 
+    @Builder.Default
     @Column(name = "delivery_status", nullable = false, length = 50)
     private String deliveryStatus = "SENT";
 

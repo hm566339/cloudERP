@@ -60,13 +60,16 @@ public class WorkflowApprover extends BaseEntity {
     private String ruleExpression;
 
     /** Order of approval in sequential execution */
+    @Builder.Default
     @Column(name = "approval_order", nullable = false)
     private Integer approvalOrder = 1;
 
     /** If true and resolution fails, workflow submission is blocked */
+    @Builder.Default
     @Column(name = "is_required", nullable = false)
     private Boolean isRequired = true;
 
+    @Builder.Default
     @Column(name = "can_delegate", nullable = false)
     private Boolean canDelegate = true;
 }

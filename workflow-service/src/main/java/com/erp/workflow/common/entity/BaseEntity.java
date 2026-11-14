@@ -51,4 +51,25 @@ public abstract class BaseEntity {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @PrePersist
+    protected void onBaseCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
+    }
+
+    @PreUpdate
+    protected void onBaseUpdate() {
+        updatedAt = LocalDateTime.now();
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
+    }
 }

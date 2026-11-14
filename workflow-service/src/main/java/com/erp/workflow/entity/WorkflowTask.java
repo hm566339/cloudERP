@@ -43,6 +43,7 @@ public class WorkflowTask {
     @Column(name = "delegated_from_user_id")
     private UUID delegatedFromUserId;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "task_status", nullable = false, length = 50)
     private WorkflowTaskStatus taskStatus = WorkflowTaskStatus.PENDING;
@@ -69,6 +70,7 @@ public class WorkflowTask {
     private String comments;
 
     /** Optimistic locking — prevents two users from approving the same task */
+    @Builder.Default
     @Version
     @Column(name = "version", nullable = false)
     private Long version = 0L;
@@ -79,6 +81,37 @@ public class WorkflowTask {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Builder.Default
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+        if (assignedAt == null) {
+            assignedAt = LocalDateTime.now();
+        }
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
+        if (taskStatus == null) {
+            taskStatus = WorkflowTaskStatus.PENDING;
+        }
+        if (version == null) {
+            version = 0L;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
+    }
 }

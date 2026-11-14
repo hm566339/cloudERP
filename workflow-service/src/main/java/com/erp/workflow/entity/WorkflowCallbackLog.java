@@ -46,12 +46,14 @@ public class WorkflowCallbackLog {
     @Column(name = "response_body", columnDefinition = "TEXT")
     private String responseBody;
 
+    @Builder.Default
     @Column(name = "attempt_count", nullable = false)
     private Integer attemptCount = 1;
 
     @Column(name = "last_attempted_at", nullable = false)
     private LocalDateTime lastAttemptedAt;
 
+    @Builder.Default
     @Column(name = "succeeded", nullable = false)
     private Boolean succeeded = false;
 

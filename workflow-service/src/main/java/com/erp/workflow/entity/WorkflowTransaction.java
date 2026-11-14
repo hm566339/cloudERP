@@ -85,6 +85,7 @@ public class WorkflowTransaction extends BaseEntity {
     @JoinColumn(name = "current_stage_id")
     private WorkflowStage currentStage;
 
+    @Builder.Default
     @Column(name = "status", nullable = false, length = 50)
     private String status = "PENDING";
 
@@ -107,6 +108,7 @@ public class WorkflowTransaction extends BaseEntity {
     private LocalDateTime cancelledAt;
 
     /** Optimistic lock — prevents concurrent approval conflicts */
+    @Builder.Default
     @Version
     @Column(name = "version", nullable = false)
     private Long version = 0L;

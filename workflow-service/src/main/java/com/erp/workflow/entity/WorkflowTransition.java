@@ -48,6 +48,7 @@ public class WorkflowTransition extends BaseEntity {
     @Column(name = "allowed_roles", length = 500)
     private String allowedRoles;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 }

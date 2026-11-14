@@ -675,9 +675,12 @@ public class OrganizationWorkflowTemplateServiceImpl implements OrganizationWork
                         .workflowStage(cStage)
                         .durationHours(tSla.getDurationHours())
                         .reminderHours(tSla.getReminderHours())
-                        .escalationAction(tSla.getEscalationAction())
+                        .escalationAction(tSla.getEscalationAction() != null ? tSla.getEscalationAction() : "NOTIFY_MANAGER")
                         .escalateToRoleName(tSla.getEscalateToRoleName())
-                        .isActive(tSla.getIsActive())
+                        .isActive(tSla.getIsActive() != null ? tSla.getIsActive() : true)
+                        .isDeleted(false)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build();
 
                 slaRepository.save(cSla);

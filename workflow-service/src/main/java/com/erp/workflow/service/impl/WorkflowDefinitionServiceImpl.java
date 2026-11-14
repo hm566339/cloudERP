@@ -141,6 +141,9 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                             .escalateToUserId(stageReq.getSla().getEscalateToUserId())
                             .escalateToRoleName(stageReq.getSla().getEscalateToRoleName())
                             .isActive(true)
+                            .isDeleted(false)
+                            .createdAt(LocalDateTime.now())
+                            .updatedAt(LocalDateTime.now())
                             .build();
                     slaRepository.save(sla);
                 }
@@ -422,6 +425,9 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                             .escalateToUserId(stageReq.getSla().getEscalateToUserId())
                             .escalateToRoleName(stageReq.getSla().getEscalateToRoleName())
                             .isActive(true)
+                            .isDeleted(false)
+                            .createdAt(LocalDateTime.now())
+                            .updatedAt(LocalDateTime.now())
                             .build();
                     slaRepository.save(sla);
                 }

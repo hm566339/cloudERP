@@ -39,6 +39,7 @@ public class WorkflowComment {
     private String commentText;
 
     /** Internal comments not visible to the document initiator */
+    @Builder.Default
     @Column(name = "is_internal", nullable = false)
     private Boolean isInternal = false;
 
@@ -48,6 +49,31 @@ public class WorkflowComment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Builder.Default
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
+        if (isInternal == null) {
+            isInternal = false;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
+    }
 }

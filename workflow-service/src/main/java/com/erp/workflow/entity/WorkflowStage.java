@@ -45,10 +45,12 @@ public class WorkflowStage extends BaseEntity {
     @Column(name = "sequence_no", nullable = false)
     private Integer sequenceNo;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "execution_type", nullable = false, length = 50)
     private WorkflowExecutionType executionType = WorkflowExecutionType.SEQUENTIAL;
 
+    @Builder.Default
     @Column(name = "minimum_approvals_required", nullable = false)
     private Integer minimumApprovalsRequired = 1;
 

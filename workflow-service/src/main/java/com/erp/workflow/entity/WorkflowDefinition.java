@@ -70,12 +70,15 @@ public class WorkflowDefinition extends BaseEntity {
     @Column(name = "description", columnDefinition = "text")
     private String description;
 
+    @Builder.Default
     @Column(name = "version", nullable = false)
     private Integer version = 1;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = false;
 
+    @Builder.Default
     @Column(name = "is_default", nullable = false)
     private Boolean isDefault = false;
 
