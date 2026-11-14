@@ -52,6 +52,7 @@ public class OrganizationServiceSignupPlanTest {
     @Mock private SubscriptionPlanRepository subscriptionPlanRepository;
     @Mock private SubscriptionPlanModuleRepository subscriptionPlanModuleRepository;
     @Mock private CompanySubscriptionRepository companySubscriptionRepository;
+    @Mock private com.erp.auth_service.client.WorkflowProvisioningClient workflowProvisioningClient;
 
     @InjectMocks
     private OrganizationServiceImpl organizationService;
@@ -67,6 +68,7 @@ public class OrganizationServiceSignupPlanTest {
     void setUp() {
         ReflectionTestUtils.setField(organizationService, "frontendBaseUrl", "https://app.clouderp.com");
         ReflectionTestUtils.setField(organizationService, "trialDays", 30);
+        ReflectionTestUtils.setField(organizationService, "workflowProvisioningClient", workflowProvisioningClient);
 
         trialPlan = SubscriptionPlan.builder()
                 .id(UUID.randomUUID())
@@ -178,6 +180,10 @@ public class OrganizationServiceSignupPlanTest {
         assertEquals(CompanySubscriptionStatus.TRIALING, createdCompSub.getStatus());
         assertNotNull(createdCompSub.getStartAt());
         assertNotNull(createdCompSub.getEndAt());
+
+        // Verify Level 2 & Level 3 Default Workflow Provisioning
+        verify(workflowProvisioningClient, times(1)).provisionOrganizationWorkflows(any(UUID.class), any());
+        verify(workflowProvisioningClient, times(1)).provisionCompanyWorkflow(any(UUID.class), any(UUID.class), any(), any());
 
         // 7. Verify CompanyModule was created ONLY for the 3 plan modules (ACCOUNT, INVENTORY, WORKFLOW)
         // SALES and CRM must NOT be provisioned

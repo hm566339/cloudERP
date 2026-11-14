@@ -42,6 +42,10 @@ public class OrgWorkflowTemplateResponse {
     private Integer provisionedCompanyCount;
     private Integer customizedCompanyCount;
 
+    private UUID platformTemplateId;
+    private Integer platformTemplateVersion;
+    private Boolean isCustomized;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private UUID createdBy;

@@ -34,5 +34,11 @@ public interface OrganizationWorkflowTemplateRepository extends JpaRepository<Or
     Integer findMaxVersionByOrganizationIdAndTemplateCode(
             @Param("organizationId") UUID organizationId,
             @Param("templateCode") String templateCode);
+
+    List<OrganizationWorkflowTemplate> findByPlatformTemplateIdAndIsDeletedFalse(UUID platformTemplateId);
+
+    List<OrganizationWorkflowTemplate> findByPlatformTemplateIdAndIsCustomizedFalseAndIsDeletedFalse(UUID platformTemplateId);
+
+    Optional<OrganizationWorkflowTemplate> findByOrganizationIdAndPlatformTemplateIdAndIsDeletedFalse(UUID organizationId, UUID platformTemplateId);
 }
 

@@ -105,4 +105,76 @@ export const organizationWorkflowTemplatesApi = {
   },
 };
 
+export const platformWorkflowTemplatesApi = {
+  getList: async (params = {}) => {
+    const response = await apiClient.get('/api/v1/workflow/platform-templates', { params });
+    const payload = getData(response);
+    return Array.isArray(payload) ? payload : (Array.isArray(payload?.content) ? payload.content : []);
+  },
+
+  getById: async (templateId) => {
+    const response = await apiClient.get(`/api/v1/workflow/platform-templates/${templateId}`);
+    return getData(response);
+  },
+
+  create: async (payload = {}) => {
+    const requestBody = payload && typeof payload === 'object' && payload.data ? payload.data : payload;
+    const response = await apiClient.post('/api/v1/workflow/platform-templates', { data: requestBody });
+    return getData(response);
+  },
+
+  update: async (templateId, payload = {}) => {
+    const requestBody = payload && typeof payload === 'object' && payload.data ? payload.data : payload;
+    const response = await apiClient.put(`/api/v1/workflow/platform-templates/${templateId}`, { data: requestBody });
+    return getData(response);
+  },
+
+  publishNewVersion: async (templateId, comment) => {
+    const response = await apiClient.post(`/api/v1/workflow/platform-templates/${templateId}/publish`, null, {
+      params: { comment }
+    });
+    return getData(response);
+  },
+
+  activate: async (templateId) => {
+    const response = await apiClient.post(`/api/v1/workflow/platform-templates/${templateId}/activate`);
+    return getData(response);
+  },
+
+  deactivate: async (templateId) => {
+    const response = await apiClient.post(`/api/v1/workflow/platform-templates/${templateId}/deactivate`);
+    return getData(response);
+  },
+
+  delete: async (templateId) => {
+    const response = await apiClient.delete(`/api/v1/workflow/platform-templates/${templateId}`);
+    return getData(response);
+  },
+
+  rollout: async (templateId, { rolloutMode = 'NON_CUSTOMIZED', propagateToCompanies = true, targetOrganizationIds, comment } = {}) => {
+    const response = await apiClient.post(`/api/v1/workflow/platform-templates/${templateId}/rollout`, {
+      data: {
+        rolloutMode,
+        propagateToCompanies,
+        targetOrganizationIds,
+        comment
+      }
+    });
+    return getData(response);
+  },
+
+  provisionOrganization: async (organizationId) => {
+    const response = await apiClient.post('/api/v1/workflow/platform-templates/provision-organization', null, {
+      params: { organizationId }
+    });
+    return getData(response);
+  },
+
+  getRolloutLogs: async (templateId, params = {}) => {
+    const response = await apiClient.get(`/api/v1/workflow/platform-templates/${templateId}/rollout-logs`, { params });
+    const payload = getData(response);
+    return Array.isArray(payload?.content) ? payload.content : (Array.isArray(payload) ? payload : []);
+  },
+};
+
 export default workflowDefinitionsApi;

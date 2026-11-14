@@ -848,8 +848,8 @@ export default function WorkflowManagementPage() {
                         </span>
                         <div className="flex items-center gap-1">
                           {item.templateId && !item.isCustomized && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800" title="Provisioned from Organization Default Workflow Template">
-                              Org Default
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800" title={`Provisioned from Organization Default Workflow Template (version ${item.templateVersion || 1})`}>
+                              Org Default {item.templateVersion ? `(v${item.templateVersion})` : ''}
                             </span>
                           )}
                           {item.templateId && item.isCustomized && (

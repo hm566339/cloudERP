@@ -82,6 +82,9 @@ const OrganizationDetails = lazy(
 const ProvisionOrganization = lazy(
   () => import("../features/super-admin/pages/ProvisionOrganization"),
 );
+const PlatformWorkflowTemplatesPage = lazy(
+  () => import("../features/super-admin/pages/PlatformWorkflowTemplatesPage"),
+);
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 const Dashboard = lazy(() => import("../features/dashboard/pages/Dashboard"));
@@ -1056,6 +1059,7 @@ export default function AppRoutes() {
             {/* ── Organization Routes (Organization-first architecture) ── */}
             <Route path="organizations" element={<OrganizationList />} />
             <Route path="organizations/provision" element={<ProvisionOrganization />} />
+            <Route path="workflow-templates" element={<PlatformWorkflowTemplatesPage />} />
             <Route path="organizations/:organizationId" element={<OrganizationDetails />} />
             {/* Companies nested under organization (org-scoped view) */}
             <Route path="organizations/:organizationId/companies" element={<CompanyList />} />

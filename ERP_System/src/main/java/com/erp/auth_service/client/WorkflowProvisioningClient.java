@@ -124,5 +124,54 @@ public class WorkflowProvisioningClient {
             return false;
         }
     }
+
+    /**
+     * Automatically provisions active platform default workflow templates for an organization.
+     *
+     * @param organizationId Newly created or targeted organization ID
+     * @param authToken Optional JWT authorization token
+     * @return true if provisioning succeeded or was skipped gracefully, false on error
+     */
+    public boolean provisionOrganizationWorkflows(UUID organizationId, String authToken) {
+        if (!provisioningEnabled) {
+            log.info("[WF_CLIENT] Workflow provisioning is disabled by configuration");
+            return true;
+        }
+
+        if (organizationId == null) {
+            return false;
+        }
+
+        try {
+            String url = workflowServiceUrl + "/api/v1/workflow/platform-templates/provision-organization?organizationId="
+                    + organizationId;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            if (authToken != null && !authToken.isBlank()) {
+                String bearer = authToken.startsWith("Bearer ") ? authToken : "Bearer " + authToken;
+                headers.set("Authorization", bearer);
+            }
+            headers.set("X-Organization-Id", organizationId.toString());
+
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            log.info("[WF_CLIENT] Calling workflow-service at {} to provision platform templates for organizationId={}",
+                    url, organizationId);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("[WF_CLIENT] Successfully provisioned platform default workflows for organizationId={}", organizationId);
+                return true;
+            } else {
+                log.warn("[WF_CLIENT] Platform workflow provisioning returned status: {}", response.getStatusCode());
+                return false;
+            }
+        } catch (Exception ex) {
+            log.warn("[WF_CLIENT] Failed to provision platform default workflows for organizationId={} (non-blocking): {}",
+                    organizationId, ex.getMessage());
+            return false;
+        }
+    }
 }
 

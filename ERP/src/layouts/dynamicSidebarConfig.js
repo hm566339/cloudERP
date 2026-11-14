@@ -143,6 +143,12 @@ export function getSystemAdminNavigation() {
           path: '/super-admin/module-routes',
           icon: Layers,
         },
+        {
+          id: 'sa-plat-workflow-templates',
+          label: 'Workflow Templates',
+          path: '/super-admin/workflow-templates',
+          icon: Workflow,
+        },
       ],
     },
     {

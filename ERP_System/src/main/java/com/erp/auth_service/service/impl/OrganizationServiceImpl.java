@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +47,9 @@ public class OrganizationServiceImpl implements OrganizationService {
         private final SubscriptionPlanRepository subscriptionPlanRepository;
         private final SubscriptionPlanModuleRepository subscriptionPlanModuleRepository;
         private final CompanySubscriptionRepository companySubscriptionRepository;
+
+        @org.springframework.beans.factory.annotation.Autowired(required = false)
+        private com.erp.auth_service.client.WorkflowProvisioningClient workflowProvisioningClient;
 
         @Value("${api.frontend}")
         private String frontendBaseUrl;
@@ -118,6 +123,16 @@ public class OrganizationServiceImpl implements OrganizationService {
                 Company savedCompany = company;
                 Organization savedOrganization = organization;
 
+                // Auto-provision Organization-level default workflows from Platform default templates (idempotent)
+                if (workflowProvisioningClient != null) {
+                        try {
+                                workflowProvisioningClient.provisionOrganizationWorkflows(savedOrganization.getId(), null);
+                        } catch (Exception wfEx) {
+                                log.warn("Non-blocking failure provisioning platform default workflows for org {}: {}",
+                                                savedOrganization.getId(), wfEx.getMessage());
+                        }
+                }
+
                 // 1. Resolve configured default subscription plan from persistent storage (fail-fast if missing)
                 String planCodeToResolve = (defaultPlanCode != null && !defaultPlanCode.isBlank())
                                 ? defaultPlanCode.trim()
@@ -188,6 +203,21 @@ public class OrganizationServiceImpl implements OrganizationService {
                                 .orElseGet(() -> roleRepository.save(Role.builder().company(savedCompany).name("OWNER")
                                                 .status(true).build()));
                 userRoleRepository.save(UserRole.builder().user(user).role(ownerRole).build());
+
+                // Auto-provision Company-level default workflow for the initial company (idempotent)
+                if (workflowProvisioningClient != null) {
+                        try {
+                                Map<String, UUID> roleMap = Map.of("OWNER", ownerRole.getId());
+                                workflowProvisioningClient.provisionCompanyWorkflow(
+                                                savedOrganization.getId(),
+                                                savedCompany.getId(),
+                                                roleMap,
+                                                null);
+                        } catch (Exception compWfEx) {
+                                log.warn("Non-blocking failure provisioning default workflow for initial company {}: {}",
+                                                savedCompany.getId(), compWfEx.getMessage());
+                        }
+                }
                 permissionService.assignOwnerRolePermissions(ownerRole,
                                 provisionedModules.stream().map(Module::getName).toList(),
                                 user.getId());

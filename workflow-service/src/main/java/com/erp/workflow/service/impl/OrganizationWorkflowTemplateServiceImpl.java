@@ -90,6 +90,7 @@ public class OrganizationWorkflowTemplateServiceImpl implements OrganizationWork
                 .autoCreateOrder(request.getAutoCreateOrder() != null ? request.getAutoCreateOrder() : false)
                 .emailNotifications(request.getEmailNotifications() != null ? request.getEmailNotifications() : true)
                 .internalNotes(request.getInternalNotes())
+                .isCustomized(true)
                 .build();
 
         UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
@@ -133,6 +134,7 @@ public class OrganizationWorkflowTemplateServiceImpl implements OrganizationWork
 
         int newVersion = template.getVersion() + 1;
         template.setVersion(newVersion);
+        template.setIsCustomized(true);
         template.setTemplateName(request.getTemplateName().trim());
 
         if (request.getTemplateCode() != null && !request.getTemplateCode().isBlank()) {
@@ -854,6 +856,9 @@ public class OrganizationWorkflowTemplateServiceImpl implements OrganizationWork
                 .internalNotes(t.getInternalNotes())
                 .provisionedCompanyCount(provisionedCount)
                 .customizedCompanyCount(customizedCount)
+                .platformTemplateId(t.getPlatformTemplateId())
+                .platformTemplateVersion(t.getPlatformTemplateVersion())
+                .isCustomized(t.getIsCustomized())
                 .createdAt(t.getCreatedAt())
                 .updatedAt(t.getUpdatedAt())
                 .createdBy(t.getCreatedBy())

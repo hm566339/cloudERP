@@ -16,6 +16,8 @@ sso:
         - "/api/v1/workflow/definitions/**"
         - "/api/v1/workflow/organization-templates"
         - "/api/v1/workflow/organization-templates/**"
+        - "/api/v1/workflow/platform-templates"
+        - "/api/v1/workflow/platform-templates/**"
       WORKFLOW_TRANSACTIONS:
         - "/api/v1/workflow/transactions"
         - "/api/v1/workflow/transactions/**"

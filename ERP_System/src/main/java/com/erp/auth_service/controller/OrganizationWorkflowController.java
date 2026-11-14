@@ -97,6 +97,23 @@ public class OrganizationWorkflowController {
         return ResponseEntity.ok(ResponseWrapper.success(responseData));
     }
 
+    @PostMapping("/provision-from-platform")
+    public ResponseEntity<ResponseWrapper<Map<String, Object>>> provisionFromPlatform(
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        UUID orgId = resolveAndAuthorizeOrgAdmin(organizationId, headerOrgId);
+
+        boolean result = workflowProvisioningClient.provisionOrganizationWorkflows(orgId, token);
+
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("organizationId", orgId);
+        responseData.put("success", result);
+
+        return ResponseEntity.ok(ResponseWrapper.success(responseData));
+    }
+
     private UUID resolveAndAuthorizeOrgAdmin(UUID organizationId, UUID headerOrgId) {
         UUID orgId = organizationId != null ? organizationId : headerOrgId;
         RequestContext.Context ctx = RequestContext.get();

@@ -95,6 +95,16 @@ public class OrganizationWorkflowTemplate extends BaseEntity {
     @Column(name = "internal_notes", columnDefinition = "text")
     private String internalNotes;
 
+    @Column(name = "platform_template_id")
+    private UUID platformTemplateId;
+
+    @Column(name = "platform_template_version")
+    private Integer platformTemplateVersion;
+
+    @Builder.Default
+    @Column(name = "is_customized", nullable = false)
+    private Boolean isCustomized = false;
+
     @Builder.Default
     @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
