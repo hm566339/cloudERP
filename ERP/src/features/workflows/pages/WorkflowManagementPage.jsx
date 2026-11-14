@@ -752,11 +752,10 @@ export default function WorkflowManagementPage() {
             type="button"
             key={item}
             onClick={() => setModule(item)}
-            className={`whitespace-nowrap border-b-2 px-3 py-2 text-xs font-semibold transition-all ${
-              module === item
-                ? 'border-zinc-900 dark:border-white text-zinc-900 dark:text-white'
-                : 'border-transparent text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] hover:border-zinc-300 dark:hover:border-zinc-700'
-            }`}
+            className={`whitespace-nowrap border-b-2 px-3 py-2 text-xs font-semibold transition-all ${module === item
+              ? 'border-zinc-900 dark:border-white text-zinc-900 dark:text-white'
+              : 'border-transparent text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] hover:border-zinc-300 dark:hover:border-zinc-700'
+              }`}
           >
             {item}
           </button>
@@ -809,11 +808,10 @@ export default function WorkflowManagementPage() {
                     type="button"
                     key={draftWorkflow.id}
                     onClick={() => { setSelectedId(draftWorkflow.id); setErrors({}); }}
-                    className={`w-full rounded-lg border p-3 text-left transition-all ${
-                      selected?.id === draftWorkflow.id
-                        ? 'border-amber-400 bg-amber-50/50 shadow-sm ring-1 ring-amber-400/30'
-                        : 'border-dashed border-amber-300 bg-amber-50/20 hover:border-amber-400 hover:bg-amber-50/40'
-                    }`}
+                    className={`w-full rounded-lg border p-3 text-left transition-all ${selected?.id === draftWorkflow.id
+                      ? 'border-amber-400 bg-amber-50/50 shadow-sm ring-1 ring-amber-400/30'
+                      : 'border-dashed border-amber-300 bg-amber-50/20 hover:border-amber-400 hover:bg-amber-50/40'
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className={`text-xs font-semibold truncate ${selected?.id === draftWorkflow.id ? 'text-zinc-950 font-bold' : 'text-zinc-800'}`}>
@@ -836,11 +834,10 @@ export default function WorkflowManagementPage() {
                       type="button"
                       key={item.id}
                       onClick={() => { setSelectedId(item.id); setErrors({}); }}
-                      className={`w-full rounded-lg border p-3 text-left transition-all ${
-                        isSelected
-                          ? 'border-zinc-900 dark:border-primary/60 bg-zinc-900/[0.04] dark:bg-primary/10 shadow-sm ring-1 ring-zinc-900/10 dark:ring-primary/20'
-                          : 'border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50/70 dark:hover:bg-[#1D212C]'
-                      }`}
+                      className={`w-full rounded-lg border p-3 text-left transition-all ${isSelected
+                        ? 'border-zinc-900 dark:border-primary/60 bg-zinc-900/[0.04] dark:bg-primary/10 shadow-sm ring-1 ring-zinc-900/10 dark:ring-primary/20'
+                        : 'border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50/70 dark:hover:bg-[#1D212C]'
+                        }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <span className={`text-xs font-semibold truncate ${isSelected ? 'text-zinc-950 dark:text-[#E6E8EE] font-bold' : 'text-zinc-800 dark:text-[#D1D5DB]'}`}>
@@ -933,11 +930,10 @@ export default function WorkflowManagementPage() {
                   key={id}
                   type="button"
                   onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
-                    activeTab === id
-                      ? 'bg-zinc-900 dark:bg-primary text-white font-semibold shadow-sm'
-                      : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1D212C] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'
-                  }`}
+                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${activeTab === id
+                    ? 'bg-zinc-900 dark:bg-primary text-white font-semibold shadow-sm'
+                    : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1D212C] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'
+                    }`}
                 >
                   <Icon size={13} />
                   <span>{label}</span>
@@ -990,8 +986,8 @@ export default function WorkflowManagementPage() {
                               {step.type === 'condition'
                                 ? `Condition: ${step.ruleExpression || 'None'}`
                                 : step.type === 'notification'
-                                ? `Channel: ${step.notificationChannel || 'IN_APP'}`
-                                : `Role: ${resolveRoleName(step.role, roles) || 'Unassigned'} (${step.approvalRule === 'ALL_MUST_APPROVE' ? 'All must approve' : step.approvalRule === 'MINIMUM_REQUIRED' ? `${step.minimumApprovalsRequired || 1} required` : 'Any can approve'})`}
+                                  ? `Channel: ${step.notificationChannel || 'IN_APP'}`
+                                  : `Role: ${resolveRoleName(step.role, roles) || 'Unassigned'} (${step.approvalRule === 'ALL_MUST_APPROVE' ? 'All must approve' : step.approvalRule === 'MINIMUM_REQUIRED' ? `${step.minimumApprovalsRequired || 1} required` : 'Any can approve'})`}
                             </div>
                           </div>
                         ))}
