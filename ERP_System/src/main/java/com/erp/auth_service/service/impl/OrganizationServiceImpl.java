@@ -123,31 +123,35 @@ public class OrganizationServiceImpl implements OrganizationService {
                 Company savedCompany = company;
                 Organization savedOrganization = organization;
 
-                // Auto-provision Organization-level default workflows from Platform default templates (idempotent)
+                // Auto-provision Organization-level default workflows from Platform default
+                // templates (idempotent)
                 if (workflowProvisioningClient != null) {
                         try {
-                                workflowProvisioningClient.provisionOrganizationWorkflows(savedOrganization.getId(), null);
+                                workflowProvisioningClient.provisionOrganizationWorkflows(savedOrganization.getId(),
+                                                null);
                         } catch (Exception wfEx) {
                                 log.warn("Non-blocking failure provisioning platform default workflows for org {}: {}",
                                                 savedOrganization.getId(), wfEx.getMessage());
                         }
                 }
 
-                // 1. Resolve configured default subscription plan from persistent storage (fail-fast if missing)
+                // 1. Resolve configured default subscription plan from persistent storage
+                // (fail-fast if missing)
                 String planCodeToResolve = (defaultPlanCode != null && !defaultPlanCode.isBlank())
                                 ? defaultPlanCode.trim()
                                 : "30_DAY_FREE_TRIAL";
 
-                SubscriptionPlan trialPlan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue(planCodeToResolve)
+                SubscriptionPlan trialPlan = subscriptionPlanRepository
+                                .findByCodeIgnoreCaseAndActiveTrue(planCodeToResolve)
                                 .or(() -> subscriptionPlanRepository.findByCodeIgnoreCase(planCodeToResolve))
                                 .or(() -> subscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue())
                                 .or(() -> subscriptionPlanRepository.findByActiveTrue().stream().findFirst())
                                 .orElseThrow(() -> new IllegalStateException(
-                                                "Default subscription plan not found: " + planCodeToResolve
-                                ));
+                                                "Default subscription plan not found: " + planCodeToResolve));
 
                 if (trialPlan.getId() == null) {
-                        throw new IllegalStateException("Resolved default subscription plan has no persistent identifier");
+                        throw new IllegalStateException(
+                                        "Resolved default subscription plan has no persistent identifier");
                 }
 
                 int effectiveTrialDays = (trialPlan.getDurationDays() != null && trialPlan.getDurationDays() > 0)
@@ -157,7 +161,8 @@ public class OrganizationServiceImpl implements OrganizationService {
                 LocalDateTime startedAt = LocalDateTime.now();
                 LocalDateTime trialEndsAt = startedAt.plusDays(effectiveTrialDays);
 
-                // 2. Create company_subscription for primary company using the persistent plan record
+                // 2. Create company_subscription for primary company using the persistent plan
+                // record
                 companySubscriptionRepository.save(CompanySubscription.builder()
                                 .company(savedCompany)
                                 .plan(trialPlan)
@@ -169,10 +174,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 
                 // 3. Read modules assigned to that plan from database (NO HARDCODING)
                 List<Module> provisionedModules = new java.util.ArrayList<>();
-                List<SubscriptionPlanModule> planModules = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(trialPlan.getId());
+                List<SubscriptionPlanModule> planModules = subscriptionPlanModuleRepository
+                                .findByPlan_IdAndActiveTrue(trialPlan.getId());
                 for (SubscriptionPlanModule spm : planModules) {
                         Module mod = spm.getModule();
-                        if (mod != null && Boolean.TRUE.equals(mod.getModuleStatus()) && !"SYSTEM_ADMIN".equalsIgnoreCase(mod.getName())) {
+                        if (mod != null && Boolean.TRUE.equals(mod.getModuleStatus())
+                                        && !"SYSTEM_ADMIN".equalsIgnoreCase(mod.getName())) {
                                 provisionedModules.add(mod);
                         }
                 }
@@ -204,7 +211,8 @@ public class OrganizationServiceImpl implements OrganizationService {
                                                 .status(true).build()));
                 userRoleRepository.save(UserRole.builder().user(user).role(ownerRole).build());
 
-                // Auto-provision Company-level default workflow for the initial company (idempotent)
+                // Auto-provision Company-level default workflow for the initial company
+                // (idempotent)
                 if (workflowProvisioningClient != null) {
                         try {
                                 Map<String, UUID> roleMap = Map.of("OWNER", ownerRole.getId());
@@ -262,18 +270,18 @@ public class OrganizationServiceImpl implements OrganizationService {
                 // will NOT roll back or block the account-creation response.
                 try {
                         emailService.sendAccountCreationEmail(
-                                email,
-                                organization.getDisplayName(),
-                                organization.getOrganizationCode(),
-                                company.getCompanyName(),
-                                company.getCompanyCode(),
-                                subscription.getTrialEndsAt(),
-                                loginUrl);
+                                        email,
+                                        organization.getDisplayName(),
+                                        organization.getOrganizationCode(),
+                                        company.getCompanyName(),
+                                        company.getCompanyCode(),
+                                        subscription.getTrialEndsAt(),
+                                        loginUrl);
                 } catch (Exception emailEx) {
                         // Idempotency: if a duplicate call somehow reaches here, it is
                         // benign — we log and continue.
                         log.warn("Could not dispatch account-creation email for org [{}]: {}",
-                                organization.getOrganizationCode(), emailEx.getMessage());
+                                        organization.getOrganizationCode(), emailEx.getMessage());
                 }
 
                 return OrganizationSignupResponse.builder()

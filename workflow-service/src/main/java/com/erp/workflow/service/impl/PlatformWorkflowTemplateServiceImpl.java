@@ -88,7 +88,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
 
         template = platformTemplateRepository.save(template);
 
-        saveStagesAndTransitions(template, request.getStages(), request.getTransitions(), currentUserId, currentUsername);
+        saveStagesAndTransitions(template, request.getStages(), request.getTransitions(), currentUserId,
+                currentUsername);
 
         log.info("Created platform workflow template: id={}, code={}, ver={}",
                 template.getId(), template.getTemplateCode(), template.getVersion());
@@ -98,7 +99,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
 
     @Override
     @Transactional
-    public PlatformWorkflowTemplateResponse updateTemplate(UUID templateId, UpdatePlatformWorkflowTemplateRequest request) {
+    public PlatformWorkflowTemplateResponse updateTemplate(UUID templateId,
+            UpdatePlatformWorkflowTemplateRequest request) {
         PlatformWorkflowTemplate template = platformTemplateRepository.findByIdAndIsDeletedFalse(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("PlatformWorkflowTemplate", "id", templateId));
 
@@ -162,7 +164,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
 
         if (request.getStages() != null && !request.getStages().isEmpty()) {
             deleteExistingStagesAndTransitions(template.getId());
-            saveStagesAndTransitions(template, request.getStages(), request.getTransitions(), currentUserId, currentUsername);
+            saveStagesAndTransitions(template, request.getStages(), request.getTransitions(), currentUserId,
+                    currentUsername);
         }
 
         if (request.getRolloutMode() != null && request.getRolloutMode() != PlatformRolloutMode.NEW_ORGS_ONLY) {
@@ -194,7 +197,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
         template = platformTemplateRepository.save(template);
 
         logRollout(template.getId(), nextVersion, PlatformRolloutMode.NEW_ORGS_ONLY.name(),
-                null, null, "SUCCESS", "Published platform template version " + nextVersion + (comment != null ? ": " + comment : ""));
+                null, null, "SUCCESS",
+                "Published platform template version " + nextVersion + (comment != null ? ": " + comment : ""));
 
         return mapToResponse(template);
     }
@@ -278,7 +282,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
 
         int provisionedCount = 0;
         for (PlatformWorkflowTemplate pt : defaultTemplates) {
-            // Check if organization already has an active template linked to this platform template or for this doc type
+            // Check if organization already has an active template linked to this platform
+            // template or for this doc type
             Optional<OrganizationWorkflowTemplate> existing = orgTemplateRepository
                     .findByOrganizationIdAndPlatformTemplateIdAndIsDeletedFalse(organizationId, pt.getId());
 
@@ -303,7 +308,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
         PlatformWorkflowTemplate platformTemplate = platformTemplateRepository.findByIdAndIsDeletedFalse(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("PlatformWorkflowTemplate", "id", templateId));
 
-        PlatformRolloutMode mode = request.getRolloutMode() != null ? request.getRolloutMode() : PlatformRolloutMode.NON_CUSTOMIZED;
+        PlatformRolloutMode mode = request.getRolloutMode() != null ? request.getRolloutMode()
+                : PlatformRolloutMode.NON_CUSTOMIZED;
 
         PlatformWorkflowRolloutResultDto result = PlatformWorkflowRolloutResultDto.builder()
                 .platformTemplateId(platformTemplate.getId())
@@ -320,7 +326,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
         }
 
         // Find candidate organization templates
-        List<OrganizationWorkflowTemplate> orgTemplates = orgTemplateRepository.findByPlatformTemplateIdAndIsDeletedFalse(platformTemplate.getId());
+        List<OrganizationWorkflowTemplate> orgTemplates = orgTemplateRepository
+                .findByPlatformTemplateIdAndIsDeletedFalse(platformTemplate.getId());
 
         if (request.getTargetOrganizationIds() != null && !request.getTargetOrganizationIds().isEmpty()) {
             Set<UUID> targetSet = new HashSet<>(request.getTargetOrganizationIds());
@@ -381,9 +388,11 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
                 if (Boolean.TRUE.equals(request.getPropagateToCompanies())) {
                     try {
                         boolean forceCompanyCustomized = (mode == PlatformRolloutMode.FORCE_ALL);
-                        var propResult = orgTemplateService.propagateTemplate(orgId, ot.getId(), null, forceCompanyCustomized);
+                        var propResult = orgTemplateService.propagateTemplate(orgId, ot.getId(), null,
+                                forceCompanyCustomized);
                         if (propResult != null) {
-                            result.setTotalCompaniesPropagated(result.getTotalCompaniesPropagated() + propResult.getProvisionedCount());
+                            result.setTotalCompaniesPropagated(
+                                    result.getTotalCompaniesPropagated() + propResult.getProvisionedCount());
                         }
                     } catch (Exception propEx) {
                         log.warn("Failed company propagation for org {} after platform rollout: {}",
@@ -426,7 +435,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
                         .build());
     }
 
-    private void clonePlatformTemplateToOrganization(PlatformWorkflowTemplate pt, UUID organizationId, boolean isCustomized) {
+    private void clonePlatformTemplateToOrganization(PlatformWorkflowTemplate pt, UUID organizationId,
+            boolean isCustomized) {
         OrganizationWorkflowTemplate ot = OrganizationWorkflowTemplate.builder()
                 .organizationId(organizationId)
                 .platformTemplateId(pt.getId())
@@ -535,9 +545,9 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
     }
 
     private void saveStagesAndTransitions(PlatformWorkflowTemplate template,
-                                          List<CreatePlatformWorkflowTemplateRequest.StageRequest> stageRequests,
-                                          List<CreatePlatformWorkflowTemplateRequest.TransitionRequest> transitionRequests,
-                                          UUID currentUserId, String currentUsername) {
+            List<CreatePlatformWorkflowTemplateRequest.StageRequest> stageRequests,
+            List<CreatePlatformWorkflowTemplateRequest.TransitionRequest> transitionRequests,
+            UUID currentUserId, String currentUsername) {
         if (stageRequests != null) {
             int seq = 1;
             for (CreatePlatformWorkflowTemplateRequest.StageRequest sReq : stageRequests) {
@@ -547,9 +557,12 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
                         .stageName(sReq.getStageName().trim())
                         .stageOrder(sReq.getStageOrder() != null ? sReq.getStageOrder() : seq)
                         .sequenceNo(sReq.getSequenceNo() != null ? sReq.getSequenceNo() : seq)
-                        .executionType(sReq.getExecutionType() != null ? sReq.getExecutionType() : WorkflowExecutionType.SEQUENTIAL)
-                        .minimumApprovalsRequired(sReq.getMinimumApprovalsRequired() != null ? sReq.getMinimumApprovalsRequired() : 1)
-                        .rejectionAction(sReq.getRejectionAction() != null ? sReq.getRejectionAction() : WorkflowRejectionAction.REJECT_DOCUMENT)
+                        .executionType(sReq.getExecutionType() != null ? sReq.getExecutionType()
+                                : WorkflowExecutionType.SEQUENTIAL)
+                        .minimumApprovalsRequired(
+                                sReq.getMinimumApprovalsRequired() != null ? sReq.getMinimumApprovalsRequired() : 1)
+                        .rejectionAction(sReq.getRejectionAction() != null ? sReq.getRejectionAction()
+                                : WorkflowRejectionAction.REJECT_DOCUMENT)
                         .isMandatory(sReq.getIsMandatory() != null ? sReq.getIsMandatory() : true)
                         .isActive(sReq.getIsActive() != null ? sReq.getIsActive() : true)
                         .build();
@@ -589,7 +602,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
                             .stage(stage)
                             .durationHours(slaReq.getDurationHours())
                             .reminderHours(slaReq.getReminderHours())
-                            .escalationAction(slaReq.getEscalationAction() != null ? slaReq.getEscalationAction() : "NOTIFY_MANAGER")
+                            .escalationAction(slaReq.getEscalationAction() != null ? slaReq.getEscalationAction()
+                                    : "NOTIFY_MANAGER")
                             .escalateToRoleName(cleanString(slaReq.getEscalateToRoleName()))
                             .isActive(true)
                             .build();
@@ -632,7 +646,7 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
     }
 
     private void logRollout(UUID platformTemplateId, Integer version, String rolloutMode,
-                            UUID targetOrgId, UUID targetCompanyId, String status, String message) {
+            UUID targetOrgId, UUID targetCompanyId, String status, String message) {
         try {
             PlatformWorkflowRolloutLog logEntry = PlatformWorkflowRolloutLog.builder()
                     .platformTemplateId(platformTemplateId)
@@ -659,7 +673,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
 
         List<OrganizationWorkflowTemplate> linkedOrgTemplates = orgTemplateRepository
                 .findByPlatformTemplateIdAndIsDeletedFalse(t.getId());
-        int linkedOrgCount = (int) linkedOrgTemplates.stream().map(OrganizationWorkflowTemplate::getOrganizationId).distinct().count();
+        int linkedOrgCount = (int) linkedOrgTemplates.stream().map(OrganizationWorkflowTemplate::getOrganizationId)
+                .distinct().count();
         int customizedOrgCount = (int) linkedOrgTemplates.stream().filter(o -> Boolean.TRUE.equals(o.getIsCustomized()))
                 .map(OrganizationWorkflowTemplate::getOrganizationId).distinct().count();
 
@@ -669,8 +684,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
             List<PlatformWorkflowTemplateSla> slas = platformSlaRepository
                     .findByStage_IdAndIsDeletedFalse(s.getId());
 
-            PlatformWorkflowTemplateResponse.SlaResponse slaResp = slas.isEmpty() ? null :
-                    PlatformWorkflowTemplateResponse.SlaResponse.builder()
+            PlatformWorkflowTemplateResponse.SlaResponse slaResp = slas.isEmpty() ? null
+                    : PlatformWorkflowTemplateResponse.SlaResponse.builder()
                             .id(slas.get(0).getId())
                             .durationHours(slas.get(0).getDurationHours())
                             .reminderHours(slas.get(0).getReminderHours())
@@ -704,8 +719,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
                     .build();
         }).collect(Collectors.toList());
 
-        List<PlatformWorkflowTemplateResponse.TransitionResponse> transitionResponses = transitions.stream().map(tr ->
-                PlatformWorkflowTemplateResponse.TransitionResponse.builder()
+        List<PlatformWorkflowTemplateResponse.TransitionResponse> transitionResponses = transitions.stream()
+                .map(tr -> PlatformWorkflowTemplateResponse.TransitionResponse.builder()
                         .id(tr.getId())
                         .actionType(tr.getActionType())
                         .sourceStageCode(tr.getSourceStageCode())
@@ -713,7 +728,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
                         .transitionCondition(tr.getTransitionCondition())
                         .allowedRoles(tr.getAllowedRoles())
                         .isActive(tr.getIsActive())
-                        .build()).collect(Collectors.toList());
+                        .build())
+                .collect(Collectors.toList());
 
         return PlatformWorkflowTemplateResponse.builder()
                 .id(t.getId())
@@ -749,7 +765,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
     }
 
     private String cleanString(String input) {
-        if (input == null || input.isBlank()) return null;
+        if (input == null || input.isBlank())
+            return null;
         return input.trim();
     }
 }
