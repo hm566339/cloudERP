@@ -71,9 +71,29 @@ export default function WorkflowManagementPage() {
   const selectedCompany = useAppSelector((state) => state.company.selectedCompany);
   const companies = useAppSelector((state) => state.accountCompany?.companies || []);
   const currentUser = useAppSelector((state) => state.auth?.user);
+  const authContext = useAppSelector((state) => state.auth?.authContext);
   const { isAdmin, isOwner } = useRBAC();
   const isOwnerOrAdmin = isAdmin || isOwner || currentUser?.role === 'owner' || currentUser?.role === 'super_admin' || currentUser?.role === 'company_admin';
-  const companyId = routeCompanyId || selectedCompany?.id || currentUser?.companyId || currentUser?.companyCode || null;
+  const storedCompany = (() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return JSON.parse(localStorage.getItem('selected_company') || 'null');
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  })();
+  const activeCompanyId =
+    routeCompanyId ||
+    selectedCompany?.id ||
+    currentUser?.companyId ||
+    currentUser?.companyCode ||
+    authContext?.activeCompanyId ||
+    authContext?.currentCompany?.id ||
+    storedCompany?.id ||
+    null;
+  const companyId = activeCompanyId;
   const canView = usePermission('WORKFLOW', 'VIEW') || isOwnerOrAdmin;
   const canCreate = usePermission('WORKFLOW', 'CREATE') || isOwnerOrAdmin;
   const canEdit = usePermission('WORKFLOW', 'EDIT') || isOwnerOrAdmin;

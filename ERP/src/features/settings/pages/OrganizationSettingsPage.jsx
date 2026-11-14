@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import {
-  Building2,
-  RefreshCw,
-  Menu,
   ChevronRight,
-  ExternalLink,
+  RefreshCw,
 } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks';
 import { selectAuthContext } from '../../../features/auth/authSlice';
@@ -108,19 +105,19 @@ export default function OrganizationSettingsPage() {
   const [accessMode, setAccessMode] = useState(authOrg?.accessMode || 'FULL');
   const [status, setStatus] = useState(authOrg?.status || 'ACTIVE');
 
-  // Regional & Fiscal Defaults
-  const [currency, setCurrency] = useState('INR');
-  const [timezone, setTimezone] = useState('Asia/Kolkata (IST)');
-  const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
-  const [timeFormat, setTimeFormat] = useState('12h');
-  const [fiscalYearStart, setFiscalYearStart] = useState('April');
-
-  // Security Policies
+  // Security States
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
   const [sessionTimeout, setSessionTimeout] = useState('60');
 
-  // Multi-Company, Subscription & Modules
-  const [registeredCompanies, setRegisteredCompanies] = useState(authCompanies || []);
+  // Regional States
+  const [currency, setCurrency] = useState('INR');
+  const [timezone, setTimezone] = useState('Asia/Kolkata');
+  const [fiscalYearStart, setFiscalYearStart] = useState('APRIL');
+  const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
+  const [timeFormat, setTimeFormat] = useState('12_HOUR');
+
+  // Data Collections
+  const [registeredCompanies, setRegisteredCompanies] = useState(authCompanies);
   const [subscriptionPlanName, setSubscriptionPlanName] = useState(
     authSubscription?.planCode || authSubscription?.planName || 'Standard Plan'
   );
@@ -252,7 +249,6 @@ export default function OrganizationSettingsPage() {
   const handleNavigateSection = (sectionId) => {
     const targetPath = sectionId === 'overview' ? basePath : `${basePath}/${sectionId}`;
     navigate(targetPath);
-    setMobileDrawerOpen(false);
   };
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -364,139 +360,169 @@ export default function OrganizationSettingsPage() {
     accessMode,
   }), [orgId, authOrg, name, orgCode, contactEmail, status, accessMode]);
 
-  // Organization Settings Container (Standard layout width & padding: p-4 sm:p-6)
   return (
-    <div className="w-full flex-1 flex flex-col min-h-full bg-zinc-50/50 dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
-      {loadError && (
-        <div className="mx-6 mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
-          <span>Failed to load fresh organization data: {loadError}</span>
+    <div className="w-full flex-1 flex flex-col min-h-screen bg-[#E8E9DF] dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
+      {/* Global Breadcrumbs & Quick Bar */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#F7F7F0]/60 dark:bg-[#161922]/60 border-b border-[#D5D8CA] dark:border-[#2A2F3D] text-xs shrink-0">
+        <div className="flex items-center gap-1.5 text-[#485942] dark:text-[#A0A6B5] flex-wrap">
+          <Link to="/owner/dashboard" className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
+            Owner Dashboard
+          </Link>
+          <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184] shrink-0" />
+          <Link to={basePath} className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
+            Organization Management
+          </Link>
+          <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184] shrink-0" />
+          <span className="text-[#2E3D28] dark:text-[#E6E8EE] font-bold">
+            {activeSectionMeta.label}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={loadSettingsData}
-            className="font-bold underline hover:text-amber-950 dark:hover:text-amber-100"
+            disabled={isLoading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] rounded-lg transition-all shadow-2xs"
           >
-            Retry
+            <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} />
+            <span>Refresh</span>
           </button>
         </div>
-      )}
-
-      {/* Active Organization Management Section View */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* 1. Overview */}
-        {activeSection === 'overview' && (
-          <OrgOverviewView
-            organization={orgSummary}
-            user={authUser}
-            companies={registeredCompanies}
-            membersCount={registeredCompanies.length}
-            planName={subscriptionPlanName}
-            isTrial={isTrial}
-            twoFactorRequired={twoFactorRequired}
-            sessionTimeout={sessionTimeout}
-            currency={currency}
-            timezone={timezone}
-            enabledModules={enabledModules}
-            loginUrl={loginUrl}
-            onNavigateSection={handleNavigateSection}
-          />
-        )}
-
-        {/* 2. Organization Profile */}
-        {activeSection === 'profile' && (
-          <OrgProfileView
-            organization={orgSummary}
-            initialName={name}
-            initialEmail={contactEmail}
-            onSaveProfile={handleSaveProfile}
-            isSaving={isSaving}
-          />
-        )}
-
-        {/* 3. Companies Management */}
-        {activeSection === 'companies' && (
-          <OrgCompaniesView
-            companies={registeredCompanies}
-            organization={orgSummary}
-            maxCapacity={4}
-          />
-        )}
-
-        {/* 4. Users & Permissions */}
-        {activeSection === 'users' && (
-          <OrgUsersView
-            organization={orgSummary}
-            companies={registeredCompanies}
-          />
-        )}
-
-        {/* 5. Role Management */}
-        {activeSection === 'roles' && (
-          <OrgRolesView
-            organization={orgSummary}
-            companies={registeredCompanies}
-          />
-        )}
-
-        {/* 6. Permission Management */}
-        {activeSection === 'permissions' && (
-          <OrgPermissionsView
-            organization={orgSummary}
-          />
-        )}
-
-        {/* 7. Portal & Module Access */}
-        {activeSection === 'portal-access' && (
-          <OrgPortalAccessView
-            organization={orgSummary}
-            companies={registeredCompanies}
-          />
-        )}
-
-        {/* 8. Security & Authentication */}
-        {activeSection === 'security' && (
-          <OrgSecurityView
-            initialTwoFactor={twoFactorRequired}
-            initialTimeout={sessionTimeout}
-            onSaveSecurity={handleSaveSecurity}
-            isSaving={isSaving}
-          />
-        )}
-
-        {/* 9. Organization Login Portal */}
-        {activeSection === 'login-portal' && (
-          <OrgLoginPortalView
-            organization={orgSummary}
-            loginUrl={loginUrl}
-          />
-        )}
-
-        {/* 10. Notifications */}
-        {activeSection === 'notifications' && (
-          <OrgNotificationsView
-            organization={orgSummary}
-          />
-        )}
-
-        {/* 11. Localization & Formats */}
-        {activeSection === 'localization' && (
-          <OrgLocalizationView
-            initialCurrency={currency}
-            initialTimezone={timezone}
-            initialFiscalYear={fiscalYearStart}
-            initialDateFormat={dateFormat}
-            initialTimeFormat={timeFormat}
-            onSaveLocalization={handleSaveRegional}
-            isSaving={isSaving}
-          />
-        )}
-
-        {/* 12. Appearance & Themes */}
-        {activeSection === 'appearance' && (
-          <OrgAppearanceView
-            organization={orgSummary}
-          />
-        )}
       </div>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full min-w-0">
+          {loadError && (
+            <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
+              <span>Failed to load fresh organization data: {loadError}</span>
+              <button
+                type="button"
+                onClick={loadSettingsData}
+                className="font-bold underline hover:text-amber-950 dark:hover:text-amber-100"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* 1. Overview */}
+          {activeSection === 'overview' && (
+            <OrgOverviewView
+              organization={orgSummary}
+              user={authUser}
+              companies={registeredCompanies}
+              membersCount={registeredCompanies.length}
+              planName={subscriptionPlanName}
+              isTrial={isTrial}
+              twoFactorRequired={twoFactorRequired}
+              sessionTimeout={sessionTimeout}
+              currency={currency}
+              timezone={timezone}
+              enabledModules={enabledModules}
+              loginUrl={loginUrl}
+              onNavigateSection={handleNavigateSection}
+            />
+          )}
+
+          {/* 2. Organization Profile */}
+          {activeSection === 'profile' && (
+            <OrgProfileView
+              organization={orgSummary}
+              initialName={name}
+              initialEmail={contactEmail}
+              onSaveProfile={handleSaveProfile}
+              isSaving={isSaving}
+            />
+          )}
+
+          {/* 3. Companies Management */}
+          {activeSection === 'companies' && (
+            <OrgCompaniesView
+              companies={registeredCompanies}
+              organization={orgSummary}
+              maxCapacity={4}
+            />
+          )}
+
+          {/* 4. Users & Permissions */}
+          {activeSection === 'users' && (
+            <OrgUsersView
+              organization={orgSummary}
+              companies={registeredCompanies}
+            />
+          )}
+
+          {/* 5. Role Management */}
+          {activeSection === 'roles' && (
+            <OrgRolesView
+              organization={orgSummary}
+              companies={registeredCompanies}
+            />
+          )}
+
+          {/* 6. Permission Management */}
+          {activeSection === 'permissions' && (
+            <OrgPermissionsView
+              organization={orgSummary}
+            />
+          )}
+
+          {/* 7. Portal & Module Access */}
+          {activeSection === 'portal-access' && (
+            <OrgPortalAccessView
+              organization={orgSummary}
+              companies={registeredCompanies}
+            />
+          )}
+
+          {/* 8. Security & Authentication */}
+          {activeSection === 'security' && (
+            <OrgSecurityView
+              initialTwoFactor={twoFactorRequired}
+              initialTimeout={sessionTimeout}
+              onSaveSecurity={handleSaveSecurity}
+              isSaving={isSaving}
+            />
+          )}
+
+          {/* 9. Organization Login Portal */}
+          {activeSection === 'login-portal' && (
+            <OrgLoginPortalView
+              organization={orgSummary}
+              loginUrl={loginUrl}
+            />
+          )}
+
+          {/* 10. Notifications */}
+          {activeSection === 'notifications' && (
+            <OrgNotificationsView
+              organization={orgSummary}
+            />
+          )}
+
+          {/* 11. Localization & Formats */}
+          {activeSection === 'localization' && (
+            <OrgLocalizationView
+              initialCurrency={currency}
+              initialTimezone={timezone}
+              initialFiscalYear={fiscalYearStart}
+              initialDateFormat={dateFormat}
+              initialTimeFormat={timeFormat}
+              onSaveLocalization={handleSaveRegional}
+              isSaving={isSaving}
+            />
+          )}
+
+          {/* 12. Appearance & Themes */}
+          {activeSection === 'appearance' && (
+            <OrgAppearanceView
+              organization={orgSummary}
+            />
+          )}
+        </div>
+      </main>
     </div>
   );
 }

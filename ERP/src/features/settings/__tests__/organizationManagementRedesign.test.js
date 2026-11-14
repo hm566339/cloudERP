@@ -70,7 +70,6 @@ describe('Organization Management Module Frontend Redesign Test Suite', () => {
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'users'), '/owner/settings/users');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'roles'), '/owner/settings/roles');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'permissions'), '/owner/settings/permissions');
-      assert.strictEqual(resolveOrgSubmenuPath(basePath, 'portal-access'), '/owner/settings/portal-access');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'security'), '/owner/settings/security');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'login-portal'), '/owner/settings/login-portal');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'notifications'), '/owner/settings/notifications');

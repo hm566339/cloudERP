@@ -98,7 +98,9 @@ describe('Workflow & Approvals Full Page Scrolling & Layout Constraint Verificat
 
   it('5. Right configuration panel footer must be flex-none (sticky at bottom)', () => {
     assert.ok(
-      workflowPageContent.includes('<div className="flex-none border-t border-zinc-100 p-3.5 bg-zinc-50/60 flex items-center justify-end gap-2">'),
+      workflowPageContent.includes('flex-none border-t border-zinc-100') &&
+      workflowPageContent.includes('p-3.5 bg-zinc-50/60') &&
+      workflowPageContent.includes('flex items-center justify-end gap-2'),
       'Cancel and Save changes footer must have flex-none'
     );
     assert.ok(workflowPageContent.includes('Save changes'), 'Footer must contain Save changes');

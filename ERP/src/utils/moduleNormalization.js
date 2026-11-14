@@ -580,6 +580,7 @@ export function normalizePermissionsList(rawPermissions) {
                 });
 
                 if (matching) return true;
+                return false;
               }
 
               // 2. Fallback: check permissions list for any allowed action on this feature
@@ -606,11 +607,15 @@ export function normalizePermissionsList(rawPermissions) {
 
               if (hasPerm) return true;
 
-              // 3. Organization Owner fallback: an owner of an organization is entitled to all features of entitled modules
-              const roleStr = String(authContext?.user?.role || authContext?.membership?.memberType || authContext?.membership?.membershipType || '').toUpperCase();
-              if (roleStr.includes('OWNER') || authContext?.membership?.memberType === 'OWNER') {
-                if (canonicalModule && hasModule(authContext, canonicalModule)) {
-                  return true;
+              // 3. Organization Owner fallback: only when no explicit granular features or permissions are defined
+              const hasExplicitPermissions = (Array.isArray(authContext?.permissions) && authContext.permissions.length > 0) ||
+                                            (Array.isArray(authContext?.features) && authContext.features.length > 0);
+              if (!hasExplicitPermissions) {
+                const roleStr = String(authContext?.user?.role || authContext?.membership?.memberType || authContext?.membership?.membershipType || '').toUpperCase();
+                if (roleStr.includes('OWNER') || authContext?.membership?.memberType === 'OWNER') {
+                  if (canonicalModule && hasModule(authContext, canonicalModule)) {
+                    return true;
+                  }
                 }
               }
 
@@ -824,11 +829,15 @@ export function normalizePermissionsList(rawPermissions) {
 
               if (hasPerm) return true;
 
-              // 3. Organization Owner fallback: an owner of an organization is entitled to all features of entitled modules
-              const roleStr = String(authContext?.user?.role || authContext?.membership?.memberType || authContext?.membership?.membershipType || '').toUpperCase();
-              if (roleStr.includes('OWNER') || authContext?.membership?.memberType === 'OWNER') {
-                if (canonicalModule && hasModule(authContext, canonicalModule)) {
-                  return true;
+              // 3. Organization Owner fallback: only when no explicit granular features or permissions are defined
+              const hasExplicitPermissions = (Array.isArray(authContext?.permissions) && authContext.permissions.length > 0) ||
+                                            (Array.isArray(authContext?.features) && authContext.features.length > 0);
+              if (!hasExplicitPermissions) {
+                const roleStr = String(authContext?.user?.role || authContext?.membership?.memberType || authContext?.membership?.membershipType || '').toUpperCase();
+                if (roleStr.includes('OWNER') || authContext?.membership?.memberType === 'OWNER') {
+                  if (canonicalModule && hasModule(authContext, canonicalModule)) {
+                    return true;
+                  }
                 }
               }
 

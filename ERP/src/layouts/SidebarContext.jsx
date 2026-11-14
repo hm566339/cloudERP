@@ -132,17 +132,17 @@ export function useSidebar() {
   if (!ctx) {
     return {
       isCollapsed: false,
-      toggleCollapse: () => {},
-      setCollapsed: () => {},
+      toggleCollapse: () => { },
+      setCollapsed: () => { },
       openMenus: {},
-      toggleMenu: () => {},
-      setMenuOpen: () => {},
+      toggleMenu: () => { },
+      setMenuOpen: () => { },
       isMenuOpen: (_id, isParentActive) => !!isParentActive,
       mobileOpen: false,
-      setMobileOpen: () => {},
-      openMobile: () => {},
-      closeMobile: () => {},
-      toggleMobile: () => {},
+      setMobileOpen: () => { },
+      openMobile: () => { },
+      closeMobile: () => { },
+      toggleMobile: () => { },
     };
   }
   return ctx;

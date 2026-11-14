@@ -44,16 +44,16 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
     const isActive = isRootSettings
       ? isItemOrChildActive(item, currentPath)
       : (
-          isItemOrChildActive(item, currentPath) ||
-          currentPath === item.path ||
-          (item.path !== '/super-admin/dashboard' && item.path !== '/' && item.path !== '/owner/dashboard' && item.path !== '/dashboard' && item.path !== '/owner/settings' && item.path !== '/settings/organization' &&
-            currentPath.startsWith(item.path + '/'))
-          || (isSalesMenu && isSalesRoute)
-          || (isPurchaseMenu && isPurchaseRoute)
-          || (isExpenseMenu && (currentPath.includes('/transactions/expenses') || currentPath.includes('/transactions/expense-requests')))
-          || (isWorkflowApprovals && isWorkflowRoute && !isApprovalsRoute)
-          || (isWorkflowRequests && isApprovalsRoute)
-        );
+        isItemOrChildActive(item, currentPath) ||
+        currentPath === item.path ||
+        (item.path !== '/super-admin/dashboard' && item.path !== '/' && item.path !== '/owner/dashboard' && item.path !== '/dashboard' && item.path !== '/owner/settings' && item.path !== '/settings/organization' &&
+          currentPath.startsWith(item.path + '/'))
+        || (isSalesMenu && isSalesRoute)
+        || (isPurchaseMenu && isPurchaseRoute)
+        || (isExpenseMenu && (currentPath.includes('/transactions/expenses') || currentPath.includes('/transactions/expense-requests')))
+        || (isWorkflowApprovals && isWorkflowRoute && !isApprovalsRoute)
+        || (isWorkflowRequests && isApprovalsRoute)
+      );
 
     return (
       <Link

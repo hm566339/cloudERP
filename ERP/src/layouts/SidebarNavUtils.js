@@ -89,74 +89,74 @@ export function isItemOrChildActive(item, currentPath) {
   if (item.path) {
     const cleanItem = stripCompany(item.path);
 
-    // Organization Settings overview vs sub-item matching
-    const isOverview = cleanItem === '/owner/settings' || cleanItem === '/settings/organization' || item.id === 'org-overview' || item.id === 'overview';
-    if (isOverview) {
-      const isOverviewRoute =
-        cleanCurrent === '/owner/settings' ||
-        cleanCurrent === '/owner/settings/' ||
-        cleanCurrent === '/owner/settings/overview' ||
-        cleanCurrent === '/settings/organization' ||
-        cleanCurrent === '/settings/organization/' ||
-        cleanCurrent === '/settings/organization/overview';
-      if (isOverviewRoute) return true;
-    }
-
-    const normalizeOrg = (p) => String(p || '').replace(/^\/settings\/organization/, '/owner/settings');
-    const normCurrent = normalizeOrg(cleanCurrent);
-    const normItem = normalizeOrg(cleanItem);
-
-    if (normCurrent === normItem && normItem !== '/') {
-      return true;
-    }
-
-    // Exact or sub-path matching without greedy prefix collision
-    if (
-      normItem !== '/' &&
-      normItem !== '/super-admin/dashboard' &&
-      normItem !== '/owner/dashboard' &&
-      normItem !== '/dashboard' &&
-      normItem !== '/owner/settings'
-    ) {
-      if (normCurrent.startsWith(normItem + '/')) {
-        // Prevent /workflows from greedily matching /workflows/approvals
-        const isApprovalsTarget = cleanCurrent === '/workflows/approvals' ||
-          cleanCurrent.startsWith('/workflows/approvals/');
-
-        if ((cleanItem === '/workflows' || item.id === 'workflow-approvals') && isApprovalsTarget) {
-          // do not match
-        } else {
-          return true;
-        }
+      // Organization Settings overview vs sub-item matching
+      const isOverview = cleanItem === '/owner/settings' || cleanItem === '/settings/organization' || item.id === 'org-overview' || item.id === 'overview';
+      if (isOverview) {
+        const isOverviewRoute =
+          cleanCurrent === '/owner/settings' ||
+          cleanCurrent === '/owner/settings/' ||
+          cleanCurrent === '/owner/settings/overview' ||
+          cleanCurrent === '/settings/organization' ||
+          cleanCurrent === '/settings/organization/' ||
+          cleanCurrent === '/settings/organization/overview';
+        if (isOverviewRoute) return true;
       }
-    }
 
-    // Special module patterns
-    const isExpenseMenu = item.id === 'acc-txn-exp' || item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'));
-    const isExpenseRoute = currentPath.includes('/transactions/expenses') || currentPath.includes('/transactions/expense-requests');
-    if (isExpenseMenu && isExpenseRoute) return true;
+      const normalizeOrg = (p) => String(p || '').replace(/^\/settings\/organization/, '/owner/settings');
+      const normCurrent = normalizeOrg(cleanCurrent);
+      const normItem = normalizeOrg(cleanItem);
 
-    // Special module patterns: Sales (Quotations, PI, Orders, Challans, Sales Invoices, Receipts)
-    const isSalesMenu = item.id === 'acc-txn-sales' || item.id === 'txn-si';
-    if (isSalesMenu && isSalesTransactionsRoute(currentPath)) return true;
+      if (normCurrent === normItem && normItem !== '/') {
+        return true;
+      }
 
-    // Special module patterns: Purchase (Requisitions, RFQs, Supplier Quotes, Purchase Orders, Goods Receipts, Purchase Invoices)
-    const isPurchaseMenu = item.id === 'acc-txn-pur' || item.id === 'txn-pi';
-    if (isPurchaseMenu && isPurchaseTransactionsRoute(currentPath)) return true;
+      // Exact or sub-path matching without greedy prefix collision
+          if (
+            normItem !== '/' &&
+            normItem !== '/super-admin/dashboard' &&
+            normItem !== '/owner/dashboard' &&
+            normItem !== '/dashboard' &&
+            normItem !== '/owner/settings'
+          ) {
+            if (normCurrent.startsWith(normItem + '/')) {
+              // Prevent /workflows from greedily matching /workflows/approvals
+              const isApprovalsTarget = cleanCurrent === '/workflows/approvals' ||
+                cleanCurrent.startsWith('/workflows/approvals/');
 
-    const isApprovalsRoute = cleanCurrent === '/workflows/approvals' ||
-      cleanCurrent.startsWith('/workflows/approvals/');
+              if ((cleanItem === '/workflows' || item.id === 'workflow-approvals') && isApprovalsTarget) {
+                // do not match
+              } else {
+                return true;
+              }
+            }
+          }
 
-    const isWorkflowRoute = cleanCurrent === '/workflows' ||
-      cleanCurrent.startsWith('/workflows/');
+          // Special module patterns
+          const isExpenseMenu = item.id === 'acc-txn-exp' || item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'));
+          const isExpenseRoute = currentPath.includes('/transactions/expenses') || currentPath.includes('/transactions/expense-requests');
+          if (isExpenseMenu && isExpenseRoute) return true;
 
-    if (item.id === 'workflow-approval-requests' && isApprovalsRoute) return true;
-    if (item.id === 'workflow-approvals' && isWorkflowRoute && !isApprovalsRoute) return true;
-  }
+          // Special module patterns: Sales (Quotations, PI, Orders, Challans, Sales Invoices, Receipts)
+          const isSalesMenu = item.id === 'acc-txn-sales' || item.id === 'txn-si';
+          if (isSalesMenu && isSalesTransactionsRoute(currentPath)) return true;
 
-  if (Array.isArray(item.children) && item.children.length > 0) {
-    return item.children.some(child => isItemOrChildActive(child, currentPath));
-  }
+          // Special module patterns: Purchase (Requisitions, RFQs, Supplier Quotes, Purchase Orders, Goods Receipts, Purchase Invoices)
+          const isPurchaseMenu = item.id === 'acc-txn-pur' || item.id === 'txn-pi';
+          if (isPurchaseMenu && isPurchaseTransactionsRoute(currentPath)) return true;
 
-  return false;
-}
+          const isApprovalsRoute = cleanCurrent === '/workflows/approvals' ||
+            cleanCurrent.startsWith('/workflows/approvals/');
+
+          const isWorkflowRoute = cleanCurrent === '/workflows' ||
+            cleanCurrent.startsWith('/workflows/');
+
+          if (item.id === 'workflow-approval-requests' && isApprovalsRoute) return true;
+          if (item.id === 'workflow-approvals' && isWorkflowRoute && !isApprovalsRoute) return true;
+        }
+
+        if (Array.isArray(item.children) && item.children.length > 0) {
+          return item.children.some(child => isItemOrChildActive(child, currentPath));
+        }
+
+        return false;
+      }
