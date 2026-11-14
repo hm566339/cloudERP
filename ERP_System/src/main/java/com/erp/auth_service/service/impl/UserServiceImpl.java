@@ -1928,14 +1928,27 @@ public class UserServiceImpl implements UserService {
         }
 
         if (membershipCtx != null && membershipCtx.getMemberType() == MemberType.OWNER) {
-            boolean hasOwnerRole = roles.stream().anyMatch(r -> "OWNER".equalsIgnoreCase(r.getName()));
-            if (!hasOwnerRole) {
-                UUID ownerRoleId = null;
-                if (roleRepository != null && effectiveCompanyId != null) {
-                    ownerRoleId = roleRepository.findByCompany_IdAndNameIgnoreCase(effectiveCompanyId, "OWNER")
-                            .map(Role::getId)
-                            .orElse(null);
+            UUID ownerRoleId = null;
+            if (roleRepository != null && effectiveCompanyId != null) {
+                ownerRoleId = roleRepository.findByCompany_IdAndNameIgnoreCase(effectiveCompanyId, "OWNER")
+                        .map(Role::getId)
+                        .orElse(null);
+            }
+            boolean hasOwnerRole = false;
+            for (int i = 0; i < roles.size(); i++) {
+                com.erp.auth_service.dto.response.RoleResponse r = roles.get(i);
+                if ("OWNER".equalsIgnoreCase(r.getName())) {
+                    hasOwnerRole = true;
+                    if (r.getId() == null && ownerRoleId != null) {
+                        roles.set(i, com.erp.auth_service.dto.response.RoleResponse.builder()
+                                .id(ownerRoleId)
+                                .name("OWNER")
+                                .status(true)
+                                .build());
+                    }
                 }
+            }
+            if (!hasOwnerRole) {
                 roles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
                         .id(ownerRoleId)
                         .name("OWNER")

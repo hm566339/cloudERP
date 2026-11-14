@@ -483,6 +483,22 @@ public class PermissionServiceImpl implements PermissionService {
             }
         }
 
+        if (isOrgOwner && companyId != null && roleRepository != null) {
+            roleRepository.findByCompany_IdAndNameIgnoreCase(companyId, "OWNER")
+                    .ifPresent(ownerRole -> {
+                        if (!userRoles.contains("OWNER")) {
+                            userRoles.add(0, "OWNER");
+                        }
+                        List<RolePermission> rps = rolePermissionRepository.findByRole_Id(ownerRole.getId());
+                        for (RolePermission rp : rps) {
+                            if (rp.getPermission() != null && rp.getPermission().isActive()
+                                    && rp.getPermission().getFeature() != null && rp.getPermission().getFeature().isActive()) {
+                                roleGrantedPermissions.add(rp.getPermission().getPermissionCode());
+                            }
+                        }
+                    });
+        }
+
         boolean isSystemAdminUser = user.getUserRoles() != null && user.getUserRoles().stream()
                 .anyMatch(ur -> ur.getRole() != null && ("SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
                         || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())));
@@ -491,6 +507,11 @@ public class PermissionServiceImpl implements PermissionService {
             roleGrantedPermissions.add("ORGANIZATION_APPEARANCE:READ");
             roleGrantedPermissions.add("DASHBOARD:READ");
         }
+
+        boolean isOwner = isOrgOwner || (user.getUserRoles() != null && user.getUserRoles().stream()
+                .filter(ur -> companyId == null || ur.getRole() == null || ur.getRole().getCompany() == null || companyId.equals(ur.getRole().getCompany().getId()))
+                .anyMatch(ur -> ur.getRole() != null
+                        && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
 
         Set<String> entitledFeatureModules = null;
         if (companyId != null && !isSystemAdminUser) {
@@ -542,11 +563,6 @@ public class PermissionServiceImpl implements PermissionService {
                     }
                 }
             }
-
-            boolean isOwner = isOrgOwner || (user.getUserRoles() != null && user.getUserRoles().stream()
-                    .filter(ur -> companyId == null || ur.getRole() == null || ur.getRole().getCompany() == null || companyId.equals(ur.getRole().getCompany().getId()))
-                    .anyMatch(ur -> ur.getRole() != null
-                            && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
 
             if (isOwner && plan != null && subscriptionPlanModuleRepository != null) {
                 List<SubscriptionPlanModule> spms = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(plan.getId());
@@ -614,7 +630,8 @@ public class PermissionServiceImpl implements PermissionService {
                     allowed = true;
                     source = "USER_GRANTED";
                 }
-            } else if (roleGrantedPermissions.contains(fp.getPermissionCode())) {
+            } else if (roleGrantedPermissions.contains(fp.getPermissionCode())
+                    || (isOwner && entitledFeatureModules != null && entitledFeatureModules.contains(featureModule))) {
                 allowed = true;
                 source = "ROLE";
             }
