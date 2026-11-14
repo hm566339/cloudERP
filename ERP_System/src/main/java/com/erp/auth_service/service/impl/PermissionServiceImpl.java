@@ -506,6 +506,16 @@ public class PermissionServiceImpl implements PermissionService {
         if (isOrgMember || isOrgOwner || isSystemAdminUser || PlatformSecurityUtil.isElevatedAdmin()) {
             roleGrantedPermissions.add("ORGANIZATION_APPEARANCE:READ");
             roleGrantedPermissions.add("DASHBOARD:READ");
+            if (isOrgOwner) {
+                roleGrantedPermissions.add("USER:READ");
+                roleGrantedPermissions.add("USER_MANAGEMENT:READ");
+                roleGrantedPermissions.add("SESSION:READ");
+                roleGrantedPermissions.add("SESSION_MANAGEMENT:READ");
+                roleGrantedPermissions.add("WORKFLOW_DEFINITIONS:READ");
+                roleGrantedPermissions.add("WORKFLOW_TASKS:READ");
+                roleGrantedPermissions.add("WORKFLOW_TASKS:APPROVE");
+                roleGrantedPermissions.add("WORKFLOW:READ");
+            }
         }
 
         boolean isOwner = isOrgOwner || (user.getUserRoles() != null && user.getUserRoles().stream()
@@ -562,18 +572,37 @@ public class PermissionServiceImpl implements PermissionService {
                         }
                     }
                 }
+                if (plan == null && subscriptionPlanRepository != null) {
+                    plan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("30_DAY_FREE_TRIAL")
+                            .or(() -> subscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue())
+                            .orElse(null);
+                }
             }
 
-            if (isOwner && plan != null && subscriptionPlanModuleRepository != null) {
-                List<SubscriptionPlanModule> spms = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(plan.getId());
-                for (SubscriptionPlanModule spm : spms) {
-                    if (spm.getModule() != null && Boolean.TRUE.equals(spm.getModule().getModuleStatus())
-                            && !"SYSTEM_ADMIN".equalsIgnoreCase(spm.getModule().getName())) {
-                        String modName = spm.getModule().getName().toUpperCase(Locale.ROOT);
+            if (isOwner) {
+                if (plan != null && subscriptionPlanModuleRepository != null) {
+                    List<SubscriptionPlanModule> spms = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(plan.getId());
+                    for (SubscriptionPlanModule spm : spms) {
+                        if (spm.getModule() != null && Boolean.TRUE.equals(spm.getModule().getModuleStatus())
+                                && !"SYSTEM_ADMIN".equalsIgnoreCase(spm.getModule().getName())) {
+                            String modName = spm.getModule().getName().toUpperCase(Locale.ROOT);
+                            entitledFeatureModules.add(modName);
+                            if (modName.startsWith("ACCOUNT")) entitledFeatureModules.add("ACCOUNT");
+                            if (modName.startsWith("INVENTORY")) entitledFeatureModules.add("INVENTORY");
+                            if (modName.startsWith("CRM")) entitledFeatureModules.add("CRM");
+                            if (modName.startsWith("WORKFLOW")) entitledFeatureModules.add("WORKFLOW");
+                        }
+                    }
+                }
+                for (com.erp.auth_service.model.CompanyModule cm : companyModules) {
+                    if (cm.getModule() != null && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
+                            && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName())) {
+                        String modName = cm.getModule().getName().toUpperCase(Locale.ROOT);
                         entitledFeatureModules.add(modName);
                         if (modName.startsWith("ACCOUNT")) entitledFeatureModules.add("ACCOUNT");
                         if (modName.startsWith("INVENTORY")) entitledFeatureModules.add("INVENTORY");
                         if (modName.startsWith("CRM")) entitledFeatureModules.add("CRM");
+                        if (modName.startsWith("WORKFLOW")) entitledFeatureModules.add("WORKFLOW");
                     }
                 }
             } else {

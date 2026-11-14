@@ -26,7 +26,7 @@ public class WorkflowProvisioningClient {
         this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
     }
 
-    @Value("${workflow.service.url:http://localhost:8083}")
+    @Value("${workflow.service.url:${WORKFLOW_SERVICE_URL:http://workflow-service:8083}}")
     private String workflowServiceUrl;
 
     @Value("${workflow.provisioning.enabled:true}")

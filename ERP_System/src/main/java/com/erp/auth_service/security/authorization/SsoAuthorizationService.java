@@ -327,28 +327,27 @@ public class SsoAuthorizationService {
                                 if (featurePermissionRepository != null) {
                                     var fpOpt = featurePermissionRepository
                                             .findByPermissionCodeIgnoreCase(candidateCode);
-                                    if (fpOpt.isEmpty()) {
-                                        continue;
-                                    }
-                                    var fp = fpOpt.get();
-                                    boolean isPermissionActive = fp.isActive();
-                                    boolean isFeatureActive = false;
-                                    try {
-                                        if (fp.getFeature() != null) {
-                                            isFeatureActive = fp.getFeature().isActive();
-                                        } else {
-                                            log.warn("Feature is null for permission [{}]", candidateCode);
+                                    if (fpOpt.isPresent()) {
+                                        var fp = fpOpt.get();
+                                        boolean isPermissionActive = fp.isActive();
+                                        boolean isFeatureActive = false;
+                                        try {
+                                            if (fp.getFeature() != null) {
+                                                isFeatureActive = fp.getFeature().isActive();
+                                            } else {
+                                                log.warn("Feature is null for permission [{}]", candidateCode);
+                                            }
+                                        } catch (Exception e) {
+                                            log.warn("Could not inspect feature active status for permission [{}]: {}",
+                                                    candidateCode, e.getMessage());
+                                            isFeatureActive = false;
                                         }
-                                    } catch (Exception e) {
-                                        log.warn("Could not inspect feature active status for permission [{}]: {}",
-                                                candidateCode, e.getMessage());
-                                        isFeatureActive = false;
-                                    }
-                                    if (!isPermissionActive || !isFeatureActive) {
-                                        log.warn("Access denied: Permission [{}] is disabled or feature unavailable",
-                                                candidateCode);
-                                        return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
-                                                "PERMISSION_DISABLED");
+                                        if (!isPermissionActive || !isFeatureActive) {
+                                            log.warn("Access denied: Permission [{}] is disabled or feature unavailable",
+                                                    candidateCode);
+                                            return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
+                                                    "PERMISSION_DISABLED");
+                                        }
                                     }
                                 }
                                 log.debug(
