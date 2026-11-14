@@ -3,7 +3,6 @@ import {
   Shield,
   Plus,
   Search,
-  Building2,
   Copy,
   Trash2,
   Edit2,
@@ -1014,21 +1013,7 @@ export default function OrgRolesView({ organization, companies = [] }) {
   // Render
   // ───────────────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full flex-1 flex flex-col min-h-full bg-[#E8E9DF] dark:bg-[#0F1117] relative">
-      {/* ── Breadcrumb Navigation ── */}
-      <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-medium px-6 pt-5 pb-1">
-        <span className="flex items-center gap-1.5 font-bold text-zinc-800 dark:text-zinc-200">
-          <Building2 size={13} className="text-zinc-600 dark:text-zinc-300" />
-          <span>{orgName}</span>
-        </span>
-        <ChevronRight size={13} className="text-zinc-400 dark:text-zinc-500" />
-        <span>Settings</span>
-        <ChevronRight size={13} className="text-zinc-400 dark:text-zinc-500" />
-        <span className="px-2 py-0.5 rounded-md bg-zinc-200/60 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-bold border border-zinc-300/60 dark:border-zinc-700 shadow-2xs">
-          Role Management
-        </span>
-      </div>
-
+    <div className="w-full flex-1 flex flex-col min-h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
       {/* ── Page Header ── */}
       <PageHeader
         title="Role Management"

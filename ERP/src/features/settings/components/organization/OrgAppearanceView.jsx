@@ -53,6 +53,7 @@ import {
 } from '../../../auth/authSlice';
 import { addAlert } from '../../../notifications/notificationSlice';
 import { useSidebar } from '../../../../layouts/SidebarContext';
+import PageHeader from '../../../../components/common/PageHeader';
 import {
   SettingsCard,
   SettingsPageHeader,
@@ -448,45 +449,32 @@ export default function OrgAppearanceView({ organization }) {
   };
 
   return (
-    <div className="p-4 sm:p-6 w-full space-y-6 animate-fade-in">
-      {/* ── Breadcrumb Navigation ── */}
-      <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] font-medium mb-3">
-        <span className="flex items-center gap-1.5 font-bold text-[var(--color-text-primary)]">
-          <Building2 size={13} className="text-[var(--color-primary)]" />
-          <span>{orgName}</span>
-        </span>
-        <ChevronRight size={13} className="text-[var(--color-text-muted)]" />
-        <span>Settings</span>
-        <ChevronRight size={13} className="text-[var(--color-text-muted)]" />
-        <span className="px-2 py-0.5 rounded-md bg-[var(--color-surface-2)] text-[var(--color-text-primary)] font-bold border border-[var(--color-border)] shadow-2xs">
-          Appearance
-        </span>
-      </div>
-
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* ── Page Header ── */}
-      <SettingsPageHeader
+      <PageHeader
         title="Appearance & Themes"
         description="Configure your enterprise theme studio, brand color palettes, display modes, typography, and layout density across all workspaces."
-        badge="Theme Studio"
-        actions={
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] text-xs font-semibold text-[var(--color-text-secondary)] transition-colors shadow-2xs"
-            >
-              <RotateCcw size={13} />
-              <span>Reset to Defaults</span>
-            </button>
-            <SettingsSaveButton
-              onClick={handleApplyAll}
-              isSaving={isSaving}
-              isSuccess={saveSuccess}
-              label="Apply Changes"
-            />
-          </div>
-        }
-      />
+      >
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] text-xs font-semibold text-[var(--color-text-secondary)] transition-colors shadow-2xs"
+          >
+            <RotateCcw size={13} />
+            <span>Reset to Defaults</span>
+          </button>
+          <SettingsSaveButton
+            onClick={handleApplyAll}
+            isSaving={isSaving}
+            isSuccess={saveSuccess}
+            label="Apply Changes"
+          />
+        </div>
+      </PageHeader>
+
+      {/* Main Content Area */}
+      <div className="flex-1 p-6 overflow-y-auto space-y-6 w-full animate-fade-in">
 
       {/* ── Organization Theme Isolation Banner ── */}
       <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
@@ -1511,5 +1499,6 @@ export default function OrgAppearanceView({ organization }) {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
