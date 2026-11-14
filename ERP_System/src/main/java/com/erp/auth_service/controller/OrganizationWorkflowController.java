@@ -14,6 +14,9 @@ import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.utility.AccessMode;
 import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
+import com.erp.auth_service.model.Organization;
+import com.erp.auth_service.repository.OrganizationRepository;
+import com.erp.auth_service.utility.OrganizationStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
 public class OrganizationWorkflowController {
 
     private final WorkflowProvisioningClient workflowProvisioningClient;
+    private final OrganizationRepository organizationRepository;
     private final CompanyRepository companyRepository;
     private final OrganizationMemberRepository organizationMemberRepository;
     private final RoleRepository roleRepository;
@@ -114,6 +118,44 @@ public class OrganizationWorkflowController {
         return ResponseEntity.ok(ResponseWrapper.success(responseData));
     }
 
+    @GetMapping("/internal/active-ids")
+    public ResponseEntity<ResponseWrapper<List<UUID>>> getActiveOrganizationIds() {
+        List<UUID> activeOrgIds = organizationRepository.findAll().stream()
+                .filter(o -> o.getStatus() == OrganizationStatus.ACTIVE)
+                .map(Organization::getId)
+                .toList();
+        return ResponseEntity.ok(ResponseWrapper.success(activeOrgIds));
+    }
+
+    @GetMapping("/internal/{organizationId}/companies")
+    public ResponseEntity<ResponseWrapper<List<Map<String, Object>>>> getOrganizationCompanies(
+            @PathVariable UUID organizationId) {
+        List<Company> companies = companyRepository.findByOrganization_Id(organizationId);
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (companies != null) {
+            for (Company c : companies) {
+                if (Boolean.TRUE.equals(c.getActive())) {
+                    Map<String, Object> compData = new HashMap<>();
+                    compData.put("companyId", c.getId());
+                    compData.put("companyCode", c.getCompanyCode());
+                    compData.put("companyName", c.getCompanyName());
+
+                    List<Role> roles = roleRepository.findByCompany_Id(c.getId());
+                    Map<String, UUID> roleMap = roles != null ? roles.stream()
+                            .filter(r -> r.getName() != null)
+                            .collect(Collectors.toMap(
+                                    r -> r.getName().toUpperCase(),
+                                    Role::getId,
+                                    (existing, duplicate) -> existing
+                            )) : Collections.emptyMap();
+                    compData.put("roleNameToIdMap", roleMap);
+                    result.add(compData);
+                }
+            }
+        }
+        return ResponseEntity.ok(ResponseWrapper.success(result));
+    }
+
     private UUID resolveAndAuthorizeOrgAdmin(UUID organizationId, UUID headerOrgId) {
         UUID orgId = organizationId != null ? organizationId : headerOrgId;
         RequestContext.Context ctx = RequestContext.get();
@@ -126,14 +168,21 @@ public class OrganizationWorkflowController {
             throw new ForbiddenException("Organization context required");
         }
 
-        UUID userId = ctx != null ? ctx.userId() : null;
-        if (userId == null) {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.getPrincipal() instanceof CustomUserDetails cud && cud.getUser() != null) {
-                userId = cud.getUser().getId();
-            } else if (auth != null && auth.getPrincipal() instanceof PlatformAdminPrincipal pap) {
-                userId = pap.getAdminId();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            if (auth.getPrincipal() instanceof PlatformAdminPrincipal) {
+                return orgId; // PlatformAdmin authorized across all organizations
             }
+            boolean isSuperAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN") || a.getAuthority().equals("SUPER_ADMIN"));
+            if (isSuperAdmin) {
+                return orgId;
+            }
+        }
+
+        UUID userId = ctx != null ? ctx.userId() : null;
+        if (userId == null && auth != null && auth.getPrincipal() instanceof CustomUserDetails cud && cud.getUser() != null) {
+            userId = cud.getUser().getId();
         }
 
         if (userId != null) {

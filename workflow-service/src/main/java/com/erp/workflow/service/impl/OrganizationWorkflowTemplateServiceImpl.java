@@ -13,6 +13,7 @@ import com.erp.workflow.exception.ResourceNotFoundException;
 import com.erp.workflow.exception.WorkflowValidationException;
 import com.erp.workflow.repository.*;
 import com.erp.workflow.security.SecurityUtils;
+import com.erp.workflow.security.sso.SsoService;
 import com.erp.workflow.service.OrganizationWorkflowTemplateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class OrganizationWorkflowTemplateServiceImpl implements OrganizationWork
     private final WorkflowApproverRepository approverRepository;
     private final WorkflowTransitionRepository transitionRepository;
     private final WorkflowSlaRepository slaRepository;
+    private final SsoService ssoService;
 
     @Override
     @Transactional
@@ -344,25 +346,67 @@ public class OrganizationWorkflowTemplateServiceImpl implements OrganizationWork
                 .findByIdAndOrganizationIdAndIsDeletedFalse(templateId, organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("OrganizationWorkflowTemplate", "id", templateId));
 
-        List<UUID> targetCompanies = companyIds;
-        if (targetCompanies == null || targetCompanies.isEmpty()) {
-            // Find all companies that have active definitions linked to this template
-            targetCompanies = definitionRepository.findByTemplateIdAndIsDeletedFalse(templateId).stream()
-                    .map(WorkflowDefinition::getCompanyId)
-                    .distinct()
-                    .collect(Collectors.toList());
+        // Discover companies and their role mappings
+        Map<UUID, Map<String, UUID>> companyRoleMaps = new LinkedHashMap<>();
+
+        if (companyIds != null && !companyIds.isEmpty()) {
+            for (UUID cid : companyIds) {
+                companyRoleMaps.put(cid, Collections.emptyMap());
+            }
+        } else {
+            // 1. Authoritative discovery from SSO
+            if (ssoService != null) {
+                try {
+                    var ssoCompanies = ssoService.getCompanyRoleMappings(organizationId);
+                    if (ssoCompanies != null && !ssoCompanies.isEmpty()) {
+                        for (var sc : ssoCompanies) {
+                            if (sc.getCompanyId() != null) {
+                                companyRoleMaps.put(sc.getCompanyId(),
+                                        sc.getRoleNameToIdMap() != null ? sc.getRoleNameToIdMap() : Collections.emptyMap());
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    log.warn("[ORG_WF] Could not retrieve companies from SSO for org {}: {}", organizationId, ex.getMessage());
+                }
+            }
+
+            // 2. Discover companies already linked to this template or organization
+            if (companyRoleMaps.isEmpty()) {
+                List<UUID> existingLinked = definitionRepository.findByTemplateIdAndIsDeletedFalse(templateId).stream()
+                        .map(WorkflowDefinition::getCompanyId)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .collect(Collectors.toList());
+                for (UUID cid : existingLinked) {
+                    companyRoleMaps.put(cid, Collections.emptyMap());
+                }
+            }
+
+            if (companyRoleMaps.isEmpty()) {
+                List<UUID> existingInOrg = definitionRepository.findByOrganizationIdAndIsDeletedFalse(organizationId).stream()
+                        .map(WorkflowDefinition::getCompanyId)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .collect(Collectors.toList());
+                for (UUID cid : existingInOrg) {
+                    companyRoleMaps.put(cid, Collections.emptyMap());
+                }
+            }
         }
 
         OrgWorkflowProvisionResultDto result = OrgWorkflowProvisionResultDto.builder()
                 .organizationId(organizationId)
                 .templateId(template.getId())
                 .templateVersion(template.getVersion())
-                .totalCompanies(targetCompanies.size())
+                .totalCompanies(companyRoleMaps.size())
                 .build();
 
-        for (UUID companyId : targetCompanies) {
+        for (Map.Entry<UUID, Map<String, UUID>> entry : companyRoleMaps.entrySet()) {
+            UUID companyId = entry.getKey();
+            Map<String, UUID> roleMap = entry.getValue();
             try {
-                WorkflowDefinition def = doProvisionForCompany(template, companyId, null, forceUpdateCustomized);
+                WorkflowDefinition def = doProvisionForCompany(template, companyId, roleMap, forceUpdateCustomized);
                 if (def != null) {
                     result.setProvisionedCount(result.getProvisionedCount() + 1);
                 } else {
@@ -388,16 +432,48 @@ public class OrganizationWorkflowTemplateServiceImpl implements OrganizationWork
                 .filter(t -> Boolean.TRUE.equals(t.getIsActive()))
                 .collect(Collectors.toList());
 
+        // Discover company role maps
+        Map<UUID, Map<String, UUID>> companyRoleMaps = new LinkedHashMap<>();
+        if (ssoService != null) {
+            try {
+                var ssoCompanies = ssoService.getCompanyRoleMappings(organizationId);
+                if (ssoCompanies != null) {
+                    for (var sc : ssoCompanies) {
+                        if (sc.getCompanyId() != null) {
+                            companyRoleMaps.put(sc.getCompanyId(),
+                                    sc.getRoleNameToIdMap() != null ? sc.getRoleNameToIdMap() : Collections.emptyMap());
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                log.warn("[ORG_WF] Could not retrieve company role mappings for reconcile: {}", ex.getMessage());
+            }
+        }
+
+        Set<UUID> targetCompanyIds = new LinkedHashSet<>();
+        if (companyIds != null && !companyIds.isEmpty()) {
+            targetCompanyIds.addAll(companyIds);
+        } else {
+            targetCompanyIds.addAll(companyRoleMaps.keySet());
+            if (targetCompanyIds.isEmpty()) {
+                targetCompanyIds.addAll(definitionRepository.findByOrganizationIdAndIsDeletedFalse(organizationId).stream()
+                        .map(WorkflowDefinition::getCompanyId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet()));
+            }
+        }
+
         OrgWorkflowProvisionResultDto result = OrgWorkflowProvisionResultDto.builder()
                 .organizationId(organizationId)
-                .totalCompanies(companyIds != null ? companyIds.size() : 0)
+                .totalCompanies(targetCompanyIds.size())
                 .build();
 
-        if (companyIds == null || companyIds.isEmpty() || activeTemplates.isEmpty()) {
+        if (targetCompanyIds.isEmpty() || activeTemplates.isEmpty()) {
             return result;
         }
 
-        for (UUID companyId : companyIds) {
+        for (UUID companyId : targetCompanyIds) {
+            Map<String, UUID> roleMap = companyRoleMaps.getOrDefault(companyId, Collections.emptyMap());
             for (OrganizationWorkflowTemplate template : activeTemplates) {
                 try {
                     // Check if company already has an active definition for this template
@@ -409,7 +485,7 @@ public class OrganizationWorkflowTemplateServiceImpl implements OrganizationWork
                             && d.getTemplateVersion().equals(template.getVersion()));
 
                     if (needsProvisioning) {
-                        WorkflowDefinition def = doProvisionForCompany(template, companyId, null, forceUpdateCustomized);
+                        WorkflowDefinition def = doProvisionForCompany(template, companyId, roleMap, forceUpdateCustomized);
                         if (def != null) {
                             result.setProvisionedCount(result.getProvisionedCount() + 1);
                         } else {

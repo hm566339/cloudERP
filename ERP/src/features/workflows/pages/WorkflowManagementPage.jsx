@@ -2,8 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity, ArrowDown, ArrowUp, Bell, Building2, ChevronDown, Clock3, Copy,
   GitBranch, HelpCircle, Mail, Plus, Save, Search, ShieldCheck, Trash2, User,
-  Users
+  Users, RefreshCw
 } from 'lucide-react';
+import apiClient from '../../../api/common/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
@@ -614,6 +615,25 @@ export default function WorkflowManagementPage() {
       return { ...item, steps: resequenced };
     });
 
+  const [isSyncing, setIsSyncing] = useState(false);
+  const handleSyncOrgDefault = async () => {
+    if (!activeCompanyId) return;
+    setIsSyncing(true);
+    try {
+      await apiClient.post(`/api/sso/organization/workflows/provision-company/${activeCompanyId}`);
+      dispatch(addAlert({
+        type: 'success',
+        message: 'Successfully synchronized organization default workflow for this company',
+      }));
+      await fetchDefinitions();
+    } catch (err) {
+      console.warn('Sync default workflows failed:', err);
+      await fetchDefinitions();
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const deleteWorkflow = () => {
     if (!selected) return;
     if (isEditingDraft) {
@@ -865,7 +885,18 @@ export default function WorkflowManagementPage() {
                 })}
                 {!visibleWorkflows.length && !(draftWorkflow && draftWorkflow.module === module) && (
                   <div className="py-8 text-center text-xs text-zinc-400 dark:text-zinc-500">
-                    No workflows in {module}.
+                    <p className="mb-2">No workflows in {module}.</p>
+                    {activeCompanyId && (
+                      <button
+                        type="button"
+                        onClick={handleSyncOrgDefault}
+                        disabled={isSyncing}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""} />
+                        Sync Organization Default
+                      </button>
+                    )}
                   </div>
                 )}
               </>

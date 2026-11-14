@@ -389,10 +389,14 @@ export function normalizePermissionsList(rawPermissions) {
                   }
                 }
                 if (nestedFeats.length > 0) {
-                  resolvedFeatures = nestedFeats;
+                  const coveredMods = new Set(nestedFeats.map((f) => normalizeModuleName(f.moduleName)).filter(Boolean));
+                  const missingFeats = (data.features || []).filter((f) => !coveredMods.has(normalizeModuleName(f.moduleName)));
+                  resolvedFeatures = [...nestedFeats, ...missingFeats];
                 }
                 if (nestedPerms.length > 0) {
-                  resolvedPermissions = nestedPerms;
+                  const coveredMods = new Set(nestedPerms.map((p) => normalizeModuleName(p.moduleName)).filter(Boolean));
+                  const missingPerms = (data.permissions || []).filter((p) => !coveredMods.has(normalizeModuleName(p.moduleName)));
+                  resolvedPermissions = [...nestedPerms, ...missingPerms];
                 }
               }
 
@@ -576,12 +580,11 @@ export function normalizePermissionsList(rawPermissions) {
                 });
 
                 if (matching) return true;
-                return false;
               }
 
               // 2. Fallback: check permissions list for any allowed action on this feature
               const permissions = authContext?.permissions || [];
-              return permissions.some((p) => {
+              const hasPerm = permissions.some((p) => {
                 if (typeof p === 'string') {
                   const parts = p.toUpperCase().split(':');
                   const feat = normalizeFeatureCode(parts[0] || p.toUpperCase());
@@ -600,6 +603,18 @@ export function normalizePermissionsList(rawPermissions) {
                 }
                 return false;
               });
+
+              if (hasPerm) return true;
+
+              // 3. Organization Owner fallback: an owner of an organization is entitled to all features of entitled modules
+              const roleStr = String(authContext?.user?.role || authContext?.membership?.memberType || authContext?.membership?.membershipType || '').toUpperCase();
+              if (roleStr.includes('OWNER') || authContext?.membership?.memberType === 'OWNER') {
+                if (canonicalModule && hasModule(authContext, canonicalModule)) {
+                  return true;
+                }
+              }
+
+              return false;
             }
 
             /**
@@ -710,7 +725,7 @@ export function normalizePermissionsList(rawPermissions) {
                 targetFeature === 'APPROVALS';
               const allowPrefixFallback = !hasExplicitFeaturePerm && !isDistinctCatalogFeature && targetFeature.includes('_');
 
-              return permissions.some((p) => {
+              const hasPerm = permissions.some((p) => {
                 if (typeof p === 'string') {
                   const upper = p.trim().toUpperCase();
                   if (upper === 'ALL' || upper === 'ALL_MODULES') return true;
@@ -806,6 +821,18 @@ export function normalizePermissionsList(rawPermissions) {
 
                 return false;
               });
+
+              if (hasPerm) return true;
+
+              // 3. Organization Owner fallback: an owner of an organization is entitled to all features of entitled modules
+              const roleStr = String(authContext?.user?.role || authContext?.membership?.memberType || authContext?.membership?.membershipType || '').toUpperCase();
+              if (roleStr.includes('OWNER') || authContext?.membership?.memberType === 'OWNER') {
+                if (canonicalModule && hasModule(authContext, canonicalModule)) {
+                  return true;
+                }
+              }
+
+              return false;
             }
 
             /**

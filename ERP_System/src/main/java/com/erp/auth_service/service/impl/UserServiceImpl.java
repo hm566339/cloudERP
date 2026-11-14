@@ -1393,13 +1393,13 @@ public class UserServiceImpl implements UserService {
     // ═══════════════════════════════════════════════════════════════════════
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public SsoMeResponse getSsoMe(String accessToken) {
         return getSsoMe(accessToken, (UUID) null);
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public SsoMeResponse getSsoMe(String accessToken, String companyParam) {
         if (companyParam == null || companyParam.isBlank()) {
             return getSsoMe(accessToken, (UUID) null);

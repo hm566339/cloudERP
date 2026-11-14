@@ -13,6 +13,7 @@ import com.erp.workflow.exception.WorkflowValidationException;
 import com.erp.workflow.exception.ResourceNotFoundException;
 import com.erp.workflow.repository.*;
 import com.erp.workflow.security.CurrentUserContext;
+import com.erp.workflow.security.sso.SsoService;
 import com.erp.workflow.service.impl.OrganizationWorkflowTemplateServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +57,8 @@ class OrganizationWorkflowTemplateServiceTest {
     private WorkflowTransitionRepository transitionRepository;
     @Mock
     private WorkflowSlaRepository slaRepository;
+    @Mock
+    private SsoService ssoService;
 
     @InjectMocks
     private OrganizationWorkflowTemplateServiceImpl templateService;

@@ -13,6 +13,7 @@ import com.erp.workflow.enums.WorkflowExecutionType;
 import com.erp.workflow.enums.WorkflowRejectionAction;
 import com.erp.workflow.repository.*;
 import com.erp.workflow.security.CurrentUserContext;
+import com.erp.workflow.security.sso.SsoService;
 import com.erp.workflow.service.impl.PlatformWorkflowTemplateServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +58,10 @@ class PlatformWorkflowTemplateServiceTest {
     private OrgWorkflowTemplateSlaRepository orgSlaRepository;
     @Mock
     private OrganizationWorkflowTemplateService orgTemplateService;
+    @Mock
+    private SsoService ssoService;
+    @Mock
+    private WorkflowDefinitionRepository definitionRepository;
 
     @InjectMocks
     private PlatformWorkflowTemplateServiceImpl service;

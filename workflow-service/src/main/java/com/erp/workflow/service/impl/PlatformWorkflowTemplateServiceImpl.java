@@ -14,6 +14,7 @@ import com.erp.workflow.exception.ResourceNotFoundException;
 import com.erp.workflow.exception.WorkflowValidationException;
 import com.erp.workflow.repository.*;
 import com.erp.workflow.security.SecurityUtils;
+import com.erp.workflow.security.sso.SsoService;
 import com.erp.workflow.service.OrganizationWorkflowTemplateService;
 import com.erp.workflow.service.PlatformWorkflowTemplateService;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,8 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
     private final OrgWorkflowTemplateTransitionRepository orgTransitionRepository;
     private final OrgWorkflowTemplateSlaRepository orgSlaRepository;
     private final OrganizationWorkflowTemplateService orgTemplateService;
+    private final SsoService ssoService;
+    private final WorkflowDefinitionRepository definitionRepository;
 
     @Override
     @Transactional
@@ -325,84 +328,147 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
             return result;
         }
 
-        // Find candidate organization templates
-        List<OrganizationWorkflowTemplate> orgTemplates = orgTemplateRepository
-                .findByPlatformTemplateIdAndIsDeletedFalse(platformTemplate.getId());
-
+        // Discover candidate organization IDs
+        Set<UUID> targetOrgIds = new LinkedHashSet<>();
+        Map<UUID, OrganizationWorkflowTemplate> existingTemplatesByOrg = new HashMap<>();
         if (request.getTargetOrganizationIds() != null && !request.getTargetOrganizationIds().isEmpty()) {
-            Set<UUID> targetSet = new HashSet<>(request.getTargetOrganizationIds());
-            orgTemplates = orgTemplates.stream()
-                    .filter(ot -> targetSet.contains(ot.getOrganizationId()))
-                    .collect(Collectors.toList());
-        }
-
-        result.setTotalOrganizationsTargeted(orgTemplates.size());
-
-        for (OrganizationWorkflowTemplate ot : orgTemplates) {
-            UUID orgId = ot.getOrganizationId();
-
-            if (Boolean.TRUE.equals(ot.getIsCustomized()) && mode != PlatformRolloutMode.FORCE_ALL) {
-                // Preserve customization in NON_CUSTOMIZED mode
-                result.setOrganizationsSkippedCustomized(result.getOrganizationsSkippedCustomized() + 1);
-                result.getDetails().add("Organization " + orgId + ": Skipped (has custom changes, isCustomized=true)");
-                logRollout(platformTemplate.getId(), platformTemplate.getVersion(), mode.name(),
-                        orgId, null, "SKIPPED_CUSTOMIZED", "Preserved organization customization");
-                continue;
+            targetOrgIds.addAll(request.getTargetOrganizationIds());
+        } else {
+            // 1. Authoritative discovery from SSO / ERP_System
+            if (ssoService != null) {
+                try {
+                    List<UUID> ssoActiveIds = ssoService.getActiveOrganizationIds();
+                    if (ssoActiveIds != null && !ssoActiveIds.isEmpty()) {
+                        targetOrgIds.addAll(ssoActiveIds);
+                    }
+                } catch (Exception ssoEx) {
+                    log.warn("Could not query active organizations from SSO during rollout: {}", ssoEx.getMessage());
+                }
             }
 
+            // 2. Discover known organizations from existing linked templates
             try {
-                // Update the organization template to match the platform template
-                ot.setTemplateName(platformTemplate.getTemplateName());
-                ot.setModuleName(platformTemplate.getModuleName());
-                ot.setDescription(platformTemplate.getDescription());
-                ot.setPlatformTemplateVersion(platformTemplate.getVersion());
-                ot.setVersion(ot.getVersion() + 1);
-                ot.setIsActive(platformTemplate.getIsActive());
-                ot.setIsDefault(platformTemplate.getIsDefault());
-                ot.setInitiatedByRoleName(platformTemplate.getInitiatedByRoleName());
-                ot.setCustomerScope(platformTemplate.getCustomerScope());
-                ot.setApprovalThreshold(platformTemplate.getApprovalThreshold());
-                ot.setIsApprovalRequired(platformTemplate.getIsApprovalRequired());
-                ot.setCustomerAcceptance(platformTemplate.getCustomerAcceptance());
-                ot.setAutoCreateOrder(platformTemplate.getAutoCreateOrder());
-                ot.setEmailNotifications(platformTemplate.getEmailNotifications());
-                ot.setInternalNotes(platformTemplate.getInternalNotes());
-                ot.setUpdatedAt(LocalDateTime.now());
-                ot.setUpdatedBy(SecurityUtils.getCurrentUserId().orElse(null));
-                ot.setUpdatedByUsername(SecurityUtils.getCurrentUsername());
-
-                if (mode == PlatformRolloutMode.FORCE_ALL) {
-                    ot.setIsCustomized(false); // Reset customization flag on force-update
-                }
-
-                ot = orgTemplateRepository.save(ot);
-
-                // Replace stages and transitions on the organization template
-                copyStagesAndTransitionsFromPlatform(platformTemplate, ot);
-
-                result.setOrganizationsUpdated(result.getOrganizationsUpdated() + 1);
-                result.getDetails().add("Organization " + orgId + ": Successfully updated to platform template v"
-                        + platformTemplate.getVersion());
-
-                // Propagate to companies under this organization
-                if (Boolean.TRUE.equals(request.getPropagateToCompanies())) {
-                    try {
-                        boolean forceCompanyCustomized = (mode == PlatformRolloutMode.FORCE_ALL);
-                        var propResult = orgTemplateService.propagateTemplate(orgId, ot.getId(), null,
-                                forceCompanyCustomized);
-                        if (propResult != null) {
-                            result.setTotalCompaniesPropagated(
-                                    result.getTotalCompaniesPropagated() + propResult.getProvisionedCount());
+                List<OrganizationWorkflowTemplate> existingLinked = orgTemplateRepository
+                        .findByPlatformTemplateIdAndIsDeletedFalse(platformTemplate.getId());
+                if (existingLinked != null) {
+                    for (OrganizationWorkflowTemplate ot : existingLinked) {
+                        if (ot.getOrganizationId() != null) {
+                            existingTemplatesByOrg.put(ot.getOrganizationId(), ot);
+                            targetOrgIds.add(ot.getOrganizationId());
                         }
-                    } catch (Exception propEx) {
-                        log.warn("Failed company propagation for org {} after platform rollout: {}",
-                                orgId, propEx.getMessage());
                     }
                 }
+            } catch (Exception ignored) {}
 
-                logRollout(platformTemplate.getId(), platformTemplate.getVersion(), mode.name(),
-                        orgId, null, "SUCCESS", "Successfully updated from platform template");
+            // 3. Fallback / merge with known organizations in workflow-service
+            try {
+                List<UUID> distinctOrgIds = orgTemplateRepository.findDistinctOrganizationIds();
+                if (distinctOrgIds != null) {
+                    targetOrgIds.addAll(distinctOrgIds);
+                }
+            } catch (Exception ignored) {}
 
+            if (definitionRepository != null) {
+                try {
+                    targetOrgIds.addAll(definitionRepository.findAll().stream()
+                            .map(WorkflowDefinition::getOrganizationId)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toSet()));
+                } catch (Exception defEx) {
+                    log.warn("Could not query definitions for org discovery: {}", defEx.getMessage());
+                }
+            }
+        }
+
+        result.setTotalOrganizationsTargeted(targetOrgIds.size());
+
+        for (UUID orgId : targetOrgIds) {
+            try {
+                // Find matching organization template
+                OrganizationWorkflowTemplate ot = existingTemplatesByOrg.get(orgId);
+                if (ot == null) {
+                    ot = orgTemplateRepository
+                            .findByOrganizationIdAndPlatformTemplateIdAndIsDeletedFalse(orgId, platformTemplate.getId())
+                            .orElse(null);
+                }
+                if (ot == null) {
+                    ot = orgTemplateRepository
+                            .findFirstByOrganizationIdAndModuleNameIgnoreCaseAndDocumentTypeIgnoreCaseAndIsDeletedFalseOrderByVersionDesc(
+                                    orgId, platformTemplate.getModuleName(), platformTemplate.getDocumentType())
+                            .orElse(null);
+                }
+
+                if (ot == null) {
+                    // Organization does not have this template -> Create independent clone
+                    clonePlatformTemplateToOrganization(platformTemplate, orgId, false);
+                    OrganizationWorkflowTemplate newOt = orgTemplateRepository
+                            .findByOrganizationIdAndPlatformTemplateIdAndIsDeletedFalse(orgId, platformTemplate.getId())
+                            .orElse(null);
+
+                    result.setOrganizationsUpdated(result.getOrganizationsUpdated() + 1);
+                    result.getDetails().add("Organization " + orgId + ": Successfully cloned platform template v"
+                            + platformTemplate.getVersion());
+                    logRollout(platformTemplate.getId(), platformTemplate.getVersion(), mode.name(),
+                            orgId, null, "SUCCESS", "Cloned platform template to organization");
+
+                    // Propagate to companies under this organization
+                    if (Boolean.TRUE.equals(request.getPropagateToCompanies()) && newOt != null) {
+                        propagateToCompanies(orgId, newOt, mode == PlatformRolloutMode.FORCE_ALL, result);
+                    }
+                } else {
+                    OrganizationWorkflowTemplate ot = existingOtOpt.get();
+
+                    if (Boolean.TRUE.equals(ot.getIsCustomized()) && mode != PlatformRolloutMode.FORCE_ALL) {
+                        // Preserve customization in NON_CUSTOMIZED mode
+                        result.setOrganizationsSkippedCustomized(result.getOrganizationsSkippedCustomized() + 1);
+                        result.getDetails().add("Organization " + orgId + ": Skipped (has custom changes, isCustomized=true)");
+                        logRollout(platformTemplate.getId(), platformTemplate.getVersion(), mode.name(),
+                                orgId, null, "SKIPPED_CUSTOMIZED", "Preserved organization customization");
+                        continue;
+                    }
+
+                    // Update the organization template to match the platform template
+                    ot.setTemplateName(platformTemplate.getTemplateName());
+                    ot.setModuleName(platformTemplate.getModuleName());
+                    ot.setDescription(platformTemplate.getDescription());
+                    ot.setPlatformTemplateId(platformTemplate.getId());
+                    ot.setPlatformTemplateVersion(platformTemplate.getVersion());
+                    ot.setVersion(ot.getVersion() + 1);
+                    ot.setIsActive(platformTemplate.getIsActive());
+                    ot.setIsDefault(platformTemplate.getIsDefault());
+                    ot.setInitiatedByRoleName(platformTemplate.getInitiatedByRoleName());
+                    ot.setCustomerScope(platformTemplate.getCustomerScope());
+                    ot.setApprovalThreshold(platformTemplate.getApprovalThreshold());
+                    ot.setIsApprovalRequired(platformTemplate.getIsApprovalRequired());
+                    ot.setCustomerAcceptance(platformTemplate.getCustomerAcceptance());
+                    ot.setAutoCreateOrder(platformTemplate.getAutoCreateOrder());
+                    ot.setEmailNotifications(platformTemplate.getEmailNotifications());
+                    ot.setInternalNotes(platformTemplate.getInternalNotes());
+                    ot.setUpdatedAt(LocalDateTime.now());
+                    ot.setUpdatedBy(SecurityUtils.getCurrentUserId().orElse(null));
+                    ot.setUpdatedByUsername(SecurityUtils.getCurrentUsername());
+
+                    if (mode == PlatformRolloutMode.FORCE_ALL) {
+                        ot.setIsCustomized(false); // Reset customization flag on force-update
+                    }
+
+                    ot = orgTemplateRepository.save(ot);
+
+                    // Replace stages and transitions on the organization template
+                    copyStagesAndTransitionsFromPlatform(platformTemplate, ot);
+
+                    result.setOrganizationsUpdated(result.getOrganizationsUpdated() + 1);
+                    result.getDetails().add("Organization " + orgId + ": Successfully updated to platform template v"
+                            + platformTemplate.getVersion());
+
+                    // Propagate to companies under this organization
+                    if (Boolean.TRUE.equals(request.getPropagateToCompanies())) {
+                        propagateToCompanies(orgId, ot, mode == PlatformRolloutMode.FORCE_ALL, result);
+                    }
+
+                    logRollout(platformTemplate.getId(), platformTemplate.getVersion(), mode.name(),
+                            orgId, null, "SUCCESS", "Successfully updated from platform template");
+                }
             } catch (Exception ex) {
                 log.error("Failed to rollout platform template {} to organization {}: {}",
                         platformTemplate.getId(), orgId, ex.getMessage(), ex);
@@ -433,6 +499,21 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
                         .executedByUsername(l.getExecutedByUsername())
                         .createdAt(l.getCreatedAt())
                         .build());
+    }
+
+    private void propagateToCompanies(UUID orgId, OrganizationWorkflowTemplate ot,
+                                      boolean forceCompanyCustomized,
+                                      PlatformWorkflowRolloutResultDto result) {
+        try {
+            var propResult = orgTemplateService.propagateTemplate(orgId, ot.getId(), null, forceCompanyCustomized);
+            if (propResult != null) {
+                result.setTotalCompaniesPropagated(
+                        result.getTotalCompaniesPropagated() + propResult.getProvisionedCount());
+            }
+        } catch (Exception propEx) {
+            log.warn("Failed company propagation for org {} after platform rollout: {}",
+                    orgId, propEx.getMessage());
+        }
     }
 
     private void clonePlatformTemplateToOrganization(PlatformWorkflowTemplate pt, UUID organizationId,

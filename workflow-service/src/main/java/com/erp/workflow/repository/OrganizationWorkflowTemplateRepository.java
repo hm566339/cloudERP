@@ -40,5 +40,11 @@ public interface OrganizationWorkflowTemplateRepository extends JpaRepository<Or
     List<OrganizationWorkflowTemplate> findByPlatformTemplateIdAndIsCustomizedFalseAndIsDeletedFalse(UUID platformTemplateId);
 
     Optional<OrganizationWorkflowTemplate> findByOrganizationIdAndPlatformTemplateIdAndIsDeletedFalse(UUID organizationId, UUID platformTemplateId);
+
+    Optional<OrganizationWorkflowTemplate> findFirstByOrganizationIdAndModuleNameIgnoreCaseAndDocumentTypeIgnoreCaseAndIsDeletedFalseOrderByVersionDesc(
+            UUID organizationId, String moduleName, String documentType);
+
+    @Query("SELECT DISTINCT t.organizationId FROM OrganizationWorkflowTemplate t WHERE t.isDeleted = false")
+    List<UUID> findDistinctOrganizationIds();
 }
 
