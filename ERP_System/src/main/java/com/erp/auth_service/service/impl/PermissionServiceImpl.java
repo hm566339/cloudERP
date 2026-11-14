@@ -86,7 +86,12 @@ public class PermissionServiceImpl implements PermissionService {
             "ORGANIZATION_MEMBERS:CREATE",
             "ORGANIZATION_MEMBERS:WRITE",
             "ORGANIZATION_MEMBERS:UPDATE",
-            "ORGANIZATION_MEMBERS:DELETE");
+            "ORGANIZATION_MEMBERS:DELETE",
+
+            // System Modules, Routes & Features Catalog
+            "MODULE:READ",
+            "MODULE_ROUTE:READ",
+            "FEATURE:READ");
 
     private final FeaturePermissionRepository featurePermissionRepository;
     private final UserPermissionRepository userPermissionRepository;

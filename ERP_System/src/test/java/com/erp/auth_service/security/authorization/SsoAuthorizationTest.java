@@ -167,10 +167,9 @@ class SsoAuthorizationTest {
         @ValueSource(strings = {
                 "OWNER", "ROLE_OWNER",
                 "COMPANY_ADMIN", "ROLE_COMPANY_ADMIN",
-                "SUPER_ADMIN", "ROLE_SUPER_ADMIN",
-                "PLATFORM_SUPPORT", "ROLE_PLATFORM_SUPPORT"
+                "MANAGER", "USER"
         })
-        @DisplayName("Non-SYSTEM_ADMIN roles do NOT get automatic bypass")
+        @DisplayName("Non-elevated admin roles do NOT get automatic bypass")
         void nonSystemAdminRolesDoNotGetBypass(String role) {
             Authentication auth = new UsernamePasswordAuthenticationToken(
                     "user", "pass", List.of(new SimpleGrantedAuthority(role)));

@@ -78,6 +78,9 @@ public class CompanyServiceImpl implements CompanyService {
         @org.springframework.beans.factory.annotation.Autowired(required = false)
         private WorkflowProvisioningClient workflowProvisioningClient;
 
+        @org.springframework.beans.factory.annotation.Autowired(required = false)
+        private com.erp.auth_service.repository.UserRepository userRepository;
+
         @Value("${strapi.server}")
         private String coreServerUrl;
 
@@ -205,7 +208,7 @@ public class CompanyServiceImpl implements CompanyService {
 
                 Company savedCompany = companyRepository.save(createdCompany);
 
-                // Auto-provision company access for the owner/creator
+                // Auto-provision company access and OWNER role for the owner/creator
                 if (context.userId() != null) {
                         organizationMemberRepository.findByOrganization_IdAndUser_Id(organizationId, context.userId())
                                         .ifPresent(member -> {
@@ -216,6 +219,25 @@ public class CompanyServiceImpl implements CompanyService {
                                                                         .company(savedCompany)
                                                                         .active(true)
                                                                         .build());
+                                                }
+                                                if (member.getMemberType() == MemberType.OWNER && roleRepository != null) {
+                                                        try {
+                                                                Role ownerRole = roleRepository.findByCompany_IdAndNameIgnoreCase(savedCompany.getId(), "OWNER")
+                                                                                .orElseGet(() -> roleRepository.save(Role.builder()
+                                                                                                .name("OWNER")
+                                                                                                .company(savedCompany)
+                                                                                                .status(true)
+                                                                                                .build()));
+                                                                if (ownerRole != null && ownerRole.getId() != null && userRoleRepository != null && !userRoleRepository.roleExists(context.userId(), ownerRole.getId())) {
+                                                                        if (userRepository != null) {
+                                                                                userRepository.findById(context.userId()).ifPresent(u ->
+                                                                                        userRoleRepository.save(UserRole.builder().user(u).role(ownerRole).build())
+                                                                                );
+                                                                        }
+                                                                }
+                                                        } catch (Exception e) {
+                                                                log.warn("Non-blocking failure initializing OWNER role for company {}: {}", savedCompany.getId(), e.getMessage());
+                                                        }
                                                 }
                                         });
                 }

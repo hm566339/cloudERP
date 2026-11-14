@@ -1798,13 +1798,29 @@ public class UserServiceImpl implements UserService {
                                         .build());
                     }
 
-                    // Ensure Owner role has permissions for all plan modules
-                    if (roleRepository != null && permissionService != null) {
-                        java.util.Optional<Role> ownerRoleOpt = roleRepository
-                                .findByCompany_IdAndNameIgnoreCase(effectiveCompanyId, "OWNER");
-                        if (ownerRoleOpt.isPresent()) {
+                    // Ensure Owner role exists and has permissions for all plan modules
+                    if (roleRepository != null && permissionService != null && effectiveCompany != null) {
+                        Role ownerRole = roleRepository
+                                .findByCompany_IdAndNameIgnoreCase(effectiveCompanyId, "OWNER")
+                                .orElseGet(() -> roleRepository.save(Role.builder()
+                                        .name("OWNER")
+                                        .company(effectiveCompany)
+                                        .status(true)
+                                        .build()));
+
+                        if (ownerRole != null && ownerRole.getId() != null) {
+                            if (userRoleRepository != null && !userRoleRepository.roleExists(userId, ownerRole.getId())) {
+                                try {
+                                    userRoleRepository.save(UserRole.builder()
+                                            .user(user)
+                                            .role(ownerRole)
+                                            .build());
+                                } catch (Exception ignored) {
+                                }
+                            }
+
                             List<String> modNames = planActiveModules.stream().map(Module::getName).toList();
-                            permissionService.assignOwnerRolePermissions(ownerRoleOpt.get(), modNames, userId);
+                            permissionService.assignOwnerRolePermissions(ownerRole, modNames, userId);
                         }
                     }
                 } else if (companyModuleRepository != null) {
@@ -1914,7 +1930,14 @@ public class UserServiceImpl implements UserService {
         if (membershipCtx != null && membershipCtx.getMemberType() == MemberType.OWNER) {
             boolean hasOwnerRole = roles.stream().anyMatch(r -> "OWNER".equalsIgnoreCase(r.getName()));
             if (!hasOwnerRole) {
+                UUID ownerRoleId = null;
+                if (roleRepository != null && effectiveCompanyId != null) {
+                    ownerRoleId = roleRepository.findByCompany_IdAndNameIgnoreCase(effectiveCompanyId, "OWNER")
+                            .map(Role::getId)
+                            .orElse(null);
+                }
                 roles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                        .id(ownerRoleId)
                         .name("OWNER")
                         .status(true)
                         .build());

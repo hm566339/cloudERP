@@ -124,4 +124,30 @@ public class CompanyModuleSecurityTest {
         assertEquals("Company Module created successfully", result.get("message"));
         verify(companyModuleRepository).save(any());
     }
+
+    @Test
+    @DisplayName("Organization Owner can access company modules for another company in the same organization")
+    void testOrganizationOwnerCanAccessModulesForOtherCompanyInSameOrg() {
+        UUID orgId = UUID.randomUUID();
+        RequestContext.set(userAId, orgId, companyAId, null, AccessMode.FULL);
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                "owner@org.com", null, List.of(new SimpleGrantedAuthority("OWNER")));
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        Company companyB = new Company();
+        companyB.setId(companyBId);
+        com.erp.auth_service.model.Organization org = new com.erp.auth_service.model.Organization();
+        org.setId(orgId);
+        companyB.setOrganization(org);
+
+        when(companyRepository.findById(companyBId)).thenReturn(Optional.of(companyB));
+        when(companyModuleRepository.findAllByCompany_Id(companyBId)).thenReturn(List.of());
+
+        List<com.erp.auth_service.dto.response.CompanyModulesResposnse> response =
+                companyModuleService.getCompanyModulesByCompany(companyBId, null);
+
+        assertNotNull(response);
+        verify(companyModuleRepository).findAllByCompany_Id(companyBId);
+    }
 }

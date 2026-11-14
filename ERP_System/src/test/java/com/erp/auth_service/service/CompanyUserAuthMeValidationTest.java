@@ -571,6 +571,7 @@ class CompanyUserAuthMeValidationTest {
 
         when(passwordEncoder.matches("correctPassword", testUser.getPassword())).thenReturn(true);
         when(userRepository.findUsersWithRolesByCompany(eq(companyId), anyString())).thenReturn(List.of(testUser));
+        when(jwtService.generateAccessToken(eq("john_mohit"), any(), anyLong())).thenReturn("generated.jwt.token");
         when(jwtService.generateAccessToken(eq("john_mohit"), any())).thenReturn("generated.jwt.token");
         when(jwtService.generateRefreshToken(eq("john_mohit"), eq("MOHIT"))).thenReturn("refresh.token");
 
@@ -581,7 +582,7 @@ class CompanyUserAuthMeValidationTest {
 
         // Capture claims passed to jwtService.generateAccessToken
         ArgumentCaptor<Map<String, Object>> claimsCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(jwtService).generateAccessToken(eq("john_mohit"), claimsCaptor.capture());
+        verify(jwtService).generateAccessToken(eq("john_mohit"), claimsCaptor.capture(), anyLong());
 
         Map<String, Object> claims = claimsCaptor.getValue();
         assertEquals(companyId.toString(), claims.get("companyId"), "companyId claim must match company UUID");

@@ -9,21 +9,27 @@ sso:
 
       USER:
         - "/api/sso/user/**"
+        - "/api/sso/user"
 
       ROLE:
         - "/api/sso/role/**"
+        - "/api/sso/role"
 
       PERMISSION:
         - "/api/sso/permissions/**"
+        - "/api/sso/permissions"
 
       FEATURE:
         - "/api/sso/features/**"
+        - "/api/sso/features"
 
       MODULE:
         - "/api/sso/module/**"
+        - "/api/sso/module"
 
       MODULE_ROUTE:
         - "/api/sso/module-routes/**"
+        - "/api/sso/module-routes"
 
       COMPANY:
         - "/api/sso/company/**"
@@ -35,9 +41,11 @@ sso:
         - "/api/companies/**"
         - "/api/companies"
         - "/api/sso/company-modules/**"
+        - "/api/sso/company-modules"
 
       COMPANY_SUBSCRIPTION:
         - "/api/sso/company-subscriptions/**"
+        - "/api/sso/company-subscriptions"
 
       SUBSCRIPTION:
         - "/api/sso/subscription/**"
@@ -51,9 +59,11 @@ sso:
 
       SUBSCRIPTION_PLAN:
         - "/api/sso/subscription-plans/**"
+        - "/api/sso/subscription-plans"
 
       SESSION:
         - "/api/sso/session/**"
+        - "/api/sso/session"
 
       ORGANIZATION_ROLE_TEMPLATES:
         - "/api/sso/organization/role-templates/**"
@@ -89,6 +99,7 @@ sso:
 
       PORTAL_ACCESS:
         - "/api/sso/portal-access/**"
+        - "/api/sso/portal-access"
 
       DASHBOARD:
         - "/api/sso/dashboard/**"

@@ -58,6 +58,20 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
         private final OrganizationMemberRepository organizationMemberRepository;
         private final AuthorizationService authorizationService;
 
+        private boolean isOwner(RequestContext.Context context) {
+                if (PlatformSecurityUtil.isOwner()) {
+                        return true;
+                }
+                if (context != null && context.organizationId() != null && context.userId() != null && organizationMemberRepository != null) {
+                        return organizationMemberRepository
+                                        .findByOrganization_IdAndUser_Id(context.organizationId(), context.userId())
+                                        .filter(m -> m.getMembershipStatus() == MembershipStatus.ACTIVE && m.getDeletedAt() == null)
+                                        .map(m -> m.getMemberType() == MemberType.OWNER)
+                                        .orElse(false);
+                }
+                return false;
+        }
+
         private void assertCompanyOwnership(Company company) {
                 if (PlatformSecurityUtil.isElevatedAdmin()) {
                         return;
@@ -71,7 +85,8 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
                                                         "Access denied: Company does not belong to authorized organization");
                                 }
                         }
-                        if (context.companyId() != null && !context.companyId().equals(company.getId())) {
+                        boolean isOwnerUser = isOwner(context);
+                        if (!isOwnerUser && context.companyId() != null && !context.companyId().equals(company.getId())) {
                                 throw new ForbiddenException(
                                                 "Access denied: Company does not match authorized company context");
                         }
