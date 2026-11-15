@@ -119,3 +119,4 @@ class CrmCommunicationServiceTest {
         assertEquals("Hello from Mark2 CRM", messages.get(0).getBodyText());
     }
 }
+
