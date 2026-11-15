@@ -164,23 +164,23 @@ export default function CampaignsPage() {
           <StatCard
             title="Total Budget Allocated"
             value={`₹${(totalBudget / 100000).toFixed(1)}L`}
-            description="Cumulative marketing budget"
-            icon={<DollarSign className="w-5 h-5 text-indigo-500" />}
+            subtitle="Cumulative marketing budget"
+            icon={DollarSign}
           />
           <StatCard
             title="Revenue Won"
             value={`₹${(totalRevenue / 100000).toFixed(1)}L`}
             trend="up"
-            change="+24%"
-            description="Attributed closed deals"
-            icon={<TrendingUp className="w-5 h-5 text-emerald-500" />}
+            trendValue="+24%"
+            subtitle="Attributed closed deals"
+            icon={TrendingUp}
           />
           <StatCard
             title="Portfolio ROI"
             value={`${overallRoi}%`}
             trend="up"
-            description="Marketing return on investment"
-            icon={<Target className="w-5 h-5 text-amber-500" />}
+            subtitle="Marketing return on investment"
+            icon={Target}
           />
         </div>
 

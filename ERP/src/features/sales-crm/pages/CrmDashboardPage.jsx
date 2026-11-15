@@ -163,34 +163,34 @@ export default function CrmDashboardPage() {
           <StatCard
             title="Active Leads"
             value={dashboard.totalLeads ?? 124}
-            change="+18.2%"
+            trendValue="+18.2%"
             trend="up"
-            description="Inbound lead pipeline"
-            icon={<Users className="w-5 h-5 text-indigo-500" />}
+            subtitle="Inbound lead pipeline"
+            icon={Users}
           />
           <StatCard
             title="Weighted Pipeline"
             value={`₹${((dashboard.pipelineValue || 3560000) / 100000).toFixed(1)}L`}
-            change="+12.5%"
+            trendValue="+12.5%"
             trend="up"
-            description="Active deal value"
-            icon={<DollarSign className="w-5 h-5 text-emerald-500" />}
+            subtitle="Active deal value"
+            icon={DollarSign}
           />
           <StatCard
             title="Win Rate"
             value={`${dashboard.winRatePercent ?? 34.8}%`}
-            change="+4.1%"
+            trendValue="+4.1%"
             trend="up"
-            description="Lead-to-deal conversion"
-            icon={<TrendingUp className="w-5 h-5 text-blue-500" />}
+            subtitle="Lead-to-deal conversion"
+            icon={TrendingUp}
           />
           <StatCard
             title="Target Attainment"
             value={`${dashboard.targetProgressPercent ?? 82}%`}
-            change="₹18.4L of ₹22.5L"
+            trendValue="₹18.4L of ₹22.5L"
             trend="neutral"
-            description="Quarterly sales quota"
-            icon={<Target className="w-5 h-5 text-amber-500" />}
+            subtitle="Quarterly sales quota"
+            icon={Target}
           />
         </div>
 
