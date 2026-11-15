@@ -32,6 +32,7 @@ import LeadFormModal from '../components/LeadFormModal';
 export default function LeadDetailsPage() {
   const { id, companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [activeTab, setActiveTab] = useState('overview');
   const [isActivityOpen, setIsActivityOpen] = useState(false);
@@ -75,7 +76,7 @@ export default function LeadDetailsPage() {
     return (
       <div className="p-8 text-center text-xs text-zinc-400 space-y-2">
         <p>Lead record not found.</p>
-        <button onClick={() => navigate('/sales-crm/leads')} className="text-primary hover:underline">
+        <button onClick={() => navigate(`${crmBase}/leads`)} className="text-primary hover:underline">
           Return to Leads
         </button>
       </div>
@@ -96,7 +97,7 @@ export default function LeadDetailsPage() {
       {/* Top Navigation */}
       <div className="flex items-center gap-2">
         <button
-          onClick={() => navigate('/sales-crm/leads')}
+          onClick={() => navigate(`${crmBase}/leads`)}
           className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]"
         >
           <ArrowLeft size={14} />
@@ -337,7 +338,7 @@ export default function LeadDetailsPage() {
         onClose={() => setIsConvertOpen(false)}
         lead={lead}
         companyId={companyId}
-        onSuccess={() => navigate('/sales-crm/opportunities')}
+        onSuccess={() => navigate(`${crmBase}/opportunities`)}
       />
 
       <LeadFormModal

@@ -23,6 +23,7 @@ import AccountFormModal from '../components/AccountFormModal';
 export default function AccountsPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTier, setSelectedTier] = useState('');
@@ -65,7 +66,7 @@ export default function AccountsPage() {
         return (
           <div className="space-y-0.5">
             <button
-              onClick={() => navigate(`/sales-crm/accounts/${acc.id}`)}
+              onClick={() => navigate(`${crmBase}/accounts/${acc.id}`)}
               className="font-semibold text-zinc-900 dark:text-white hover:text-primary text-xs text-left block transition-colors"
             >
               {acc.accountName || acc.name}
@@ -160,7 +161,7 @@ export default function AccountsPage() {
               <Edit2 size={13} />
             </button>
             <button
-              onClick={() => navigate(`/sales-crm/accounts/${acc.id}`)}
+              onClick={() => navigate(`${crmBase}/accounts/${acc.id}`)}
               className="p-1.5 text-zinc-500 hover:text-primary hover:bg-zinc-100 dark:hover:bg-[#1C202B] rounded transition-colors"
               title="View Account Dossier"
             >

@@ -34,6 +34,7 @@ import LeadImportModal from '../components/LeadImportModal';
 export default function LeadsPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -112,7 +113,7 @@ export default function LeadsPage() {
         return (
           <div className="space-y-0.5">
             <button
-              onClick={() => navigate(`/sales-crm/leads/${lead.id}`)}
+              onClick={() => navigate(`${crmBase}/leads/${lead.id}`)}
               className="font-semibold text-zinc-900 dark:text-white hover:text-primary text-left text-xs block transition-colors"
             >
               {name}

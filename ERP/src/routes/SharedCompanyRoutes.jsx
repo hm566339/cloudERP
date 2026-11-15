@@ -1,13 +1,26 @@
 import React, { lazy } from 'react';
-import { Route, Navigate, Outlet } from 'react-router-dom';
+import { Route, Navigate, Outlet, useParams } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import PurchaseModuleLayout from '../components/common/PurchaseModuleLayout';
+import { SharedCrmRoutes } from './SharedCrmRoutes';
 
 const InventoryWrapper = () => (
   <div className="flex-1 min-h-0 min-w-0 flex flex-col w-full h-full">
     <Outlet />
   </div>
 );
+
+/**
+ * Company-aware redirect component.
+ * Preserves the /company/:companyId context when nested under CompanyLayout,
+ * and falls back to root-relative path when at top-level.
+ */
+function CompanyRedirect({ to }) {
+  const { companyId } = useParams();
+  const clean = to.replace(/^\//, '');
+  const destination = companyId ? `/company/${encodeURIComponent(companyId)}/${clean}` : `/${clean}`;
+  return <Navigate to={destination} replace />;
+}
 
 // ─── HR ────────────────────────────────────────────────────────────────
 const HRDashboard = lazy(() => import('../features/hr/pages/HRDashboard'));
@@ -48,21 +61,6 @@ const GenericEntityDetails = lazy(() => import('../features/inventory/pages/Gene
 const WarehouseLocationManagementPage = lazy(() => import('../features/inventory/pages/WarehouseLocationManagementPage'));
 const StockTracking = lazy(() => import('../features/inventory/pages/StockTracking'));
 
-
-// ─── Sales & CRM ────────────────────────────────────────────────────────
-const SalesCRMDashboard = lazy(() => import('../features/sales/pages/SalesCRMDashboard'));
-const CustomerManagement = lazy(() => import("../features/account/pages/CustomerManagement"));
-const CustomerDetails = lazy(() => import("../features/account/pages/CustomerDetails"));
-const LeadTracking = lazy(() => import('../features/sales/pages/LeadTracking'));
-const QuotationsPage = lazy(() => import('../features/sales/pages/QuotationsPage'));
-const QuotationDetails = lazy(() => import('../features/sales/pages/QuotationDetails'));
-const SalesOrders = lazy(() => import("../features/sales/pages/SalesOrdersPage"));
-const CustomerCommunication = lazy(() => import('../features/sales/pages/CustomerCommunication'));
-const SalesAnalytics = lazy(() => import('../features/sales/pages/SalesAnalytics'));
-const SalesInvoices = lazy(() => import('../features/sales/pages/SalesInvoices'));
-const SalesInvoiceDetails = lazy(() => import('../features/sales/pages/SalesInvoiceDetails'));
-const InvoicePreviewPage = lazy(() => import('../features/sales/pages/InvoicePreviewPage'));
-
 // ─── Purchase Management ────────────────────────────────────────────────
 const PurchaseDashboard = lazy(() => import('../features/purchase/pages/PurchaseDashboard'));
 const VendorManagement = lazy(() => import('../features/account/pages/VendorManagement'));
@@ -89,19 +87,17 @@ const ManufacturingDashboard = lazy(() => import('../features/manufacturing/page
 const ProductionPage = lazy(() => import('../features/manufacturing/pages/ProductionPage'));
 const BatchesPage = lazy(() => import('../features/manufacturing/pages/BatchesPage'));
 
-// ─── Audit ──────────────────────────────────────────────────────────────
+// ─── Audit & Workflows ──────────────────────────────────────────────────
 const AuditLogsPage = lazy(() => import('../features/audit/pages/AuditLogsPage'));
 const WorkflowManagementPage = lazy(() => import('../features/workflows/pages/WorkflowManagementPage'));
 const ApprovalRequestsPage = lazy(() => import('../features/workflows/pages/ApprovalRequestsPage'));
 const DynamicWorkflowPage = lazy(() => import('../features/workflows/pages/DynamicWorkflowPage'));
 
 export default function SharedCompanyRoutes({ prefix = "" }) {
-  const toPath = (sub) => ('/' + prefix + sub).replace(/\/{2,}/g, '/');
-
   return (
     <>
       {/* HR & Employee */}
-      <Route path={`${prefix}hr`} element={<Navigate to={toPath('hr/dashboard')} replace />} />
+      <Route path={`${prefix}hr`} element={<CompanyRedirect to="hr/dashboard" />} />
       <Route path={`${prefix}hr/dashboard`} element={<ProtectedRoute module="HR"><HRDashboard /></ProtectedRoute>} />
       <Route path={`${prefix}hr/profile`} element={<ProtectedRoute module="HR"><EmployeeProfile /></ProtectedRoute>} />
       <Route path={`${prefix}hr/employees`} element={<ProtectedRoute module="HR"><EmployeeList /></ProtectedRoute>} />
@@ -118,7 +114,7 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
 
       {/* Inventory */}
       <Route element={<InventoryWrapper />}>
-        <Route path={`${prefix}inventory`} element={<Navigate to={toPath('inventory/dashboard')} replace />} />
+        <Route path={`${prefix}inventory`} element={<CompanyRedirect to="inventory/dashboard" />} />
         <Route path={`${prefix}inventory/dashboard`} element={<ProtectedRoute module="INVENTORY"><InventoryDashboard /></ProtectedRoute>} />
         <Route path={`${prefix}inventory/unit-of-measures`} element={<ProtectedRoute module="PRODUCT_UOMS"><UnitOfMeasureManagement /></ProtectedRoute>} />
         <Route path={`${prefix}inventory/unit-of-measures/:id`} element={<ProtectedRoute module="PRODUCT_UOMS"><GenericEntityDetails endpoint="/api/inventory/unit-of-measures" entityName="Unit of Measure" /></ProtectedRoute>} />
@@ -165,55 +161,36 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
         <Route path={`${prefix}inventory/inventory-posting`} element={<ProtectedRoute module="INVENTORY_POSTING"><InventoryDashboard /></ProtectedRoute>} />
 
         {/* Inventory convenience aliases */}
-        <Route path={`${prefix}inventory/movements`} element={<Navigate to={toPath('inventory/stock-movements')} replace />} />
-        <Route path={`${prefix}inventory/adjustments`} element={<Navigate to={toPath('inventory/stock-adjustments')} replace />} />
-        <Route path={`${prefix}inventory/transfers`} element={<Navigate to={toPath('inventory/stock-transfers')} replace />} />
-        <Route path={`${prefix}inventory/valuation`} element={<Navigate to={toPath('inventory/valuations')} replace />} />
+        <Route path={`${prefix}inventory/movements`} element={<CompanyRedirect to="inventory/stock-movements" />} />
+        <Route path={`${prefix}inventory/adjustments`} element={<CompanyRedirect to="inventory/stock-adjustments" />} />
+        <Route path={`${prefix}inventory/transfers`} element={<CompanyRedirect to="inventory/stock-transfers" />} />
+        <Route path={`${prefix}inventory/valuation`} element={<CompanyRedirect to="inventory/valuations" />} />
         <Route path={`${prefix}inventory/warehouses`} element={<ProtectedRoute module="WAREHOUSES"><WarehouseManagement /></ProtectedRoute>} />
       </Route>
 
-      {/* Sales & CRM */}
-      <Route path={`${prefix}sales`} element={<Navigate to={toPath('sales-crm/dashboard')} replace />} />
-      <Route path={`${prefix}sales/quotations`} element={<Navigate to={toPath('sales-crm/quotations')} replace />} />
-      <Route path={`${prefix}sales/orders`} element={<Navigate to={toPath('sales-crm/orders')} replace />} />
-      <Route path={`${prefix}sales/delivery-challans`} element={<Navigate to={toPath('accounts/transactions/delivery-challans')} replace />} />
-      <Route path={`${prefix}sales/invoices`} element={<Navigate to={toPath('sales-crm/invoices')} replace />} />
-      <Route path={`${prefix}sales-crm`} element={<Navigate to={toPath('sales-crm/dashboard')} replace />} />
-      <Route path={`${prefix}sales-crm/dashboard`} element={<ProtectedRoute module="CRM"><SalesCRMDashboard /></ProtectedRoute>} />
-      <Route path={`${prefix}sales-crm/customers`} element={<ProtectedRoute module="CUSTOMERS"><CustomerManagement /></ProtectedRoute>} />
-      <Route path={`${prefix}sales-crm/customers/:id`} element={<ProtectedRoute module="CUSTOMERS"><CustomerDetails /></ProtectedRoute>} />
-      <Route path={`${prefix}sales-crm/leads`} element={<ProtectedRoute module="LEADS"><LeadTracking /></ProtectedRoute>} />
-      <Route path={`${prefix}sales-crm/quotations`} element={<ProtectedRoute module="QUOTATIONS"><QuotationsPage /></ProtectedRoute>} />
-      <Route path={`${prefix}sales-crm/quotations/:id`} element={<ProtectedRoute module="QUOTATIONS"><QuotationDetails /></ProtectedRoute>} />
-      <Route path={`${prefix}sales-crm/orders`} element={<ProtectedRoute module="SALES_ORDERS"><SalesOrders /></ProtectedRoute>} />
-      <Route
-        path={`${prefix}sales-crm/communication`}
-        element={<ProtectedRoute module="COMMUNICATION"><CustomerCommunication /></ProtectedRoute>}
-      />
-      <Route path={`${prefix}sales-crm/analytics`} element={<ProtectedRoute module="ANALYTICS"><SalesAnalytics /></ProtectedRoute>} />
-      <Route path={`${prefix}sales-crm/invoices`} element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoices /></ProtectedRoute>} />
-      <Route
-        path={`${prefix}sales-crm/invoices/create-from-order/:salesOrderId`}
-        element={<ProtectedRoute module="SALES_INVOICES"><InvoicePreviewPage /></ProtectedRoute>}
-      />
-      <Route
-        path={`${prefix}sales-crm/invoices/:id`}
-        element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoiceDetails /></ProtectedRoute>}
-      />
-      <Route
-        path={`${prefix}sales-crm/audit`}
-        element={<ProtectedRoute module="AUDIT_LOGS"><AuditLogsPage moduleFilter="Sales" /></ProtectedRoute>}
-      />
+      {/* ─── Sales & CRM Module ─── */}
+      {/* Convenience redirects & aliases */}
+      <Route path={`${prefix}sales`} element={<CompanyRedirect to="sales-crm/dashboard" />} />
+      <Route path={`${prefix}sales-crm`} element={<CompanyRedirect to="sales-crm/dashboard" />} />
+      <Route path={`${prefix}crm`} element={<CompanyRedirect to="sales-crm/dashboard" />} />
+      <Route path={`${prefix}sales/quotations`} element={<CompanyRedirect to="sales-crm/quotations" />} />
+      <Route path={`${prefix}sales/orders`} element={<CompanyRedirect to="sales-crm/orders" />} />
+      <Route path={`${prefix}sales/invoices`} element={<CompanyRedirect to="sales-crm/invoices" />} />
+      <Route path={`${prefix}sales/delivery-challans`} element={<CompanyRedirect to="accounts/transactions/delivery-challans" />} />
+
+      {/* Unified Enterprise Sales & CRM routes for /sales-crm/* and /crm/* */}
+      {SharedCrmRoutes({ prefix: `${prefix}sales-crm/` })}
+      {SharedCrmRoutes({ prefix: `${prefix}crm/` })}
 
       {/* Purchase Management */}
-      <Route path={`${prefix}purchase`} element={<Navigate to={toPath('purchases/dashboard')} replace />} />
-      <Route path={`${prefix}purchase/requisitions`} element={<Navigate to={toPath('purchases/requisitions')} replace />} />
-      <Route path={`${prefix}purchase/rfqs`} element={<Navigate to={toPath('purchases/rfqs')} replace />} />
-      <Route path={`${prefix}purchase/orders`} element={<Navigate to={toPath('purchases/purchase-orders')} replace />} />
-      <Route path={`${prefix}purchase/grn`} element={<Navigate to={toPath('purchases/goods-receipts')} replace />} />
-      <Route path={`${prefix}purchase/invoices`} element={<Navigate to={toPath('purchases/invoices')} replace />} />
-      <Route path={`${prefix}purchase/payments`} element={<Navigate to={toPath('purchases/payments')} replace />} />
-      <Route path={`${prefix}purchases`} element={<Navigate to={toPath('purchases/dashboard')} replace />} />
+      <Route path={`${prefix}purchase`} element={<CompanyRedirect to="purchases/dashboard" />} />
+      <Route path={`${prefix}purchase/requisitions`} element={<CompanyRedirect to="purchases/requisitions" />} />
+      <Route path={`${prefix}purchase/rfqs`} element={<CompanyRedirect to="purchases/rfqs" />} />
+      <Route path={`${prefix}purchase/orders`} element={<CompanyRedirect to="purchases/purchase-orders" />} />
+      <Route path={`${prefix}purchase/grn`} element={<CompanyRedirect to="purchases/goods-receipts" />} />
+      <Route path={`${prefix}purchase/invoices`} element={<CompanyRedirect to="purchases/invoices" />} />
+      <Route path={`${prefix}purchase/payments`} element={<CompanyRedirect to="purchases/payments" />} />
+      <Route path={`${prefix}purchases`} element={<CompanyRedirect to="purchases/dashboard" />} />
       <Route path={`${prefix}purchases/dashboard`} element={<ProtectedRoute module="PURCHASES"><PurchaseDashboard /></ProtectedRoute>} />
       <Route path={`${prefix}purchases/vendors`} element={<ProtectedRoute module="VENDORS"><VendorManagement /></ProtectedRoute>} />
       <Route element={<PurchaseModuleLayout />}>
@@ -245,7 +222,7 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       </Route>
 
       {/* Manufacturing */}
-      <Route path={`${prefix}manufacturing`} element={<Navigate to={toPath('manufacturing/dashboard')} replace />} />
+      <Route path={`${prefix}manufacturing`} element={<CompanyRedirect to="manufacturing/dashboard" />} />
       <Route path={`${prefix}manufacturing/dashboard`} element={<ProtectedRoute module="MANUFACTURING"><ManufacturingDashboard /></ProtectedRoute>} />
       <Route path={`${prefix}manufacturing/production`} element={<ProtectedRoute module="MANUFACTURING"><ProductionPage /></ProtectedRoute>} />
       <Route path={`${prefix}manufacturing/batches`} element={<ProtectedRoute module="MANUFACTURING"><BatchesPage /></ProtectedRoute>} />
@@ -255,8 +232,8 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       <Route path={`${prefix}workflows/approvals`} element={<ProtectedRoute module="WORKFLOW"><ApprovalRequestsPage /></ProtectedRoute>} />
       <Route path={`${prefix}workflows/transactions/:transactionId`} element={<ProtectedRoute module="WORKFLOW"><DynamicWorkflowPage /></ProtectedRoute>} />
       <Route path={`${prefix}workflows/document/:documentType/:documentId`} element={<ProtectedRoute module="WORKFLOW"><DynamicWorkflowPage /></ProtectedRoute>} />
-      <Route path={`${prefix}workflow`} element={<Navigate to={toPath('workflows')} replace />} />
-      <Route path={`${prefix}workflow/approvals`} element={<Navigate to={toPath('workflows/approvals')} replace />} />
+      <Route path={`${prefix}workflow`} element={<CompanyRedirect to="workflows" />} />
+      <Route path={`${prefix}workflow/approvals`} element={<CompanyRedirect to="workflows/approvals" />} />
     </>
   );
 }

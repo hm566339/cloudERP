@@ -40,6 +40,7 @@ const PIE_COLORS = ['#6366F1', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#8B5
 export default function CrmDashboardPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isOppModalOpen, setIsOppModalOpen] = useState(false);
@@ -260,7 +261,7 @@ export default function CrmDashboardPage() {
               <p className="text-xs text-zinc-500">Latest leads qualified & assigned</p>
             </div>
             <button
-              onClick={() => navigate('/sales-crm/leads')}
+              onClick={() => navigate(`${crmBase}/leads`)}
               className="text-xs text-primary font-semibold hover:underline flex items-center gap-1"
             >
               View All Leads <ArrowRight size={13} />
@@ -283,7 +284,7 @@ export default function CrmDashboardPage() {
               <p className="text-xs text-zinc-500">Follow-ups & action items</p>
             </div>
             <button
-              onClick={() => navigate('/sales-crm/tasks')}
+              onClick={() => navigate(`${crmBase}/tasks`)}
               className="text-xs text-primary font-semibold hover:underline flex items-center gap-1"
             >
               All Tasks <ArrowRight size={13} />

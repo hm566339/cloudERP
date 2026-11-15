@@ -8,6 +8,7 @@ import PipelineFormModal from '../components/PipelineFormModal';
 export default function PipelinesPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const { data: pipelinesRes, isLoading, refetch } = useGetCrmPipelinesQuery(companyId);
@@ -17,7 +18,7 @@ export default function PipelinesPage() {
     <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
       <div className="flex items-center gap-2">
         <button
-          onClick={() => navigate('/sales-crm/opportunities')}
+          onClick={() => navigate(`${crmBase}/opportunities`)}
           className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]"
         >
           <ArrowLeft size={14} />

@@ -21,6 +21,7 @@ import ContactFormModal from '../components/ContactFormModal';
 export default function ContactsPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
@@ -62,7 +63,7 @@ export default function ContactsPage() {
           <div className="flex items-center gap-1.5 text-xs text-zinc-700 dark:text-[#A0A6B5]">
             <Building2 size={12} className="text-zinc-400" />
             <button
-              onClick={() => c.accountId && navigate(`/sales-crm/accounts/${c.accountId}`)}
+              onClick={() => c.accountId && navigate(`${crmBase}/accounts/${c.accountId}`)}
               className="hover:text-primary hover:underline font-medium"
             >
               {c.accountName || 'Independent'}

@@ -25,6 +25,7 @@ import QuotationPrintModal from '../components/QuotationPrintModal';
 export default function QuotationsPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -71,7 +72,7 @@ export default function QuotationsPage() {
         return (
           <div className="space-y-0.5">
             <button
-              onClick={() => navigate(`/sales-crm/quotations/${q.id}`)}
+              onClick={() => navigate(`${crmBase}/quotations/${q.id}`)}
               className="font-semibold text-zinc-900 dark:text-white hover:text-primary text-xs text-left block transition-colors"
             >
               {q.quotationNumber || 'Draft Quote'}
@@ -161,7 +162,7 @@ export default function QuotationsPage() {
             </button>
 
             <button
-              onClick={() => navigate(`/sales-crm/quotations/${q.id}`)}
+              onClick={() => navigate(`${crmBase}/quotations/${q.id}`)}
               className="p-1.5 text-zinc-500 hover:text-primary rounded"
               title="View Details"
             >

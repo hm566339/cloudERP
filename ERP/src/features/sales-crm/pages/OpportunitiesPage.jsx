@@ -27,6 +27,7 @@ import {
 export default function OpportunitiesPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'table'
   const [selectedPipelineId, setSelectedPipelineId] = useState('');
@@ -170,7 +171,7 @@ export default function OpportunitiesPage() {
         actions={
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/sales-crm/pipelines')}
+              onClick={() => navigate(`${crmBase}/pipelines`)}
               className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
             >
               <Layers size={13} /> Configure Pipelines

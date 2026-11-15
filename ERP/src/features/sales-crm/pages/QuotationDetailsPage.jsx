@@ -23,6 +23,7 @@ import QuotationPrintModal from '../components/QuotationPrintModal';
 export default function QuotationDetailsPage() {
   const { id, companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [isApprovalOpen, setIsApprovalOpen] = useState(false);
   const [isPrintOpen, setIsPrintOpen] = useState(false);
@@ -41,7 +42,7 @@ export default function QuotationDetailsPage() {
     return (
       <div className="p-8 text-center text-xs text-zinc-400 space-y-2">
         <p>Quotation not found.</p>
-        <button onClick={() => navigate('/sales-crm/quotations')} className="text-primary hover:underline">
+        <button onClick={() => navigate(`${crmBase}/quotations`)} className="text-primary hover:underline">
           Return to Quotations
         </button>
       </div>
@@ -65,7 +66,7 @@ export default function QuotationDetailsPage() {
     <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
       <div className="flex items-center gap-2">
         <button
-          onClick={() => navigate('/sales-crm/quotations')}
+          onClick={() => navigate(`${crmBase}/quotations`)}
           className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]"
         >
           <ArrowLeft size={14} />

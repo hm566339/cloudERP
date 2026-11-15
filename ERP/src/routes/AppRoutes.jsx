@@ -832,19 +832,6 @@ export default function AppRoutes() {
             {SharedInventoryRoutes({ prefix: "" })}
             {SharedInventoryRoutes({ prefix: "inventory/" })}
 
-            {/* Sales & CRM Enterprise Microservice Routes */}
-            <Route path="/crm" element={<Navigate to="/sales-crm/dashboard" replace />} />
-            <Route path="/sales-crm" element={<Navigate to="/sales-crm/dashboard" replace />} />
-            {SharedCrmRoutes({ prefix: "sales-crm/" })}
-            {SharedCrmRoutes({ prefix: "crm/" })}
-            {/* Backward-compatible legacy receivables/finance endpoints */}
-            <Route path="/crm/customers" element={<ProtectedRoute module="CUSTOMERS"><CustomerManagement /></ProtectedRoute>} />
-            <Route path="/crm/customers/:id" element={<ProtectedRoute module="CUSTOMERS"><CustomerDetails /></ProtectedRoute>} />
-            <Route path="/crm/orders" element={<ProtectedRoute module="SALES_ORDERS"><SalesOrders /></ProtectedRoute>} />
-            <Route path="/crm/analytics" element={<ProtectedRoute module="ANALYTICS"><SalesAnalytics /></ProtectedRoute>} />
-            <Route path="/crm/invoices" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoices /></ProtectedRoute>} />
-            <Route path="/crm/invoices/:id" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoiceDetails /></ProtectedRoute>} />
-            <Route path="/crm/audit" element={<ProtectedRoute module="AUDIT_LOGS"><AuditLogsPage /></ProtectedRoute>} />
 
             {/* Direct Procurement Routes */}
             <Route element={<PurchaseModuleLayout />}>

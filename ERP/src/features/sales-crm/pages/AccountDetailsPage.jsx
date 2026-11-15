@@ -29,6 +29,7 @@ import QuotationFormModal from '../components/QuotationFormModal';
 export default function AccountDetailsPage() {
   const { id, companyId } = useParams();
   const navigate = useNavigate();
+  const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [activeTab, setActiveTab] = useState('contacts');
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -55,7 +56,7 @@ export default function AccountDetailsPage() {
     return (
       <div className="p-8 text-center text-xs text-zinc-400 space-y-2">
         <p>Account record not found.</p>
-        <button onClick={() => navigate('/sales-crm/accounts')} className="text-primary hover:underline">
+        <button onClick={() => navigate(`${crmBase}/accounts`)} className="text-primary hover:underline">
           Return to Accounts
         </button>
       </div>
@@ -137,7 +138,7 @@ export default function AccountDetailsPage() {
     <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
       <div className="flex items-center gap-2">
         <button
-          onClick={() => navigate('/sales-crm/accounts')}
+          onClick={() => navigate(`${crmBase}/accounts`)}
           className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]"
         >
           <ArrowLeft size={14} />
