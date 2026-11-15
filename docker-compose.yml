@@ -428,6 +428,66 @@ services:
       - erp-network
 
   # ----------------------------------------------------------------------------
+  # 7c. Sales and CRM Service (Internal only)
+  # ----------------------------------------------------------------------------
+  sales-crm:
+    image: ${IMAGE_SALES_CRM:-mohit950/clouderp:sales-crm-${TAG:-latest}}
+    build:
+      context: ./sales-crm
+      dockerfile: Dockerfile
+    container_name: erp-sales-crm
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/crm_db?stringtype=unspecified
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      SSO_BACKEND: http://auth-service:8090
+      COOKIE_PATH: ${COOKIE_PATH:-/}
+      SSO_CLIENT_ID: ${CRM_SSO_CLIENT_ID:-}
+      SSO_CLIENT_SECRET: ${CRM_SSO_CLIENT_SECRET:-}
+      FRONTEND_URL: ${CRM_FRONTEND_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/sales-crm}
+      SSO_FRONTEND: ${CRM_SSO_FRONTEND:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/sales-crm}
+      BASE_URL: ${CRM_BASE_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/api/crm}
+      SSO_LOGIN_URL: ${CRM_SSO_LOGIN_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/login}
+      SSO_TRANSPORT: ${CRM_SSO_TRANSPORT:-cookie}
+      SSO_CALLBACK_PATH: ${CRM_SSO_CALLBACK_PATH:-/auth/callback}
+      SSO_COOKIE_NAME: ${CRM_SSO_COOKIE_NAME:-ACCESS_TOKEN}
+      SSO_COOKIE_PATH: ${CRM_SSO_COOKIE_PATH:-/}
+      SSO_COOKIE_SECURE: ${CRM_SSO_COOKIE_SECURE:-false}
+      SSO_COOKIE_HTTP_ONLY: ${CRM_SSO_COOKIE_HTTP_ONLY:-true}
+      SSO_COOKIE_SAME_SITE: ${CRM_SSO_COOKIE_SAME_SITE:-Lax}
+      SSO_MODULE_NAME: ${CRM_SSO_MODULE_NAME:-CRM}
+      CORE_SERVICE_URL: http://account-service:8081
+      WORKFLOW_SERVICE_URL: http://workflow-service:8083
+      INVENTORY_SERVICE_URL: http://inventory-service:8082
+      COMMUNICATION_SERVICE_URL: http://communication-service:8084
+      WORKFLOW_CALLBACK_SECRET: ${WORKFLOW_CALLBACK_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8086/actuator/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      erp-network:
+        aliases:
+          - sales-crm
+          - crm-service
+
+  # ----------------------------------------------------------------------------
   # 8. Frontend Client & Subpath Reverse Proxy (Binds to 127.0.0.1:3001)
   # ----------------------------------------------------------------------------
   frontend:

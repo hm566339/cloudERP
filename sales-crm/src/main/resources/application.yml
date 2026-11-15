@@ -1,0 +1,96 @@
+crm:
+  seed:
+    master-data: true
+
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME:sales-crm}
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:classpath:application-sso-auth.yml
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:crm_db}?stringtype=unspecified}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: CrmHikariCP
+      data-source-properties:
+        stringtype: unspecified
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8086}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+frontend:
+  url: ${FRONTEND_URL:${PUBLIC_BASE_URL:https://www.mark2.in}/erp/sales-crm}
+
+sso:
+  frontend: ${SSO_FRONTEND:${FRONTEND_URL:${PUBLIC_BASE_URL:https://www.mark2.in}/erp/sales-crm}}
+  backend: ${SSO_BACKEND:http://auth-service:8090}
+  cookie: ${COOKIE_PATH:/}
+  base-url: ${BASE_URL:${PUBLIC_BASE_URL:https://www.mark2.in}/api/crm}
+  login-url: ${SSO_LOGIN_URL:${PUBLIC_BASE_URL:https://www.mark2.in}/erp/login}
+  client-id: ${SSO_CLIENT_ID:}
+  client-secret: ${SSO_CLIENT_SECRET:}
+  transport: ${SSO_TRANSPORT:cookie}
+  callback-path: ${SSO_CALLBACK_PATH:/auth/callback}
+  cookie-name: ${SSO_COOKIE_NAME:ACCESS_TOKEN}
+  cookie-path: ${SSO_COOKIE_PATH:/}
+  cookie-secure: ${SSO_COOKIE_SECURE:false}
+  cookie-http-only: ${SSO_COOKIE_HTTP_ONLY:true}
+  cookie-same-site: ${SSO_COOKIE_SAME_SITE:Lax}
+  module-name: ${SSO_MODULE_NAME:CRM}
+
+services:
+  workflow:
+    url: ${WORKFLOW_SERVICE_URL:http://workflow-service:8083}
+    callback-secret: ${WORKFLOW_CALLBACK_SECRET:crm-workflow-callback-secret}
+  inventory:
+    url: ${INVENTORY_SERVICE_URL:http://inventory-service:8082}
+  account:
+    url: ${ACCOUNT_SERVICE_URL:http://account-service:8081}
+  communication:
+    url: ${COMMUNICATION_SERVICE_URL:http://communication-service:8084}
+
+jwt:
+  secret: ${JWT_SECRET:defaultSecretKeyWithAtLeast32CharactersForHmacSha256}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: INFO
+    com.erp.crm: DEBUG
+

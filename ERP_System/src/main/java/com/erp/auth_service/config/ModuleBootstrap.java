@@ -76,7 +76,7 @@ public class ModuleBootstrap implements CommandLineRunner {
                 bootstrapRouteIfMissing("WORKFLOW", "/api/workflow/**",
                                 "http://workflow-service:8083");
                 bootstrapModuleIfMissing("CRM", "crm-service.local", "/api/crm/**",
-                                "http://crm-service:8084");
+                                "http://sales-crm:8086");
                 bootstrapModuleIfMissing("MANUFACTURING", "manufacturing-service.local", "/api/manufacturing/**",
                                 "http://manufacturing-service:8085");
                 bootstrapRouteIfMissing("MANUFACTURING", "/api/boms/**",

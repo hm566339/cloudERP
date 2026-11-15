@@ -1,0 +1,63 @@
+sso:
+  authorization:
+    modules:
+      CRM_LEADS:
+        - "/api/crm/leads/**"
+      CRM_ACCOUNTS:
+        - "/api/crm/accounts/**"
+      CRM_CONTACTS:
+        - "/api/crm/contacts/**"
+      CRM_OPPORTUNITIES:
+        - "/api/crm/opportunities/**"
+      CRM_PIPELINES:
+        - "/api/crm/pipelines/**"
+      CRM_ACTIVITIES:
+        - "/api/crm/activities/**"
+      CRM_TASKS:
+        - "/api/crm/tasks/**"
+      CRM_COMMUNICATION:
+        - "/api/crm/communication/**"
+      CRM_QUOTATIONS:
+        - "/api/crm/quotations/**"
+      CRM_CAMPAIGNS:
+        - "/api/crm/campaigns/**"
+      CRM_AUTOMATION:
+        - "/api/crm/automation/**"
+      CRM_SETTINGS:
+        - "/api/crm/settings/**"
+      CRM_INTEGRATIONS:
+        - "/api/crm/integrations/**"
+      CRM_DASHBOARD:
+        - "/api/crm/dashboard"
+        - "/api/crm/dashboard/**"
+
+    method-actions:
+      GET:
+        - "READ"
+      POST:
+        - "CREATE"
+        - "WRITE"
+      PUT:
+        - "UPDATE"
+        - "WRITE"
+      PATCH:
+        - "UPDATE"
+        - "WRITE"
+      DELETE:
+        - "DELETE"
+
+    custom-action-suffixes:
+      "/assign": "ASSIGN"
+      "/merge": "MERGE"
+      "/convert": "CONVERT"
+      "/close": "CLOSE"
+      "/stage": "UPDATE"
+      "/status": "UPDATE"
+      "/submit-approval": "SUBMIT_APPROVAL"
+      "/convert-to-sales-order": "CONVERT_ORDER"
+      "/onboard-erp": "ONBOARD"
+      "/sync": "EXECUTE"
+      "/send": "SEND"
+
+    write-implies-create-update: false
+
