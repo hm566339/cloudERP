@@ -96,67 +96,62 @@ export default function QuotationsPage() {
   const columns = useMemo(() => [
     {
       id: 'quotationNumber',
-      header: 'Quote # & Title',
-      accessorKey: 'quotationNumber',
+      label: 'Quote # & Title',
       sortable: true,
-      cell: ({ row }) => {
-        const q = row.original;
+      render: (val, q) => {
         return (
           <div className="space-y-0.5">
             <button
-              onClick={() => navigate(`${crmBase}/quotations/${q.id}`)}
+              onClick={() => navigate(`${crmBase}/quotations/${q?.id}`)}
               className="font-semibold text-zinc-900 dark:text-white hover:text-primary text-xs text-left block transition-colors"
             >
-              {q.quotationNumber || 'Draft Quote'}
+              {q?.quotationNumber || val || 'Draft Quote'}
             </button>
-            <span className="text-[11px] text-zinc-500 block truncate max-w-xs">{q.title || 'Standard Commercial Supply'}</span>
+            <span className="text-[11px] text-zinc-500 block truncate max-w-xs">{q?.title || 'Standard Commercial Supply'}</span>
           </div>
         );
       },
     },
     {
       id: 'accountName',
-      header: 'Client Account',
-      accessorKey: 'accountName',
+      label: 'Client Account',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, q) => (
         <span className="text-xs font-medium text-zinc-800 dark:text-[#E6E8EE]">
-          {row.original.accountName || 'Direct Customer'}
+          {q?.accountName || val || 'Direct Customer'}
         </span>
       ),
     },
     {
       id: 'totalAmount',
-      header: 'Total Value (₹)',
-      accessorKey: 'totalAmount',
+      label: 'Total Value (₹)',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, q) => (
         <div className="space-y-0.5 text-xs">
           <span className="font-mono font-bold text-primary block">
-            ₹{(row.original.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            ₹{Number(q?.totalAmount ?? val ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </span>
           <span className="text-[11px] text-zinc-400 font-mono">
-            Taxes: ₹{(row.original.taxAmount || 0).toLocaleString('en-IN')}
+            Taxes: ₹{Number(q?.taxAmount ?? 0).toLocaleString('en-IN')}
           </span>
         </div>
       ),
     },
     {
       id: 'taxAmount',
-      header: 'Tax Amount',
-      accessorKey: 'taxAmount',
-      cell: ({ row }) => (
+      label: 'Tax Amount',
+      render: (val, q) => (
         <span className="text-xs font-mono text-zinc-500">
-          ₹{(row.original.taxAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          ₹{Number(q?.taxAmount ?? val ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
         </span>
       ),
     },
     {
       id: 'status',
-      header: 'Status',
-      accessorKey: 'status',
-      cell: ({ row }) => {
-        const s = row.original.status || 'DRAFT';
+      label: 'Status',
+      sortable: true,
+      render: (val, q) => {
+        const s = q?.status || (typeof val === 'string' ? val : 'DRAFT');
         let statusType = 'neutral';
         if (s === 'APPROVED') statusType = 'success';
         else if (s === 'PENDING_APPROVAL') statusType = 'warning';

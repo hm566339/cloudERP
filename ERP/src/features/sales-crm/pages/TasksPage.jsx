@@ -105,16 +105,14 @@ export default function TasksPage() {
   const columns = useMemo(() => [
     {
       id: 'title',
-      header: 'Task Title & Description',
-      accessorKey: 'title',
+      label: 'Task Title & Description',
       sortable: true,
-      cell: ({ row }) => {
-        const t = row.original;
-        const isCompleted = t.status === 'COMPLETED';
+      render: (val, t) => {
+        const isCompleted = t?.status === 'COMPLETED';
         return (
           <div className="flex items-start gap-2.5">
             <button
-              onClick={() => !isCompleted && handleToggleComplete(t.id)}
+              onClick={() => !isCompleted && handleToggleComplete(t?.id)}
               disabled={isCompleted}
               className={`mt-0.5 rounded transition-colors ${
                 isCompleted ? 'text-emerald-500' : 'text-zinc-400 hover:text-emerald-500'
@@ -124,9 +122,9 @@ export default function TasksPage() {
             </button>
             <div className="space-y-0.5">
               <span className={`font-semibold text-xs block ${isCompleted ? 'line-through text-zinc-400' : 'text-zinc-900 dark:text-white'}`}>
-                {t.title}
+                {t?.title || val}
               </span>
-              {t.description && <span className="text-[11px] text-zinc-500 block">{t.description}</span>}
+              {t?.description && <span className="text-[11px] text-zinc-500 block">{t.description}</span>}
             </div>
           </div>
         );
@@ -134,22 +132,20 @@ export default function TasksPage() {
     },
     {
       id: 'entityType',
-      header: 'Target Entity',
-      accessorKey: 'entityType',
+      label: 'Target Entity',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, t) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-100 dark:bg-[#1C202B] text-zinc-700 dark:text-[#E6E8EE]">
-          {row.original.entityType || 'LEAD'}
+          {t?.entityType || val || 'LEAD'}
         </span>
       ),
     },
     {
       id: 'priority',
-      header: 'Priority',
-      accessorKey: 'priority',
+      label: 'Priority',
       sortable: true,
-      cell: ({ row }) => {
-        const p = row.original.priority || 'MEDIUM';
+      render: (val, t) => {
+        const p = t?.priority || val || 'MEDIUM';
         let statusType = 'neutral';
         if (p === 'URGENT') statusType = 'danger';
         else if (p === 'HIGH') statusType = 'warning';
@@ -165,12 +161,11 @@ export default function TasksPage() {
     },
     {
       id: 'dueDate',
-      header: 'Due Date',
-      accessorKey: 'dueDate',
+      label: 'Due Date',
       sortable: true,
-      cell: ({ row }) => {
-        const date = row.original.dueDate ? new Date(row.original.dueDate) : null;
-        const isOverdue = date && date < new Date() && row.original.status !== 'COMPLETED';
+      render: (val, t) => {
+        const date = t?.dueDate || val ? new Date(t?.dueDate || val) : null;
+        const isOverdue = date && date < new Date() && t?.status !== 'COMPLETED';
 
         return (
           <div className={`text-xs flex items-center gap-1 ${isOverdue ? 'text-rose-500 font-bold' : 'text-zinc-500'}`}>
@@ -182,13 +177,12 @@ export default function TasksPage() {
     },
     {
       id: 'status',
-      header: 'Status',
-      accessorKey: 'status',
+      label: 'Status',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, t) => (
         <DataTableStatusBadge
-          status={row.original.status || 'PENDING'}
-          variant={row.original.status === 'COMPLETED' ? 'success' : 'neutral'}
+          status={t?.status || val || 'PENDING'}
+          variant={t?.status === 'COMPLETED' ? 'success' : 'neutral'}
         />
       ),
     },

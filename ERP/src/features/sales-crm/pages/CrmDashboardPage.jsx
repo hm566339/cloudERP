@@ -75,33 +75,33 @@ export default function CrmDashboardPage() {
   const leadColumns = useMemo(() => [
     {
       id: 'displayName',
-      header: 'Lead Name',
-      accessorKey: 'displayName',
-      cell: ({ row }) => (
+      label: 'Lead Name',
+      sortable: true,
+      render: (val, lead) => (
         <div>
           <span className="font-semibold text-zinc-900 dark:text-white block text-xs">
-            {row.original.displayName || `${row.original.firstName || ''} ${row.original.lastName || ''}`.trim() || 'Anonymous Lead'}
+            {lead?.displayName || `${lead?.firstName || ''} ${lead?.lastName || ''}`.trim() || val || 'Anonymous Lead'}
           </span>
-          <span className="text-[11px] text-zinc-500">{row.original.organizationName || 'Individual'}</span>
+          <span className="text-[11px] text-zinc-500">{lead?.organizationName || 'Individual'}</span>
         </div>
       ),
     },
     {
       id: 'phone',
-      header: 'Contact',
-      accessorKey: 'phone',
-      cell: ({ row }) => (
+      label: 'Contact',
+      sortable: false,
+      render: (val, lead) => (
         <span className="font-mono text-xs text-zinc-700 dark:text-[#A0A6B5]">
-          {row.original.normalizedPhone || row.original.phone || row.original.email || 'N/A'}
+          {lead?.normalizedPhone || lead?.phone || lead?.email || val || 'N/A'}
         </span>
       ),
     },
     {
       id: 'leadScore',
-      header: 'Score',
-      accessorKey: 'leadScore',
-      cell: ({ row }) => {
-        const score = row.original.leadScore || 50;
+      label: 'Score',
+      sortable: true,
+      render: (val, lead) => {
+        const score = lead?.leadScore ?? val ?? 50;
         let color = 'bg-blue-500/10 text-blue-500';
         if (score >= 70) color = 'bg-emerald-500/10 text-emerald-500';
         else if (score < 40) color = 'bg-zinc-100 text-zinc-500';
@@ -115,11 +115,11 @@ export default function CrmDashboardPage() {
     },
     {
       id: 'leadStatus',
-      header: 'Status',
-      accessorKey: 'leadStatus',
-      cell: ({ row }) => (
+      label: 'Status',
+      sortable: false,
+      render: (val, lead) => (
         <DataTableStatusBadge
-          status={row.original.leadStatus?.statusName || 'NEW'}
+          status={lead?.leadStatus?.statusName || (typeof val === 'string' ? val : 'NEW')}
           variant="primary"
         />
       ),
@@ -205,8 +205,8 @@ export default function CrmDashboardPage() {
               </div>
               <span className="text-xs font-semibold text-primary">Live CRM Data</span>
             </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full h-64 min-w-0" style={{ minHeight: '256px' }}>
+              <ResponsiveContainer width="100%" height={256} minWidth={0} minHeight={256}>
                 <BarChart data={pipelineStagesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(val) => `₹${val / 1000}k`} />
@@ -228,8 +228,8 @@ export default function CrmDashboardPage() {
                 <p className="text-xs text-zinc-500">Top acquisition channels</p>
               </div>
             </div>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full h-52 min-w-0" style={{ minHeight: '208px' }}>
+              <ResponsiveContainer width="100%" height={208} minWidth={0} minHeight={208}>
                 <PieChart>
                   <Pie
                     data={leadSourcesData}

@@ -60,29 +60,27 @@ export default function CommunicationsPage() {
   const callColumns = useMemo(() => [
     {
       id: 'receiverNumber',
-      header: 'Phone / Direction',
-      accessorKey: 'receiverNumber',
+      label: 'Phone / Direction',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, row) => (
         <div className="space-y-0.5 text-xs">
           <span className="font-mono font-semibold text-zinc-900 dark:text-white block">
-            {row.original.receiverNumber}
+            {row?.receiverNumber || val}
           </span>
-          <span className="text-[11px] text-zinc-500 font-mono">From: {row.original.callerNumber}</span>
+          <span className="text-[11px] text-zinc-500 font-mono">From: {row?.callerNumber || '-'}</span>
         </div>
       ),
     },
     {
       id: 'callStatus',
-      header: 'Call Status',
-      accessorKey: 'callStatus',
+      label: 'Call Status',
       sortable: true,
-      cell: ({ row }) => {
-        const s = row.original.callStatus;
+      render: (val, row) => {
+        const s = row?.callStatus || val;
         const isAnswered = s === 'ANSWERED';
         return (
           <DataTableStatusBadge
-            status={s}
+            status={s || 'UNKNOWN'}
             variant={isAnswered ? 'success' : 'danger'}
           />
         );
@@ -90,11 +88,10 @@ export default function CommunicationsPage() {
     },
     {
       id: 'durationSeconds',
-      header: 'Duration',
-      accessorKey: 'durationSeconds',
+      label: 'Duration',
       sortable: true,
-      cell: ({ row }) => {
-        const sec = row.original.durationSeconds || 0;
+      render: (val, row) => {
+        const sec = row?.durationSeconds ?? val ?? 0;
         const mins = Math.floor(sec / 60);
         const remSec = sec % 60;
         return (
@@ -106,12 +103,11 @@ export default function CommunicationsPage() {
     },
     {
       id: 'createdAt',
-      header: 'Timestamp',
-      accessorKey: 'createdAt',
+      label: 'Timestamp',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, row) => (
         <span className="text-xs text-zinc-500">
-          {new Date(row.original.createdAt).toLocaleString()}
+          {row?.createdAt || val ? new Date(row?.createdAt || val).toLocaleString() : '-'}
         </span>
       ),
     },

@@ -74,51 +74,44 @@ export default function AutomationPage() {
   const ruleColumns = useMemo(() => [
     {
       id: 'ruleName',
-      header: 'Rule Name & Trigger',
-      accessorKey: 'ruleName',
+      label: 'Rule Name & Trigger',
       sortable: true,
-      cell: ({ row }) => {
-        const r = row.original;
-        return (
-          <div className="space-y-0.5">
-            <span className="font-semibold text-xs text-zinc-900 dark:text-white block">{r.ruleName}</span>
-            <span className="text-[11px] font-mono text-zinc-500 uppercase">{r.triggerEvent}</span>
-          </div>
-        );
-      },
+      render: (val, r) => (
+        <div className="space-y-0.5">
+          <span className="font-semibold text-xs text-zinc-900 dark:text-white block">{r?.ruleName || val}</span>
+          <span className="text-[11px] font-mono text-zinc-500 uppercase">{r?.triggerEvent}</span>
+        </div>
+      ),
     },
     {
       id: 'conditionExpression',
-      header: 'Condition Expression (SpEL)',
-      accessorKey: 'conditionExpression',
+      label: 'Condition Expression (SpEL)',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, r) => (
         <span className="font-mono text-xs text-zinc-700 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1C202B] px-2 py-0.5 rounded">
-          {row.original.conditionExpression || 'Always True (Default)'}
+          {r?.conditionExpression || val || 'Always True (Default)'}
         </span>
       ),
     },
     {
       id: 'actionType',
-      header: 'Automated Action',
-      accessorKey: 'actionType',
+      label: 'Automated Action',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, r) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-primary/10 text-primary">
-          {row.original.actionType?.replace(/_/g, ' ')}
+          {(r?.actionType || val)?.replace(/_/g, ' ')}
         </span>
       ),
     },
     {
       id: 'isActive',
-      header: 'Active State',
-      accessorKey: 'isActive',
+      label: 'Active State',
       sortable: true,
-      cell: ({ row }) => {
-        const active = row.original.isActive;
+      render: (val, r) => {
+        const active = r?.isActive ?? val;
         return (
           <button
-            onClick={() => handleToggleActive(row.original)}
+            onClick={() => handleToggleActive(r)}
             className="cursor-pointer focus:outline-none"
           >
             <DataTableStatusBadge
@@ -145,34 +138,31 @@ export default function AutomationPage() {
   const poolColumns = useMemo(() => [
     {
       id: 'poolName',
-      header: 'Pool Name',
-      accessorKey: 'poolName',
+      label: 'Pool Name',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, r) => (
         <span className="font-semibold text-xs text-zinc-900 dark:text-white">
-          {row.original.poolName}
+          {r?.poolName || val}
         </span>
       ),
     },
     {
       id: 'routingStrategy',
-      header: 'Routing Strategy',
-      accessorKey: 'routingStrategy',
+      label: 'Routing Strategy',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, r) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-zinc-100 dark:bg-[#1C202B] text-zinc-700 dark:text-[#E6E8EE]">
-          {row.original.routingStrategy}
+          {r?.routingStrategy || val}
         </span>
       ),
     },
     {
       id: 'members',
-      header: 'Active Reps',
-      accessorKey: 'members',
+      label: 'Active Reps',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, r) => (
         <span className="text-xs text-zinc-700 dark:text-[#A0A6B5]">
-          {(row.original.members || []).length} Sales Reps
+          {(r?.members || []).length} Sales Reps
         </span>
       ),
     },
@@ -181,34 +171,32 @@ export default function AutomationPage() {
   const logColumns = useMemo(() => [
     {
       id: 'triggerEvent',
-      header: 'Trigger Event',
-      accessorKey: 'triggerEvent',
+      label: 'Trigger Event',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, r) => (
         <span className="font-mono text-xs font-semibold text-zinc-900 dark:text-white">
-          {row.original.triggerEvent}
+          {r?.triggerEvent || val}
         </span>
       ),
     },
     {
       id: 'actionType',
-      header: 'Action Executed',
-      accessorKey: 'actionType',
+      label: 'Action Executed',
       sortable: true,
-      cell: ({ row }) => (
-        <span className="text-xs text-primary font-medium">{row.original.actionType}</span>
+      render: (val, r) => (
+        <span className="text-xs text-primary font-medium">{r?.actionType || val}</span>
       ),
     },
     {
       id: 'executionStatus',
-      header: 'Result Status',
-      accessorKey: 'executionStatus',
+      label: 'Result Status',
       sortable: true,
-      cell: ({ row }) => {
-        const success = row.original.executionStatus === 'SUCCESS';
+      render: (val, r) => {
+        const s = r?.executionStatus || val;
+        const success = s === 'SUCCESS';
         return (
           <DataTableStatusBadge
-            status={row.original.executionStatus || 'SUCCESS'}
+            status={s || 'SUCCESS'}
             variant={success ? 'success' : 'danger'}
           />
         );
@@ -216,12 +204,11 @@ export default function AutomationPage() {
     },
     {
       id: 'createdAt',
-      header: 'Timestamp',
-      accessorKey: 'createdAt',
+      label: 'Timestamp',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, r) => (
         <span className="text-xs text-zinc-500 font-mono">
-          {new Date(row.original.createdAt || Date.now()).toLocaleString()}
+          {r?.createdAt || val ? new Date(r?.createdAt || val).toLocaleString() : '-'}
         </span>
       ),
     },

@@ -56,69 +56,61 @@ export default function CampaignsPage() {
   const columns = useMemo(() => [
     {
       id: 'name',
-      header: 'Campaign & Code',
-      accessorKey: 'name',
+      label: 'Campaign & Code',
       sortable: true,
-      cell: ({ row }) => {
-        const c = row.original;
-        return (
-          <div className="space-y-0.5">
-            <span className="font-semibold text-zinc-900 dark:text-white text-xs block">{c.name}</span>
-            <span className="text-[11px] font-mono text-zinc-500">{c.code}</span>
-          </div>
-        );
-      },
+      render: (val, c) => (
+        <div className="space-y-0.5">
+          <span className="font-semibold text-zinc-900 dark:text-white text-xs block">{c?.name || val}</span>
+          <span className="text-[11px] font-mono text-zinc-500">{c?.code}</span>
+        </div>
+      ),
     },
     {
       id: 'channel',
-      header: 'Channel & Type',
-      accessorKey: 'channel',
+      label: 'Channel & Type',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, c) => (
         <div className="space-y-0.5 text-xs">
           <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE] block">
-            {row.original.channel || 'MARKETPLACE'}
+            {c?.channel || val || 'MARKETPLACE'}
           </span>
-          <span className="text-[11px] text-zinc-500">{row.original.type || 'Inbound'}</span>
+          <span className="text-[11px] text-zinc-500">{c?.type || 'Inbound'}</span>
         </div>
       ),
     },
     {
       id: 'budget',
-      header: 'Budget & Spend',
-      accessorKey: 'budget',
+      label: 'Budget & Spend',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, c) => (
         <div className="text-xs space-y-0.5">
           <span className="font-mono font-semibold text-zinc-900 dark:text-white block">
-            Budget: ₹{(row.original.budget || 0).toLocaleString('en-IN')}
+            Budget: ₹{(c?.budget || val || 0).toLocaleString('en-IN')}
           </span>
           <span className="font-mono text-[11px] text-zinc-500">
-            Spend: ₹{(row.original.actualSpend || row.original.budget || 0).toLocaleString('en-IN')}
+            Spend: ₹{(c?.actualSpend || c?.budget || val || 0).toLocaleString('en-IN')}
           </span>
         </div>
       ),
     },
     {
       id: 'actualRevenueWon',
-      header: 'Revenue Won',
-      accessorKey: 'actualRevenueWon',
+      label: 'Revenue Won',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, c) => (
         <span className="font-mono font-bold text-emerald-600 text-xs">
-          ₹{(row.original.actualRevenueWon || 0).toLocaleString('en-IN')}
+          ₹{(c?.actualRevenueWon || val || 0).toLocaleString('en-IN')}
         </span>
       ),
     },
     {
       id: 'roiPercent',
-      header: 'ROI %',
-      accessorKey: 'roiPercent',
+      label: 'ROI %',
       sortable: true,
-      cell: ({ row }) => {
-        const budget = Number(row.original.budget) || 0;
-        const revenue = Number(row.original.actualRevenueWon) || 0;
-        const roi = budget > 0 ? (((revenue - budget) / budget) * 100).toFixed(0) : 0;
+      render: (val, c) => {
+        const budget = Number(c?.budget) || 0;
+        const revenue = Number(c?.actualRevenueWon) || 0;
+        const roi = budget > 0 ? (((revenue - budget) / budget) * 100).toFixed(0) : (val ?? 0);
         const isPositive = Number(roi) > 0;
 
         return (
@@ -132,12 +124,11 @@ export default function CampaignsPage() {
     },
     {
       id: 'leadsCount',
-      header: 'Leads Generated',
-      accessorKey: 'leadsCount',
+      label: 'Leads Generated',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, c) => (
         <span className="font-semibold text-xs text-zinc-800 dark:text-[#E6E8EE]">
-          {row.original.leadsCount || 0} Leads
+          {c?.leadsCount ?? val ?? 0} Leads
         </span>
       ),
     },

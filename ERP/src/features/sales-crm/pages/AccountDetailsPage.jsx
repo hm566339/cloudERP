@@ -72,33 +72,33 @@ export default function AccountDetailsPage() {
 
   const contactColumns = [
     {
-      header: 'Contact Name',
-      accessorKey: 'firstName',
-      cell: ({ row }) => (
+      id: 'firstName',
+      label: 'Contact Name',
+      render: (val, row) => (
         <div>
           <span className="font-semibold text-zinc-900 dark:text-white block">
-            {row.original.firstName} {row.original.lastName || ''}
+            {row?.firstName || val} {row?.lastName || ''}
           </span>
-          <span className="text-[11px] text-zinc-500">{row.original.designation || 'Contact Person'}</span>
+          <span className="text-[11px] text-zinc-500">{row?.designation || 'Contact Person'}</span>
         </div>
       ),
     },
     {
-      header: 'Role',
-      accessorKey: 'decisionRole',
-      cell: ({ row }) => (
+      id: 'decisionRole',
+      label: 'Role',
+      render: (val, row) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-100 dark:bg-[#1C202B] text-zinc-700 dark:text-[#E6E8EE]">
-          {row.original.decisionRole || 'DECISION_MAKER'}
+          {row?.decisionRole || val || 'DECISION_MAKER'}
         </span>
       ),
     },
     {
-      header: 'Email & Phone',
-      accessorKey: 'email',
-      cell: ({ row }) => (
+      id: 'email',
+      label: 'Email & Phone',
+      render: (val, row) => (
         <div className="text-xs space-y-0.5">
-          <span className="text-zinc-700 dark:text-[#A0A6B5] block">{row.original.email}</span>
-          <span className="font-mono text-zinc-500 text-[11px]">{row.original.phone || 'N/A'}</span>
+          <span className="text-zinc-700 dark:text-[#A0A6B5] block">{row?.email || val || '-'}</span>
+          <span className="font-mono text-zinc-500 text-[11px]">{row?.phone || 'N/A'}</span>
         </div>
       ),
     },
@@ -106,29 +106,29 @@ export default function AccountDetailsPage() {
 
   const oppColumns = [
     {
-      header: 'Deal Title',
-      accessorKey: 'title',
-      cell: ({ row }) => (
+      id: 'title',
+      label: 'Deal Title',
+      render: (val, row) => (
         <span className="font-semibold text-zinc-900 dark:text-white text-xs">
-          {row.original.title}
+          {row?.title || val}
         </span>
       ),
     },
     {
-      header: 'Stage',
-      accessorKey: 'stageName',
-      cell: ({ row }) => (
+      id: 'stageName',
+      label: 'Stage',
+      render: (val, row) => (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-primary/10 text-primary">
-          {row.original.stageName || 'Pipeline Stage'}
+          {row?.stageName || val || 'Pipeline Stage'}
         </span>
       ),
     },
     {
-      header: 'Deal Value',
-      accessorKey: 'dealValue',
-      cell: ({ row }) => (
+      id: 'dealValue',
+      label: 'Deal Value',
+      render: (val, row) => (
         <span className="font-mono font-semibold text-zinc-900 dark:text-white text-xs">
-          ₹{(row.original.dealValue || 0).toLocaleString('en-IN')}
+          ₹{Number(row?.dealValue ?? val ?? 0).toLocaleString('en-IN')}
         </span>
       ),
     },

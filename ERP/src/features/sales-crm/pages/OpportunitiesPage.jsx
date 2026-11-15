@@ -122,56 +122,51 @@ export default function OpportunitiesPage() {
   const tableColumns = useMemo(() => [
     {
       id: 'title',
-      header: 'Deal Title',
-      accessorKey: 'title',
+      label: 'Deal Title',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, o) => (
         <span className="font-semibold text-zinc-900 dark:text-white text-xs">
-          {row.original.title}
+          {o?.title || val}
         </span>
       ),
     },
     {
       id: 'stageName',
-      header: 'Stage',
-      accessorKey: 'stageName',
+      label: 'Stage',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, o) => (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-primary/10 text-primary">
-          {row.original.stageName}
+          {o?.stageName || val}
         </span>
       ),
     },
     {
       id: 'dealValue',
-      header: 'Deal Value',
-      accessorKey: 'dealValue',
+      label: 'Deal Value',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, o) => (
         <span className="font-mono font-semibold text-xs text-zinc-900 dark:text-white">
-          ₹{(row.original.dealValue || 0).toLocaleString('en-IN')}
+          ₹{Number(o?.dealValue ?? val ?? 0).toLocaleString('en-IN')}
         </span>
       ),
     },
     {
       id: 'probabilityPercent',
-      header: 'Win Probability',
-      accessorKey: 'probabilityPercent',
+      label: 'Win Probability',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, o) => (
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-xs font-semibold text-emerald-600">{row.original.probabilityPercent || 50}%</span>
+          <span className="font-mono text-xs font-semibold text-emerald-600">{o?.probabilityPercent ?? val ?? 50}%</span>
         </div>
       ),
     },
     {
       id: 'expectedCloseDate',
-      header: 'Close Date',
-      accessorKey: 'expectedCloseDate',
+      label: 'Close Date',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, o) => (
         <span className="text-xs text-zinc-500">
-          {row.original.expectedCloseDate ? new Date(row.original.expectedCloseDate).toLocaleDateString() : 'N/A'}
+          {(o?.expectedCloseDate || val) ? new Date(o?.expectedCloseDate || val).toLocaleDateString() : 'N/A'}
         </span>
       ),
     },

@@ -44,66 +44,60 @@ export default function AttributionPage() {
   const columns = useMemo(() => [
     {
       id: 'channel',
-      header: 'Marketing Channel',
-      accessorKey: 'channel',
+      label: 'Marketing Channel',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, row) => (
         <span className="font-semibold text-xs text-zinc-900 dark:text-white">
-          {row.original.channel}
+          {row?.channel || val}
         </span>
       ),
     },
     {
       id: 'firstTouch',
-      header: 'First Touch (₹)',
-      accessorKey: 'firstTouch',
+      label: 'First Touch (₹)',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, row) => (
         <span className="font-mono text-xs text-zinc-700 dark:text-[#A0A6B5]">
-          ₹{row.original.firstTouch.toLocaleString('en-IN')}
+          ₹{Number(row?.firstTouch ?? val ?? 0).toLocaleString('en-IN')}
         </span>
       ),
     },
     {
       id: 'lastTouch',
-      header: 'Last Touch (₹)',
-      accessorKey: 'lastTouch',
+      label: 'Last Touch (₹)',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, row) => (
         <span className="font-mono text-xs text-zinc-700 dark:text-[#A0A6B5]">
-          ₹{row.original.lastTouch.toLocaleString('en-IN')}
+          ₹{Number(row?.lastTouch ?? val ?? 0).toLocaleString('en-IN')}
         </span>
       ),
     },
     {
       id: 'linear',
-      header: 'Linear (₹)',
-      accessorKey: 'linear',
+      label: 'Linear (₹)',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, row) => (
         <span className="font-mono text-xs text-zinc-700 dark:text-[#A0A6B5]">
-          ₹{row.original.linear.toLocaleString('en-IN')}
+          ₹{Number(row?.linear ?? val ?? 0).toLocaleString('en-IN')}
         </span>
       ),
     },
     {
       id: 'uShaped',
-      header: 'U-Shaped Weighted (₹)',
-      accessorKey: 'uShaped',
+      label: 'U-Shaped Weighted (₹)',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, row) => (
         <span className="font-mono font-bold text-xs text-primary">
-          ₹{row.original.uShaped.toLocaleString('en-IN')}
+          ₹{Number(row?.uShaped ?? val ?? 0).toLocaleString('en-IN')}
         </span>
       ),
     },
     {
       id: 'share',
-      header: 'Revenue Share',
-      accessorKey: 'share',
-      cell: ({ row }) => (
+      label: 'Revenue Share',
+      render: (val, row) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary">
-          {row.original.share}
+          {row?.share || val}
         </span>
       ),
     },
@@ -144,8 +138,8 @@ export default function AttributionPage() {
         {/* Comparative Bar Chart */}
         <div className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm space-y-4 shrink-0">
           <h2 className="text-sm font-bold text-zinc-900 dark:text-white">Channel Revenue Comparison Across Models</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full h-64 min-w-0" style={{ minHeight: '260px' }}>
+            <ResponsiveContainer width="100%" height={260} minWidth={0} minHeight={260}>
               <BarChart data={ATTRIBUTION_DATA} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                 <XAxis dataKey="channel" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(val) => `₹${val / 1000}k`} />
@@ -180,5 +174,3 @@ export default function AttributionPage() {
     </div>
   );
 }
-
-

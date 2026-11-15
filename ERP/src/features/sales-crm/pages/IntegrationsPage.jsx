@@ -65,31 +65,25 @@ export default function IntegrationsPage() {
   const columns = useMemo(() => [
     {
       id: 'integrationName',
-      header: 'Integration & Channel',
-      accessorKey: 'integrationName',
+      label: 'Integration & Channel',
       sortable: true,
-      cell: ({ row }) => {
-        const item = row.original;
-        return (
-          <div className="space-y-0.5">
-            <span className="font-semibold text-xs text-zinc-900 dark:text-white block">
-              {item.integrationName || item.channelCode}
-            </span>
-            <span className="text-[11px] font-mono text-zinc-500 uppercase">{item.channelCode}</span>
-          </div>
-        );
-      },
+      render: (val, item) => (
+        <div className="space-y-0.5">
+          <span className="font-semibold text-xs text-zinc-900 dark:text-white block">
+            {item?.integrationName || item?.channelCode || val}
+          </span>
+          <span className="text-[11px] font-mono text-zinc-500 uppercase">{item?.channelCode}</span>
+        </div>
+      ),
     },
     {
       id: 'webhookSlug',
-      header: 'Webhook Inbound Endpoint',
-      accessorKey: 'webhookSlug',
+      label: 'Webhook Inbound Endpoint',
       sortable: true,
-      cell: ({ row }) => {
-        const item = row.original;
-        const slug = item.webhookSlug || item.id;
+      render: (val, item) => {
+        const slug = item?.webhookSlug || item?.id || val;
         const url = `/api/crm/integrations/webhook/${slug}`;
-        const isCopied = copiedId === item.id;
+        const isCopied = copiedId === item?.id;
 
         return (
           <div className="flex items-center gap-1.5 font-mono text-xs text-zinc-600 dark:text-[#A0A6B5]">
@@ -107,10 +101,9 @@ export default function IntegrationsPage() {
     },
     {
       id: 'isActive',
-      header: 'Status',
-      accessorKey: 'isActive',
+      label: 'Status',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, item) => (
         <DataTableStatusBadge
           status="CONNECTED"
           variant="success"
@@ -119,12 +112,11 @@ export default function IntegrationsPage() {
     },
     {
       id: 'lastSyncAt',
-      header: 'Last Sync / Lead',
-      accessorKey: 'lastSyncAt',
+      label: 'Last Sync / Lead',
       sortable: true,
-      cell: ({ row }) => (
+      render: (val, item) => (
         <span className="text-xs text-zinc-500 font-mono">
-          {row.original.lastSyncAt ? new Date(row.original.lastSyncAt).toLocaleString() : 'Listening for Webhooks'}
+          {item?.lastSyncAt || val ? new Date(item?.lastSyncAt || val).toLocaleString() : 'Listening for Webhooks'}
         </span>
       ),
     },

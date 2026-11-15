@@ -85,10 +85,16 @@ function DataTableRow({
               ? 'text-center'
               : 'text-left';
 
+          const cellData = {
+            ...row,
+            row: { original: row, ...row },
+            getValue: () => rawValue,
+          };
+
           const renderedContent = col.render
             ? col.render(rawValue, row, index)
             : typeof col.cell === 'function'
-            ? col.cell(row, rawValue, index)
+            ? col.cell(cellData, rawValue, index)
             : rawValue !== undefined && rawValue !== null && rawValue !== ''
             ? String(rawValue)
             : '-';
