@@ -31,11 +31,11 @@ public class CrmMessage {
     private UUID conversationId;
 
     @Enumerated(EnumType.STRING)
-        @Column(name = "direction", nullable = false)
+    @Column(name = "direction", nullable = false)
     private MessageDirection direction;
 
     @Enumerated(EnumType.STRING)
-        @Column(name = "channel", nullable = false)
+    @Column(name = "channel", nullable = false)
     private CommunicationChannel channel;
 
     @Column(name = "sender_identifier", nullable = false, length = 255)
@@ -57,7 +57,7 @@ public class CrmMessage {
     private String mediaStorageUrl;
 
     @Enumerated(EnumType.STRING)
-        @Column(name = "delivery_status", nullable = false)
+    @Column(name = "delivery_status", nullable = false)
     @Builder.Default
     private MessageDeliveryStatus deliveryStatus = MessageDeliveryStatus.QUEUED;
 
