@@ -51,7 +51,7 @@ export const MODULE_UI_METADATA = {
     id: 'sales-crm',
     label: 'Sales & CRM',
     icon: TrendingUp,
-    defaultPath: (base) => `${base}/crm/dashboard`,
+    defaultPath: (base) => `${base}/sales-crm/dashboard`,
   },
   [CANONICAL_MODULES.WORKFLOW]: {
     id: 'workflow',
@@ -372,57 +372,130 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
         {
           id: 'crm-dashboard',
           label: 'Dashboard',
-          path: `${base}/crm/dashboard`,
+          path: `${base}/sales-crm/dashboard`,
           icon: LayoutDashboard,
           featureCode: 'DASHBOARD',
           action: 'READ',
         },
         {
-          id: 'crm-customers',
-          label: 'Customer Management',
-          path: `${base}/crm/customers`,
-          icon: UserCheck,
-          featureCode: 'CUSTOMERS',
-          action: 'READ',
-        },
-        {
           id: 'crm-leads',
-          label: 'Lead Tracking',
-          path: `${base}/crm/leads`,
+          label: 'Leads',
+          path: `${base}/sales-crm/leads`,
           icon: UserPlus,
           featureCode: 'LEADS',
           action: 'READ',
         },
         {
+          id: 'crm-accounts',
+          label: 'Accounts',
+          path: `${base}/sales-crm/accounts`,
+          icon: Building2,
+          featureCode: 'CUSTOMERS',
+          action: 'READ',
+        },
+        {
+          id: 'crm-contacts',
+          label: 'Contacts',
+          path: `${base}/sales-crm/contacts`,
+          icon: Users,
+          featureCode: 'CUSTOMERS',
+          action: 'READ',
+        },
+        {
+          id: 'crm-opportunities',
+          label: 'Opportunities',
+          path: `${base}/sales-crm/opportunities`,
+          icon: Target,
+          featureCode: 'CRM_OPPORTUNITIES',
+          action: 'READ',
+        },
+        {
+          id: 'crm-pipelines',
+          label: 'Pipelines',
+          path: `${base}/sales-crm/pipelines`,
+          icon: Layers,
+          featureCode: 'CRM_OPPORTUNITIES',
+          action: 'READ',
+        },
+        {
           id: 'crm-quotations',
           label: 'Quotations',
-          path: `${base}/crm/quotations`,
+          path: `${base}/sales-crm/quotations`,
           icon: FileText,
           featureCode: 'QUOTATIONS',
           action: 'READ',
         },
+        {
+          id: 'crm-tasks',
+          label: 'Tasks',
+          path: `${base}/sales-crm/tasks`,
+          icon: ClipboardCheck,
+          featureCode: 'CRM_ACTIVITIES',
+          action: 'READ',
+        },
+        {
+          id: 'crm-activities',
+          label: 'Activities',
+          path: `${base}/sales-crm/activities`,
+          icon: Calendar,
+          featureCode: 'CRM_ACTIVITIES',
+          action: 'READ',
+        },
+        {
+          id: 'crm-campaigns',
+          label: 'Campaigns',
+          path: `${base}/sales-crm/campaigns`,
+          icon: Target,
+          featureCode: 'CRM_CAMPAIGNS',
+          action: 'READ',
+        },
+        {
+          id: 'crm-attribution',
+          label: 'Attribution',
+          path: `${base}/sales-crm/attribution`,
+          icon: PieChart,
+          featureCode: 'CRM_CAMPAIGNS',
+          action: 'READ',
+        },
+        {
+          id: 'crm-comms',
+          label: 'Customer Communication',
+          path: `${base}/sales-crm/communications`,
+          icon: MessageSquare,
+          featureCode: 'CRM_COMMUNICATION',
+          action: 'READ',
+        },
+        {
+          id: 'crm-automation',
+          label: 'Automation',
+          path: `${base}/sales-crm/automation`,
+          icon: Activity,
+          featureCode: 'CRM_AUTOMATION',
+          action: 'READ',
+        },
+        {
+          id: 'crm-integrations',
+          label: 'Integrations',
+          path: `${base}/sales-crm/integrations`,
+          icon: Globe,
+          featureCode: 'CRM_INTEGRATIONS',
+          action: 'READ',
+        },
+        {
+          id: 'crm-settings',
+          label: 'Settings',
+          path: `${base}/sales-crm/settings`,
+          icon: Settings,
+          featureCode: 'CRM_SETTINGS',
+          action: 'READ',
+        },
+        // Backward-compatible legacy receivables/finance endpoints
         {
           id: 'crm-orders',
           label: 'Sales Orders',
           path: `${base}/crm/orders`,
           icon: ShoppingCart,
           featureCode: 'ORDERS',
-          action: 'READ',
-        },
-        {
-          id: 'crm-comms',
-          label: 'Customer Communication',
-          path: `${base}/crm/communication`,
-          icon: MessageSquare,
-          featureCode: 'COMMUNICATION',
-          action: 'READ',
-        },
-        {
-          id: 'crm-analytics',
-          label: 'Sales Analytics',
-          path: `${base}/crm/analytics`,
-          icon: LineChart,
-          featureCode: 'ANALYTICS',
           action: 'READ',
         },
         {
@@ -647,6 +720,16 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
           hasFeature(authContext, 'EXPENSE_REQUESTS', moduleName) ||
           hasFeature(authContext, 'EXPENSE', moduleName);
       }
+      if (!hasFeat && (featureCode === 'LEADS' || featureCode === 'CRM_LEADS')) {
+        hasFeat = hasFeature(authContext, 'LEADS', moduleName) ||
+          hasFeature(authContext, 'CRM_LEADS', moduleName) ||
+          hasFeature(authContext, 'CRM', moduleName);
+      }
+      if (!hasFeat && (featureCode === 'CUSTOMERS' || featureCode === 'CRM_ACCOUNTS')) {
+        hasFeat = hasFeature(authContext, 'CUSTOMERS', moduleName) ||
+          hasFeature(authContext, 'CRM_ACCOUNTS', moduleName) ||
+          hasFeature(authContext, 'CRM', moduleName);
+      }
       if (!hasFeat) return null;
     }
 
@@ -680,6 +763,14 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
         hasPerm = checkHasPermission(authContext, 'GST_MASTER', action, moduleName);
       } else if (featureCode === 'ORDERS') {
         hasPerm = checkHasPermission(authContext, 'SALES_ORDERS', action, moduleName);
+      } else if (featureCode === 'LEADS' || featureCode === 'CRM_LEADS') {
+        hasPerm = checkHasPermission(authContext, 'LEADS', action, moduleName) ||
+          checkHasPermission(authContext, 'CRM_LEADS', action, moduleName) ||
+          checkHasPermission(authContext, 'CRM', action, moduleName);
+      } else if (featureCode === 'CUSTOMERS' || featureCode === 'CRM_ACCOUNTS') {
+        hasPerm = checkHasPermission(authContext, 'CUSTOMERS', action, moduleName) ||
+          checkHasPermission(authContext, 'CRM_ACCOUNTS', action, moduleName) ||
+          checkHasPermission(authContext, 'CRM', action, moduleName);
       } else if (featureCode === 'SALES_ORDERS') {
         hasPerm = checkHasPermission(authContext, 'ORDERS', action, moduleName);
       } else if (featureCode === 'UNIT_OF_MEASURES') {

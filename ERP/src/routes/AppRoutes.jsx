@@ -10,6 +10,7 @@ import AppShellLayout from "../layouts/AppShellLayout";
 import PurchaseModuleLayout from "../components/common/PurchaseModuleLayout";
 import { SharedAccountsRoutes } from "./SharedAccountsRoutes";
 import { SharedInventoryRoutes } from "./SharedInventoryRoutes";
+import { SharedCrmRoutes } from "./SharedCrmRoutes";
 import SharedCompanyRoutes from "./SharedCompanyRoutes";
 import { getModuleDashboardPath, getPostLoginRedirectPath } from "../utils/moduleAccess";
 import { useRBAC, parseJwt, extractRoleFromToken } from "../utils/rbac";
@@ -831,22 +832,19 @@ export default function AppRoutes() {
             {SharedInventoryRoutes({ prefix: "" })}
             {SharedInventoryRoutes({ prefix: "inventory/" })}
 
-            {/* CRM & Sales */}
-            <Route path="/crm" element={<Navigate to="/crm/dashboard" replace />} />
-            <Route path="/crm/dashboard" element={<ProtectedRoute module="CRM"><SalesCRMDashboard /></ProtectedRoute>} />
+            {/* Sales & CRM Enterprise Microservice Routes */}
+            <Route path="/crm" element={<Navigate to="/sales-crm/dashboard" replace />} />
+            <Route path="/sales-crm" element={<Navigate to="/sales-crm/dashboard" replace />} />
+            {SharedCrmRoutes({ prefix: "sales-crm/" })}
+            {SharedCrmRoutes({ prefix: "crm/" })}
+            {/* Backward-compatible legacy receivables/finance endpoints */}
             <Route path="/crm/customers" element={<ProtectedRoute module="CUSTOMERS"><CustomerManagement /></ProtectedRoute>} />
             <Route path="/crm/customers/:id" element={<ProtectedRoute module="CUSTOMERS"><CustomerDetails /></ProtectedRoute>} />
-            <Route path="/crm/leads" element={<ProtectedRoute module="LEADS"><LeadTracking /></ProtectedRoute>} />
-            <Route path="/crm/quotations" element={<ProtectedRoute module="QUOTATIONS"><QuotationsPage /></ProtectedRoute>} />
-            <Route path="/crm/quotations/:id" element={<ProtectedRoute module="QUOTATIONS"><QuotationDetails /></ProtectedRoute>} />
             <Route path="/crm/orders" element={<ProtectedRoute module="SALES_ORDERS"><SalesOrders /></ProtectedRoute>} />
-            <Route path="/crm/communication" element={<ProtectedRoute module="COMMUNICATION"><CustomerCommunication /></ProtectedRoute>} />
             <Route path="/crm/analytics" element={<ProtectedRoute module="ANALYTICS"><SalesAnalytics /></ProtectedRoute>} />
             <Route path="/crm/invoices" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoices /></ProtectedRoute>} />
             <Route path="/crm/invoices/:id" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoiceDetails /></ProtectedRoute>} />
             <Route path="/crm/audit" element={<ProtectedRoute module="AUDIT_LOGS"><AuditLogsPage /></ProtectedRoute>} />
-            <Route path="/sales-crm/*" element={<Navigate to="/crm" replace />} />
-            <Route path="/sales-crm" element={<Navigate to="/crm/dashboard" replace />} />
 
             {/* Direct Procurement Routes */}
             <Route element={<PurchaseModuleLayout />}>

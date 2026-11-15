@@ -226,6 +226,33 @@ export const crmApiSlice = baseApi.injectEndpoints({
       invalidatesTags: ['CRM_OPPORTUNITIES', 'CRM_DASHBOARD'],
     }),
 
+    // Pipelines (/api/crm/pipelines)
+    getCrmPipelines: builder.query({
+      query: (companyId) => ({
+        url: '/api/crm/pipelines',
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      providesTags: ['CRM_OPPORTUNITIES'],
+    }),
+
+    getCrmPipelineById: builder.query({
+      query: ({ id, companyId }) => ({
+        url: `/api/crm/pipelines/${id}`,
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      providesTags: (result, error, { id }) => [{ type: 'CRM_OPPORTUNITIES', id }],
+    }),
+
+    createCrmPipeline: builder.mutation({
+      query: ({ data, companyId }) => ({
+        url: '/api/crm/pipelines',
+        method: 'POST',
+        data: { data },
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_OPPORTUNITIES'],
+    }),
+
     // -------------------------------------------------------------------------
     // 4. Quotations (/api/crm/quotations)
     // -------------------------------------------------------------------------
@@ -236,6 +263,14 @@ export const crmApiSlice = baseApi.injectEndpoints({
         headers: params?.companyId ? { 'X-Company-Id': params.companyId } : undefined,
       }),
       providesTags: ['CRM_QUOTATIONS'],
+    }),
+
+    getCrmQuotationById: builder.query({
+      query: ({ id, companyId }) => ({
+        url: `/api/crm/quotations/${id}`,
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      providesTags: (result, error, { id }) => [{ type: 'CRM_QUOTATIONS', id }],
     }),
 
     createCrmQuotation: builder.mutation({
@@ -314,6 +349,47 @@ export const crmApiSlice = baseApi.injectEndpoints({
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       invalidatesTags: ['CRM_ACTIVITIES'],
+    }),
+
+    // -------------------------------------------------------------------------
+    // 5b. Omnichannel Communications (/api/crm/communication)
+    // -------------------------------------------------------------------------
+    sendCrmMessage: builder.mutation({
+      query: ({ data, companyId }) => ({
+        url: '/api/crm/communication/send',
+        method: 'POST',
+        data: { data },
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_COMMUNICATIONS'],
+    }),
+
+    getCrmConversationMessages: builder.query({
+      query: ({ conversationId, companyId }) => ({
+        url: '/api/crm/communication/messages',
+        params: { conversationId },
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      providesTags: ['CRM_COMMUNICATIONS'],
+    }),
+
+    logCrmCall: builder.mutation({
+      query: ({ data, companyId }) => ({
+        url: '/api/crm/communication/telephony/cdr',
+        method: 'POST',
+        data: { data },
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_COMMUNICATIONS', 'CRM_ACTIVITIES'],
+    }),
+
+    getCrmCalls: builder.query({
+      query: ({ entityType, entityId, companyId }) => ({
+        url: '/api/crm/communication/calls',
+        params: { entityType, entityId },
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      providesTags: ['CRM_COMMUNICATIONS'],
     }),
 
     // -------------------------------------------------------------------------
@@ -469,6 +545,14 @@ export const crmApiSlice = baseApi.injectEndpoints({
       providesTags: ['CRM_DASHBOARD'],
     }),
 
+    getCrmDashboard: builder.query({
+      query: (companyId) => ({
+        url: '/api/crm/dashboard',
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      providesTags: ['CRM_DASHBOARD'],
+    }),
+
     getCrmCompanySettings: builder.query({
       query: (companyId) => ({
         url: '/api/crm/settings/company',
@@ -559,9 +643,13 @@ export const {
   useCreateCrmOpportunityMutation,
   useUpdateOpportunityStageMutation,
   useCloseOpportunityMutation,
+  useGetCrmPipelinesQuery,
+  useGetCrmPipelineByIdQuery,
+  useCreateCrmPipelineMutation,
 
   // Quotations
   useGetCrmQuotationsQuery,
+  useGetCrmQuotationByIdQuery,
   useCreateCrmQuotationMutation,
   useSubmitQuotationApprovalMutation,
   useConvertQuotationToOrderMutation,
@@ -572,6 +660,12 @@ export const {
   useCompleteCrmTaskMutation,
   useGetCrmActivitiesQuery,
   useLogCrmActivityMutation,
+
+  // Communications
+  useSendCrmMessageMutation,
+  useGetCrmConversationMessagesQuery,
+  useLogCrmCallMutation,
+  useGetCrmCallsQuery,
 
   // Automation
   useGetCrmAutomationRulesQuery,
@@ -595,6 +689,7 @@ export const {
   useTriggerCrmIntegrationSyncMutation,
 
   // Dashboard & Settings
+  useGetCrmDashboardQuery,
   useGetCrmDashboardSummaryQuery,
   useGetCrmCompanySettingsQuery,
   useUpdateCrmCompanySettingsMutation,

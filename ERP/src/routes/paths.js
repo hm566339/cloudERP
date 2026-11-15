@@ -92,6 +92,31 @@ export const PATHS = {
     AUDIT: '/workflows/audit',
   },
 
+  // Sales & CRM
+  CRM: {
+    ROOT: '/sales-crm',
+    DASHBOARD: '/sales-crm/dashboard',
+    LEADS: '/sales-crm/leads',
+    LEAD_DETAILS: (id = ':id') => `/sales-crm/leads/${id}`,
+    ACCOUNTS: '/sales-crm/accounts',
+    ACCOUNT_DETAILS: (id = ':id') => `/sales-crm/accounts/${id}`,
+    CONTACTS: '/sales-crm/contacts',
+    CONTACT_DETAILS: (id = ':id') => `/sales-crm/contacts/${id}`,
+    OPPORTUNITIES: '/sales-crm/opportunities',
+    OPPORTUNITY_DETAILS: (id = ':id') => `/sales-crm/opportunities/${id}`,
+    PIPELINES: '/sales-crm/pipelines',
+    QUOTATIONS: '/sales-crm/quotations',
+    QUOTATION_DETAILS: (id = ':id') => `/sales-crm/quotations/${id}`,
+    TASKS: '/sales-crm/tasks',
+    ACTIVITIES: '/sales-crm/activities',
+    CAMPAIGNS: '/sales-crm/campaigns',
+    ATTRIBUTION: '/sales-crm/attribution',
+    COMMUNICATIONS: '/sales-crm/communications',
+    AUTOMATION: '/sales-crm/automation',
+    INTEGRATIONS: '/sales-crm/integrations',
+    SETTINGS: '/sales-crm/settings',
+  },
+
   // Company / Settings / System Admin
   COMPANY: (companyId = ':companyId') => `/company/${companyId}`,
   COMPANY_DASHBOARD: (companyId = ':companyId') => `/company/${companyId}/dashboard`,

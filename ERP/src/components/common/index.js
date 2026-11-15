@@ -55,6 +55,7 @@ export { default as Tooltip } from './Tooltip';
 export { default as ToastContainer, ToastItem } from './Toast';
 
 export { default as PageHeader } from './PageHeader';
+export { default as StatCard } from './StatCard';
 export { default as EmptyState } from './EmptyState';
 export { default as ErrorState } from './ErrorState';
 export { default as SkeletonLoader } from './SkeletonLoader';
