@@ -18,7 +18,7 @@ export default function LeadsPage() {
 
   const companyId = useParams().companyId || JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyCode;
 
-  const { filterBarProps, paginationProps, sortBy, setSortBy, sortOrder, setSortOrder, filters, page, pageSize, handleColumnSort, apiParams } = useApiFilters(FILTER_CONFIGS.leads, { defaultPageSize: 10, defaultSortBy: 'date-desc' });
+  const { filterBarProps, paginationProps, sortBy, setSortBy, sortOrder, setSortOrder, filters, page, pageSize, handleColumnSort, apiParams } = useApiFilters(FILTER_CONFIGS.leads, { defaultPageSize: 10, defaultSortBy: 'createdAt-desc' });
 
   const search = filterBarProps.searchTerm || '';
   const stageFilter = filters.stage || '';
@@ -108,10 +108,10 @@ export default function LeadsPage() {
             <thead>
               <tr>
                 <th className="w-12 text-center">S.No.</th>
-                <SortableHeader field="company" label="Company / Contact" sortBy={sortBy} sortOrder={sortOrder} onSort={handleColumnSort} />
+                <SortableHeader field="organizationName" label="Company / Contact" sortBy={sortBy} sortOrder={sortOrder} onSort={handleColumnSort} />
                 <th>Source</th>
-                <SortableHeader field="date" label="Date Added" sortBy={sortBy} sortOrder={sortOrder} onSort={handleColumnSort} />
-                <SortableHeader field="value" label="Est. Value (₹)" align="right" sortBy={sortBy} sortOrder={sortOrder} onSort={handleColumnSort} />
+                <SortableHeader field="createdAt" label="Date Added" sortBy={sortBy} sortOrder={sortOrder} onSort={handleColumnSort} />
+                <SortableHeader field="annualRevenue" label="Est. Value (₹)" align="right" sortBy={sortBy} sortOrder={sortOrder} onSort={handleColumnSort} />
                 <th>Stage</th>
                 <th></th>
               </tr>
@@ -123,19 +123,19 @@ export default function LeadsPage() {
                     {getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}
                   </td>
                   <td>
-                    <div className="font-medium text-zinc-900 dark:text-zinc-200">{l.company}</div>
+                    <div className="font-medium text-zinc-900 dark:text-zinc-200">{l.organizationName || l.company || '—'}</div>
                     <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-0.5">
-                      <UserPlus size={12} /> {l.contact}
+                      <UserPlus size={12} /> {l.displayName || l.contact || '—'}
                     </div>
                   </td>
-                  <td className="text-zinc-600 dark:text-zinc-300">{l.source}</td>
-                  <td className="text-zinc-500 dark:text-zinc-400">{l.date}</td>
+                  <td className="text-zinc-600 dark:text-zinc-300">{l.leadSourceName || l.source || 'Direct'}</td>
+                  <td className="text-zinc-500 dark:text-zinc-400">{l.createdAt ? (typeof l.createdAt === 'string' ? l.createdAt.slice(0, 10) : l.createdAt) : (l.date || '—')}</td>
                   <td className="text-right font-semibold text-zinc-800 dark:text-zinc-200">
-                    ₹{l.value?.toLocaleString()}
+                    ₹{(l.annualRevenue ?? l.value ?? 0).toLocaleString()}
                   </td>
                   <td>
-                    <span className={`badge ${getStageBadge(l.stage)}`}>
-                      {l.stage}
+                    <span className={`badge ${getStageBadge(l.leadStage || l.stage)}`}>
+                      {l.leadStage || l.stage || 'NEW'}
                     </span>
                   </td>
                   <td>

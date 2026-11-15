@@ -252,6 +252,30 @@ export const salesFilters = {
     pagination: SPRING_PAGEABLE,
     viewConfig: { hiddenKeys: ['id', 'companyId', 'salesInvoiceId'] },
     updateConfig: { fields: [] }
-  }
+  },
 
+  // ━━━ CRM Leads ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  leads: {
+    searchParam: 'search',
+    fields: [
+      { key: 'status', label: 'Status', type: 'select', priority: true, options: [] },
+      { key: 'leadSource', label: 'Lead Source', type: 'select', priority: true, options: [] },
+      { key: 'city', label: 'City', type: 'text' },
+      { key: 'state', label: 'State', type: 'text' },
+      { key: 'country', label: 'Country', type: 'text' },
+      { key: 'fromDate', label: 'From Date', type: 'date' },
+      { key: 'toDate', label: 'To Date', type: 'date' },
+    ],
+    sortFields: [
+      { label: 'Created Date', value: 'createdAt' },
+      { label: 'Lead Name', value: 'displayName' },
+      { label: 'Company Name', value: 'organizationName' },
+      { label: 'Lead Score', value: 'leadScore' },
+      { label: 'Annual Revenue', value: 'annualRevenue' },
+      { label: 'Next Follow Up', value: 'nextFollowUpDate' }
+    ],
+    pagination: SPRING_PAGEABLE,
+    viewConfig: { hiddenKeys: ['id', 'tenantId', 'companyId', 'isDeleted'] },
+    updateConfig: { fields: [] }
+  }
 };

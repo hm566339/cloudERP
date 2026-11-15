@@ -499,9 +499,14 @@ public class PermissionServiceImpl implements PermissionService {
                     });
         }
 
-        boolean isSystemAdminUser = user.getUserRoles() != null && user.getUserRoles().stream()
+        boolean isSystemAdminUser = (user.getUserRoles() != null && user.getUserRoles().stream()
                 .anyMatch(ur -> ur.getRole() != null && ("SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
-                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())));
+                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName()))))
+                || PlatformSecurityUtil.isElevatedAdmin();
+
+        if (isSystemAdminUser && !userRoles.contains("SYSTEM_ADMIN")) {
+            userRoles.add(0, "SYSTEM_ADMIN");
+        }
 
         if (isOrgMember || isOrgOwner || isSystemAdminUser || PlatformSecurityUtil.isElevatedAdmin()) {
             roleGrantedPermissions.add("ORGANIZATION_APPEARANCE:READ");
@@ -659,6 +664,9 @@ public class PermissionServiceImpl implements PermissionService {
                     allowed = true;
                     source = "USER_GRANTED";
                 }
+            } else if (isSystemAdminUser) {
+                allowed = true;
+                source = "SYSTEM_ADMIN";
             } else if (roleGrantedPermissions.contains(fp.getPermissionCode())
                     || (isOwner && entitledFeatureModules != null && entitledFeatureModules.contains(featureModule))) {
                 allowed = true;

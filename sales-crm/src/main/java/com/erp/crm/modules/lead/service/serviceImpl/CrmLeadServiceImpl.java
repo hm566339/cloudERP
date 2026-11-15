@@ -35,15 +35,16 @@ import com.erp.crm.modules.setting.repository.CrmLeadStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -178,12 +179,84 @@ public class CrmLeadServiceImpl implements CrmLeadService {
         return enrichResponse(lead);
     }
 
+    private static final Map<String, String> LEAD_SORT_FIELD_MAPPING = Map.ofEntries(
+            Map.entry("date", "createdAt"),
+            Map.entry("createddate", "createdAt"),
+            Map.entry("createdat", "createdAt"),
+            Map.entry("updateddate", "updatedAt"),
+            Map.entry("updatedat", "updatedAt"),
+            Map.entry("company", "organizationName"),
+            Map.entry("companyname", "organizationName"),
+            Map.entry("organizationname", "organizationName"),
+            Map.entry("contact", "displayName"),
+            Map.entry("name", "displayName"),
+            Map.entry("displayname", "displayName"),
+            Map.entry("value", "annualRevenue"),
+            Map.entry("annualrevenue", "annualRevenue"),
+            Map.entry("score", "leadScore"),
+            Map.entry("leadscore", "leadScore"),
+            Map.entry("rating", "scoreGrade"),
+            Map.entry("scoregrade", "scoreGrade"),
+            Map.entry("stage", "leadStage"),
+            Map.entry("leadstage", "leadStage"),
+            Map.entry("code", "leadCode"),
+            Map.entry("leadcode", "leadCode"),
+            Map.entry("followupdate", "nextFollowUpDate"),
+            Map.entry("nextfollowupdate", "nextFollowUpDate")
+    );
+
+    private static final Set<String> VALID_LEAD_ENTITY_FIELDS = Set.of(
+            "id", "companyId", "leadCode", "salutation", "firstName", "lastName", "displayName",
+            "email", "normalizedEmail", "phone", "normalizedPhone", "alternatePhone", "website",
+            "organizationName", "designation", "industry", "annualRevenue", "companySize",
+            "gstin", "pan", "addressLine1", "addressLine2", "city", "state", "stateCode", "postalCode", "country",
+            "leadSourceId", "leadStatusId", "leadStage", "leadScore", "scoreGrade", "isQualified",
+            "qualifiedAt", "qualifiedByUserId", "ownerUserId", "assignedTeamId", "assignedAt",
+            "lastContactedAt", "nextFollowUpDate", "isConverted", "convertedAt", "convertedByUserId",
+            "convertedAccountId", "convertedContactId", "convertedOpportunityId", "isLost",
+            "lostReasonId", "lostDetails", "lostAt", "isRecycled", "recycledAt", "isDuplicate",
+            "primaryLeadId", "dedupFingerprint", "consentGiven", "consentTimestamp", "consentSource",
+            "optOutEmail", "optOutWhatsapp", "optOutSms", "optOutCall", "createdAt", "updatedAt", "isDeleted"
+    );
+
+    private Pageable sanitizeLeadPageable(Pageable pageable) {
+        if (pageable == null) {
+            return PageRequest.of(0, 15, Sort.by(Sort.Direction.DESC, "createdAt"));
+        }
+        if (pageable.getSort().isUnsorted()) {
+            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        }
+
+        List<Sort.Order> sanitizedOrders = new ArrayList<>();
+        for (Sort.Order order : pageable.getSort()) {
+            String property = order.getProperty();
+            if (property == null || property.isBlank()) {
+                continue;
+            }
+            String lower = property.trim().toLowerCase();
+            String mapped = LEAD_SORT_FIELD_MAPPING.getOrDefault(lower, property.trim());
+
+            if (!VALID_LEAD_ENTITY_FIELDS.contains(mapped)) {
+                log.warn("Invalid sort property '{}' passed for CrmLead; falling back to 'createdAt'", property);
+                mapped = "createdAt";
+            }
+            sanitizedOrders.add(new Sort.Order(order.getDirection(), mapped, order.getNullHandling()));
+        }
+
+        Sort sanitizedSort = sanitizedOrders.isEmpty()
+                ? Sort.by(Sort.Direction.DESC, "createdAt")
+                : Sort.by(sanitizedOrders);
+
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sanitizedSort);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Page<LeadResponse> getAllLeads(LeadFilterRequest filter, UUID requestCompanyId, Pageable pageable) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
+        Pageable sanitizedPageable = sanitizeLeadPageable(pageable);
         Specification<CrmLead> spec = buildSpecification(companyId, filter);
-        return leadRepository.findAll(spec, pageable).map(this::enrichResponse);
+        return leadRepository.findAll(spec, sanitizedPageable).map(this::enrichResponse);
     }
 
     @Override
@@ -497,6 +570,12 @@ public class CrmLeadServiceImpl implements CrmLeadService {
                 }
                 if (filter.getIsConverted() != null) {
                     predicates.add(cb.equal(root.get("isConverted"), filter.getIsConverted()));
+                }
+                if (filter.getFromDate() != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), filter.getFromDate()));
+                }
+                if (filter.getToDate() != null) {
+                    predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), filter.getToDate()));
                 }
             }
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));

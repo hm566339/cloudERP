@@ -106,19 +106,19 @@ public class FeatureBootstrap implements CommandLineRunner {
                         // ── CRM Features ──────────────────────────────────────────────────────────
                         new FeatureDefinition("CRM", "CRM Module", "CRM",
                                         "Access to the Customer Relationship Management module",
-                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE")),
+                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "MANAGE")),
                         new FeatureDefinition("CRM_LEADS", "CRM Leads", "CRM",
                                         "Access to lead management, qualification, assignment, conversion and import",
-                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "ASSIGN", "MERGE", "CONVERT", "IMPORT")),
+                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "ASSIGN", "MERGE", "CONVERT", "IMPORT", "EXPORT")),
                         new FeatureDefinition("CRM_ACCOUNTS", "CRM Accounts & Contacts", "CRM",
                                         "Access to corporate accounts, contacts, and ERP customer onboarding",
-                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "ONBOARD")),
+                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "ONBOARD", "EXPORT")),
                         new FeatureDefinition("CRM_OPPORTUNITIES", "CRM Deals & Pipelines", "CRM",
                                         "Access to sales pipelines, kanban board, stage progression, and deals",
-                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "CLOSE")),
+                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "CLOSE", "EXPORT")),
                         new FeatureDefinition("CRM_QUOTATIONS", "CRM Quotations", "CRM",
                                         "Access to commercial quotations, GST calculation, approvals, and order conversion",
-                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "SUBMIT_APPROVAL", "CONVERT_ORDER")),
+                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "SUBMIT_APPROVAL", "APPROVE", "CONVERT_ORDER", "EXPORT")),
                         new FeatureDefinition("CRM_ACTIVITIES", "CRM Activities & Tasks", "CRM",
                                         "Access to customer interaction timeline, schedule follow-ups, and tasks",
                                         List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "COMPLETE")),
@@ -130,13 +130,13 @@ public class FeatureBootstrap implements CommandLineRunner {
                                         List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "EXECUTE")),
                         new FeatureDefinition("CRM_AUTOMATION", "CRM Automation Engine", "CRM",
                                         "Access to rule-based automation triggers, actions, and round-robin pools",
-                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "MANAGE")),
+                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "MANAGE", "EXECUTE")),
                         new FeatureDefinition("CRM_CAMPAIGNS", "CRM Campaigns & Marketing Attribution", "CRM",
                                         "Access to marketing campaigns, spend tracking, ROI, and multi-touch attribution",
-                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE")),
+                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "EXPORT")),
                         new FeatureDefinition("CRM_SETTINGS", "CRM Settings & Master Data", "CRM",
                                         "Access to tenant CRM operations, custom fields, lead statuses, sources, and tags",
-                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE")));
+                                        List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "MANAGE")));
 
         @Override
         public void run(String... args) {

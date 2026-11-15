@@ -229,4 +229,39 @@ class CrmLeadServiceImplTest {
         assertTrue(lead.getIsConverted());
         verify(leadRepository, times(1)).save(lead);
     }
+
+    @Test
+    @DisplayName("Should sanitize sort property 'date' to 'createdAt'")
+    void testGetAllLeads_DateSortSanitized() {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "date"));
+        org.springframework.data.domain.Page<CrmLead> mockPage = new org.springframework.data.domain.PageImpl<>(java.util.Collections.emptyList());
+
+        org.mockito.ArgumentCaptor<org.springframework.data.domain.Pageable> pageableCaptor = org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+        when(leadRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), pageableCaptor.capture())).thenReturn(mockPage);
+
+        leadService.getAllLeads(null, companyId, pageable);
+
+        org.springframework.data.domain.Pageable captured = pageableCaptor.getValue();
+        assertNotNull(captured);
+        org.springframework.data.domain.Sort.Order order = captured.getSort().getOrderFor("createdAt");
+        assertNotNull(order, "Expected sort by createdAt when 'date' is supplied");
+        assertEquals(org.springframework.data.domain.Sort.Direction.DESC, order.getDirection());
+    }
+
+    @Test
+    @DisplayName("Should sanitize invalid sort property to default 'createdAt' DESC")
+    void testGetAllLeads_InvalidSortSanitized() {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "unknownField"));
+        org.springframework.data.domain.Page<CrmLead> mockPage = new org.springframework.data.domain.PageImpl<>(java.util.Collections.emptyList());
+
+        org.mockito.ArgumentCaptor<org.springframework.data.domain.Pageable> pageableCaptor = org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+        when(leadRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), pageableCaptor.capture())).thenReturn(mockPage);
+
+        leadService.getAllLeads(null, companyId, pageable);
+
+        org.springframework.data.domain.Pageable captured = pageableCaptor.getValue();
+        assertNotNull(captured);
+        org.springframework.data.domain.Sort.Order order = captured.getSort().getOrderFor("createdAt");
+        assertNotNull(order, "Expected sort to fall back safely to createdAt");
+    }
 }

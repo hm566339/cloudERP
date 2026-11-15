@@ -15,6 +15,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +59,7 @@ public class CrmLeadController {
     public ResponseEntity<ApiResponse<List<LeadResponse>>> getAllLeads(
             LeadFilterRequest filter,
             @RequestParam(required = false) UUID companyId,
-            Pageable pageable) {
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC, size = 15) Pageable pageable) {
         Page<LeadResponse> page = leadService.getAllLeads(filter, companyId, pageable);
         return ResponseEntity.ok(ApiResponse.paginated(page, "Leads fetched successfully"));
     }

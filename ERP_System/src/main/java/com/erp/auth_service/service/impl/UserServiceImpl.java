@@ -1541,6 +1541,41 @@ public class UserServiceImpl implements UserService {
             }
         }
 
+        boolean isSystemAdmin = (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(
+                ur -> ur.getRole() != null && ("SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName()))))
+                || PlatformSecurityUtil.isElevatedAdmin();
+
+        if (isSystemAdmin && companyRepository != null) {
+            List<Company> allActiveCompanies = organization != null
+                    ? companyRepository.findByOrganization_IdAndActiveTrue(organization.getId())
+                    : companyRepository.findAll().stream().filter(c -> Boolean.TRUE.equals(c.getActive())).toList();
+            for (Company comp : allActiveCompanies) {
+                if (accessibleCompaniesAcc.stream().noneMatch(c -> c.getId().equals(comp.getId()))) {
+                    accessibleCompaniesAcc.add(
+                            SsoMeResponse.CompanyContext.builder()
+                                    .id(comp.getId())
+                                    .code(comp.getCompanyCode())
+                                    .name(comp.getCompanyName())
+                                    .legalName(comp.getLegalName())
+                                    .active(comp.getActive())
+                                    .membership(SsoMeResponse.CompanyMembershipContext.builder()
+                                            .id(comp.getId())
+                                            .status("ACTIVE")
+                                            .role(com.erp.auth_service.dto.response.RoleResponse.builder()
+                                                    .name("SYSTEM_ADMIN")
+                                                    .status(true)
+                                                    .build())
+                                            .roles(List.of(com.erp.auth_service.dto.response.RoleResponse.builder()
+                                                    .name("SYSTEM_ADMIN")
+                                                    .status(true)
+                                                    .build()))
+                                            .build())
+                                    .build());
+                }
+            }
+        }
+
         List<SsoMeResponse.CompanyContext> accessibleCompanies = new java.util.ArrayList<>(accessibleCompaniesAcc);
 
         // ── Company context ────────────────────────────────────────────────
@@ -1551,7 +1586,8 @@ public class UserServiceImpl implements UserService {
                 Company candidate = reqCompOpt.get();
                 boolean orgMatches = (organization == null || candidate.getOrganization() == null
                         || candidate.getOrganization().getId().equals(organization.getId()));
-                boolean isOwnerOrAdmin = (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER
+                boolean isOwnerOrAdmin = isSystemAdmin
+                        || (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER
                         || membershipCtx.getMemberType() == MemberType.ADMIN))
                         || (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(
                                 ur -> ur.getRole() != null && ("OWNER".equalsIgnoreCase(ur.getRole().getName())
@@ -1776,7 +1812,19 @@ public class UserServiceImpl implements UserService {
         // ── Authorized modules ────────────────────────────────────────────
         final List<SsoMeResponse.ModuleContext> authorizedModulesAcc = new java.util.ArrayList<>();
 
-        if (effectiveCompany != null) {
+        if (isSystemAdmin && moduleRepository != null) {
+            // SYSTEM_ADMIN receives global administrative access to all active ERP/CRM modules
+            moduleRepository.findAll().stream()
+                    .filter(m -> Boolean.TRUE.equals(m.getModuleStatus()))
+                    .forEach(m -> authorizedModulesAcc.add(
+                            SsoMeResponse.ModuleContext.builder()
+                                    .id(m.getId())
+                                    .name(m.getName())
+                                    .code(m.getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_"))
+                                    .host(m.getHost())
+                                    .active(true)
+                                    .build()));
+        } else if (effectiveCompany != null) {
             boolean isOwner = (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER
                     || membershipCtx.getMemberType() == MemberType.ADMIN))
                     || (user.getUserRoles() != null && user.getUserRoles().stream()
@@ -1961,6 +2009,12 @@ public class UserServiceImpl implements UserService {
                     .status(true)
                     .build());
         }
+        if (isSystemAdmin && roles.stream().noneMatch(r -> "SYSTEM_ADMIN".equalsIgnoreCase(r.getName()))) {
+            roles.add(0, com.erp.auth_service.dto.response.RoleResponse.builder()
+                    .name("SYSTEM_ADMIN")
+                    .status(true)
+                    .build());
+        }
         if (roles.isEmpty()) {
             roles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
                     .name("MEMBER")
@@ -1984,6 +2038,30 @@ public class UserServiceImpl implements UserService {
                 java.util.List<SsoMeResponse.ModuleContext> compMods = new java.util.ArrayList<>();
                 if (effectiveCompanyId != null && effectiveCompanyId.equals(cc.getId())) {
                     compMods = authorizedModules != null ? authorizedModules : java.util.Collections.emptyList();
+                } else if (isSystemAdmin && moduleRepository != null) {
+                    final List<SsoMeResponse.ModuleContext> baseMods = new java.util.ArrayList<>();
+                    moduleRepository.findAll().stream()
+                            .filter(m -> Boolean.TRUE.equals(m.getModuleStatus()))
+                            .forEach(m -> baseMods.add(
+                                    SsoMeResponse.ModuleContext.builder()
+                                            .id(m.getId())
+                                            .name(m.getName())
+                                            .code(m.getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_"))
+                                            .host(m.getHost())
+                                            .active(true)
+                                            .features(java.util.Collections.emptyList())
+                                            .build()));
+                    if (permissionService != null) {
+                        try {
+                            com.erp.auth_service.dto.response.EffectivePermissionsResponse compEffective = permissionService
+                                    .getEffectivePermissions(userId, cc.getId());
+                            compMods = nestFeaturesAndPermissions(baseMods, compEffective);
+                        } catch (Exception ignored) {
+                            compMods = baseMods;
+                        }
+                    } else {
+                        compMods = baseMods;
+                    }
                 } else {
                     try {
                         if (companyModuleRepository != null) {
