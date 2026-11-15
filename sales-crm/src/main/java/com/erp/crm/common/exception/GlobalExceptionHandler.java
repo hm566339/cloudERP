@@ -60,8 +60,8 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(org.springframework.data.mapping.PropertyReferenceException.class)
-    public ResponseEntity<ApiResponse<Object>> handlePropertyReferenceException(org.springframework.data.mapping.PropertyReferenceException ex) {
+    @ExceptionHandler(org.springframework.data.core.PropertyReferenceException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePropertyReferenceException(org.springframework.data.core.PropertyReferenceException ex) {
         return new ResponseEntity<>(
                 ApiResponse.error(ex.getMessage(), "Invalid Sort Property", HttpStatus.BAD_REQUEST),
                 HttpStatus.BAD_REQUEST
