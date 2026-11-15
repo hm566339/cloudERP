@@ -164,9 +164,7 @@ public class CrmOpportunityServiceImpl implements CrmOpportunityService {
             return KanbanViewResponse.builder()
                     .pipelineId(null)
                     .pipelineName("Default Pipeline")
-                    .columns(new ArrayList<>())
-                    .totalDeals(0)
-                    .totalPipelineValue(BigDecimal.ZERO)
+                    .stages(new ArrayList<>())
                     .build();
         }
 

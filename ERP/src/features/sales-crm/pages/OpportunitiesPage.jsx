@@ -76,7 +76,7 @@ export default function OpportunitiesPage() {
   const [updateStage] = useUpdateOpportunityStageMutation();
   const [closeOpportunity, { isLoading: isClosing }] = useCloseOpportunityMutation();
 
-  const kanbanColumns = kanbanRes?.data?.columns || [];
+  const kanbanColumns = kanbanRes?.data?.stages || kanbanRes?.data?.columns || [];
   const opportunities = oppsRes?.data?.content || oppsRes?.data || [];
   const totalElements = oppsRes?.data?.totalElements || opportunities.length;
   const totalPages = oppsRes?.data?.totalPages || Math.ceil(totalElements / (apiParams.size || 10)) || 1;
@@ -277,7 +277,9 @@ export default function OpportunitiesPage() {
         {viewMode === 'kanban' ? (
           <div className="flex-1 overflow-x-auto overflow-y-hidden">
             <CrmKanbanBoard
+              stages={kanbanColumns}
               columns={kanbanColumns}
+              opportunities={opportunities}
               onStageChange={handleStageChange}
               onOpportunityClick={(opp) => console.log('View opp', opp)}
             />

@@ -8,6 +8,7 @@ import { StatusBadge } from '../../../components/common';
  */
 export default function CrmKanbanBoard({
   stages = [],
+  columns = [],
   opportunities = [],
   onStageChange,
   onCreateOpportunity,
@@ -15,23 +16,33 @@ export default function CrmKanbanBoard({
 }) {
   const [draggingOppId, setDraggingOppId] = useState(null);
 
+  const rawStages = (stages && stages.length > 0) ? stages : (columns || []);
+  const normalizedStages = React.useMemo(() => {
+    return rawStages.map((s) => ({
+      ...s,
+      id: s.id || s.stageId,
+    }));
+  }, [rawStages]);
+
   // Group opportunities by stageId
   const oppsByStage = React.useMemo(() => {
     const map = {};
-    stages.forEach((s) => {
-      map[s.id] = [];
+    normalizedStages.forEach((s) => {
+      map[s.id] = (s.deals && Array.isArray(s.deals)) ? [...s.deals] : [];
     });
     opportunities.forEach((opp) => {
       const stageId = opp.currentStageId || opp.stageId;
       if (map[stageId]) {
-        map[stageId].push(opp);
-      } else if (stages.length > 0) {
+        if (!map[stageId].some(d => (d.id === opp.id))) {
+          map[stageId].push(opp);
+        }
+      } else if (normalizedStages.length > 0) {
         // Fallback to first stage if unassigned
-        map[stages[0].id].push(opp);
+        map[normalizedStages[0].id].push(opp);
       }
     });
     return map;
-  }, [stages, opportunities]);
+  }, [normalizedStages, opportunities]);
 
   const handleDragStart = (e, oppId) => {
     e.dataTransfer.setData('text/plain', oppId);
@@ -53,7 +64,7 @@ export default function CrmKanbanBoard({
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-6 pt-2 hide-scrollbar min-h-[600px] select-none">
-      {stages.map((stage) => {
+      {normalizedStages.map((stage) => {
         const stageOpps = oppsByStage[stage.id] || [];
         const totalValue = stageOpps.reduce((acc, curr) => acc + (Number(curr.dealValue) || 0), 0);
 
