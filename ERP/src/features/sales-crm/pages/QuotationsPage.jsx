@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FileText,
   Plus,
-  Search,
   ExternalLink,
   Printer,
   Send,
@@ -11,8 +10,10 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { PageHeader, ConfirmModal, StatusBadge } from '../../../components/common';
-import DataTable from '../../../components/data-table/DataTable';
+import PageHeader from '../../../components/common/PageHeader';
+import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
+import ConfirmModal from '../../../components/common/ConfirmModal';
+import useUrlFilters from '../../../hooks/useUrlFilters';
 import {
   useGetCrmQuotationsQuery,
   useConvertQuotationToOrderMutation,
@@ -22,26 +23,38 @@ import QuotationFormModal from '../components/QuotationFormModal';
 import QuotationApprovalModal from '../components/QuotationApprovalModal';
 import QuotationPrintModal from '../components/QuotationPrintModal';
 
+const DEFAULT_COLUMNS = [
+  'quotationNumber',
+  'accountName',
+  'totalAmount',
+  'taxAmount',
+  'status',
+];
+
 export default function QuotationsPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
   const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [page, setPage] = useState(0);
-
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [approvingQuote, setApprovingQuote] = useState(null);
   const [printingQuote, setPrintingQuote] = useState(null);
   const [convertingQuote, setConvertingQuote] = useState(null);
 
-  const { data: quotesRes, isLoading, refetch } = useGetCrmQuotationsQuery({
+  const {
+    page, setPage, setPageSize, apiParams,
+    sortBy, sortOrder, handleColumnSort,
+    filters, setFilter, resetFilters
+  } = useUrlFilters({ defaultPageSize: 10 });
+
+  const { data: quotesRes, isLoading, refetch, isFetching } = useGetCrmQuotationsQuery({
     companyId,
-    search: searchTerm || undefined,
-    status: selectedStatus || undefined,
-    page,
-    size: 15,
+    search: filters.searchKey || undefined,
+    status: filters.status || undefined,
+    page: page ? page - 1 : 0,
+    size: apiParams.size || 10,
   });
 
   const { data: accountsRes } = useGetCrmAccountsQuery({ companyId, page: 0, size: 100 });
@@ -51,6 +64,7 @@ export default function QuotationsPage() {
 
   const quotations = quotesRes?.data?.content || quotesRes?.data || [];
   const totalElements = quotesRes?.data?.totalElements || quotations.length;
+  const totalPages = quotesRes?.data?.totalPages || Math.ceil(totalElements / (apiParams.size || 10)) || 1;
 
   const handleConvertOrderConfirm = async () => {
     if (!convertingQuote) return;
@@ -63,10 +77,28 @@ export default function QuotationsPage() {
     }
   };
 
-  const columns = [
+  const basicFilters = useMemo(() => [
     {
+      key: 'status',
+      label: 'STATUS',
+      type: 'select',
+      options: [
+        { label: 'All Statuses', value: '' },
+        { label: 'Draft', value: 'DRAFT' },
+        { label: 'Pending Approval', value: 'PENDING_APPROVAL' },
+        { label: 'Approved', value: 'APPROVED' },
+        { label: 'Converted to Order', value: 'CONVERTED_TO_ORDER' },
+        { label: 'Rejected', value: 'REJECTED' },
+      ],
+    },
+  ], []);
+
+  const columns = useMemo(() => [
+    {
+      id: 'quotationNumber',
       header: 'Quote # & Title',
       accessorKey: 'quotationNumber',
+      sortable: true,
       cell: ({ row }) => {
         const q = row.original;
         return (
@@ -83,8 +115,10 @@ export default function QuotationsPage() {
       },
     },
     {
+      id: 'accountName',
       header: 'Client Account',
       accessorKey: 'accountName',
+      sortable: true,
       cell: ({ row }) => (
         <span className="text-xs font-medium text-zinc-800 dark:text-[#E6E8EE]">
           {row.original.accountName || 'Direct Customer'}
@@ -92,8 +126,10 @@ export default function QuotationsPage() {
       ),
     },
     {
+      id: 'totalAmount',
       header: 'Total Value (₹)',
       accessorKey: 'totalAmount',
+      sortable: true,
       cell: ({ row }) => (
         <div className="space-y-0.5 text-xs">
           <span className="font-mono font-bold text-primary block">
@@ -106,121 +142,142 @@ export default function QuotationsPage() {
       ),
     },
     {
-      header: 'Approval Status',
+      id: 'taxAmount',
+      header: 'Tax Amount',
+      accessorKey: 'taxAmount',
+      cell: ({ row }) => (
+        <span className="text-xs font-mono text-zinc-500">
+          ₹{(row.original.taxAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+        </span>
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Status',
       accessorKey: 'status',
       cell: ({ row }) => {
         const s = row.original.status || 'DRAFT';
-        let color = 'bg-zinc-100 text-zinc-600';
-        if (s === 'APPROVED') color = 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20';
-        else if (s === 'PENDING_APPROVAL') color = 'bg-amber-500/10 text-amber-600 border border-amber-500/20';
-        else if (s === 'CONVERTED_TO_ORDER') color = 'bg-purple-500/10 text-purple-600 border border-purple-500/20';
-        else if (s === 'REJECTED') color = 'bg-rose-500/10 text-rose-600 border border-rose-500/20';
+        let statusType = 'neutral';
+        if (s === 'APPROVED') statusType = 'success';
+        else if (s === 'PENDING_APPROVAL') statusType = 'warning';
+        else if (s === 'CONVERTED_TO_ORDER') statusType = 'primary';
+        else if (s === 'REJECTED') statusType = 'danger';
 
         return (
-          <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${color}`}>
-            {s.replace(/_/g, ' ')}
-          </span>
+          <DataTableStatusBadge
+            status={s.replace(/_/g, ' ')}
+            variant={statusType}
+          />
         );
       },
+    },
+  ], [crmBase, navigate]);
+
+  const rowActions = useMemo(() => [
+    {
+      key: 'submit',
+      label: 'Submit for Approval',
+      icon: Send,
+      tooltip: 'Submit',
+      hidden: (row) => row.status !== 'DRAFT' && row.status !== 'REJECTED',
+      className: 'hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20',
+      onClick: (row) => setApprovingQuote(row),
     },
     {
-      header: 'Actions',
-      id: 'actions',
-      cell: ({ row }) => {
-        const q = row.original;
-        const canSubmit = q.status === 'DRAFT' || q.status === 'REJECTED';
-        const canConvert = q.status === 'APPROVED';
-
-        return (
-          <div className="flex items-center gap-1.5 justify-end">
-            {canSubmit && (
-              <button
-                onClick={() => setApprovingQuote(q)}
-                className="px-2 py-1 text-[11px] font-semibold rounded bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 flex items-center gap-1"
-                title="Submit for Approval"
-              >
-                <Send size={11} /> Submit
-              </button>
-            )}
-
-            {canConvert && (
-              <button
-                onClick={() => setConvertingQuote(q)}
-                className="px-2 py-1 text-[11px] font-semibold rounded bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 flex items-center gap-1"
-                title="Convert to Sales Order"
-              >
-                <ArrowRightLeft size={11} /> Convert PO
-              </button>
-            )}
-
-            <button
-              onClick={() => setPrintingQuote(q)}
-              className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white rounded"
-              title="Print Quotation"
-            >
-              <Printer size={13} />
-            </button>
-
-            <button
-              onClick={() => navigate(`${crmBase}/quotations/${q.id}`)}
-              className="p-1.5 text-zinc-500 hover:text-primary rounded"
-              title="View Details"
-            >
-              <ExternalLink size={13} />
-            </button>
-          </div>
-        );
-      },
+      key: 'convert',
+      label: 'Convert to Order',
+      icon: ArrowRightLeft,
+      tooltip: 'Convert PO',
+      hidden: (row) => row.status !== 'APPROVED',
+      className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20',
+      onClick: (row) => setConvertingQuote(row),
     },
-  ];
+    {
+      key: 'print',
+      label: 'Print',
+      icon: Printer,
+      tooltip: 'Print Quotation',
+      onClick: (row) => setPrintingQuote(row),
+    },
+    {
+      key: 'view',
+      label: 'View Dossier',
+      icon: ExternalLink,
+      tooltip: 'View Details',
+      onClick: (row) => navigate(`${crmBase}/quotations/${row.id}`),
+    },
+  ], [crmBase, navigate]);
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Commercial Quotations"
-        subtitle={`Managing ${totalElements} quotes, GST tax computations, and workflow approvals.`}
-        actions={
-          <button
-            onClick={() => setIsCreateOpen(true)}
-            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5"
-          >
-            <Plus size={14} /> Create Quotation
-          </button>
-        }
-      />
-
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
-        <div className="relative w-full sm:w-72">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Search quotation number, title..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-900 dark:text-white"
-          />
-        </div>
-
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
+        description="Managing quotations, GST tax computations, and workflow approvals"
+      >
+        <button
+          onClick={() => setIsCreateOpen(true)}
+          className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
         >
-          <option value="">All Statuses</option>
-          <option value="DRAFT">Draft</option>
-          <option value="PENDING_APPROVAL">Pending Approval</option>
-          <option value="APPROVED">Approved</option>
-          <option value="CONVERTED_TO_ORDER">Converted to Order</option>
-          <option value="REJECTED">Rejected</option>
-        </select>
-      </div>
+          <Plus className="w-3.5 h-3.5" />
+          <span>New Quotation</span>
+        </button>
+      </PageHeader>
 
-      <DataTable
-        data={quotations}
-        columns={columns}
-        isLoading={isLoading}
-        enablePagination={true}
-      />
+      <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        <DataTable
+          permissionFeature="CRM"
+          selectable
+          selectedRows={selectedRows}
+          onSelectionChange={setSelectedRows}
+          columns={columns}
+          data={quotations}
+          rowKey="id"
+          loading={isLoading}
+          isRefreshing={isFetching}
+
+          // Search
+          searchable
+          searchValue={filters.searchKey || ''}
+          searchPlaceholder="Search quotation number, title..."
+          onSearchChange={(val) => setFilter('searchKey', val)}
+
+          // Filters
+          filters={basicFilters}
+          filterValues={filters}
+          onFilterChange={setFilter}
+
+          // Reset & Refresh
+          onReset={resetFilters}
+          onRefresh={refetch}
+
+          // Column Visibility
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={setVisibleColumns}
+
+          // Sorting
+          sort={{ key: sortBy, direction: sortOrder }}
+          onSortChange={({ key }) => handleColumnSort(key)}
+
+          // Row Actions
+          rowActions={rowActions}
+
+          // Pagination
+          pagination={{
+            page,
+            pageSize: apiParams.size || 10,
+            totalPages,
+            totalElements,
+          }}
+          pageIndexBase={1}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemName="quotations"
+
+          // Empty State
+          emptyMessage="No quotations found"
+          emptyDescription="Try adjusting your search query or status filter to find quotations."
+        />
+      </div>
 
       {/* Modals */}
       <QuotationFormModal
@@ -257,4 +314,5 @@ export default function QuotationsPage() {
     </div>
   );
 }
+
 

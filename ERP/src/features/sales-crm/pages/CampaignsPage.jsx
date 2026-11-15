@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Megaphone,
@@ -10,26 +10,55 @@ import {
   Calendar,
   ExternalLink
 } from 'lucide-react';
-import { PageHeader, StatCard } from '../../../components/common';
-import DataTable from '../../../components/data-table/DataTable';
+import PageHeader from '../../../components/common/PageHeader';
+import StatCard from '../../../components/common/StatCard';
+import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
+import useUrlFilters from '../../../hooks/useUrlFilters';
 import { useGetCrmCampaignsQuery } from '../../../api/sales-crm/crm.api';
 import CampaignFormModal from '../components/CampaignFormModal';
+
+const DEFAULT_COLUMNS = [
+  'name',
+  'channel',
+  'budget',
+  'actualRevenueWon',
+  'roiPercent',
+  'leadsCount',
+];
 
 export default function CampaignsPage() {
   const { companyId } = useParams();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
 
-  const { data: campaignsRes, isLoading, refetch } = useGetCrmCampaignsQuery({ companyId });
+  const {
+    page, setPage, setPageSize, apiParams,
+    sortBy, sortOrder, handleColumnSort,
+    filters, setFilter, resetFilters
+  } = useUrlFilters({ defaultPageSize: 10 });
+
+  const { data: campaignsRes, isLoading, refetch, isFetching } = useGetCrmCampaignsQuery({
+    companyId,
+    search: filters.searchKey || undefined,
+    page: page ? page - 1 : 0,
+    size: apiParams.size || 10,
+  });
+
   const campaigns = campaignsRes?.data?.content || campaignsRes?.data || [];
+  const totalElements = campaignsRes?.data?.totalElements || campaigns.length;
+  const totalPages = campaignsRes?.data?.totalPages || Math.ceil(totalElements / (apiParams.size || 10)) || 1;
 
   const totalBudget = campaigns.reduce((acc, c) => acc + (Number(c.budget) || 0), 0);
   const totalRevenue = campaigns.reduce((acc, c) => acc + (Number(c.actualRevenueWon) || 0), 0);
   const overallRoi = totalBudget > 0 ? (((totalRevenue - totalBudget) / totalBudget) * 100).toFixed(1) : 0;
 
-  const columns = [
+  const columns = useMemo(() => [
     {
+      id: 'name',
       header: 'Campaign & Code',
       accessorKey: 'name',
+      sortable: true,
       cell: ({ row }) => {
         const c = row.original;
         return (
@@ -41,8 +70,10 @@ export default function CampaignsPage() {
       },
     },
     {
+      id: 'channel',
       header: 'Channel & Type',
       accessorKey: 'channel',
+      sortable: true,
       cell: ({ row }) => (
         <div className="space-y-0.5 text-xs">
           <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE] block">
@@ -53,8 +84,10 @@ export default function CampaignsPage() {
       ),
     },
     {
+      id: 'budget',
       header: 'Budget & Spend',
       accessorKey: 'budget',
+      sortable: true,
       cell: ({ row }) => (
         <div className="text-xs space-y-0.5">
           <span className="font-mono font-semibold text-zinc-900 dark:text-white block">
@@ -67,8 +100,10 @@ export default function CampaignsPage() {
       ),
     },
     {
+      id: 'actualRevenueWon',
       header: 'Revenue Won',
       accessorKey: 'actualRevenueWon',
+      sortable: true,
       cell: ({ row }) => (
         <span className="font-mono font-bold text-emerald-600 text-xs">
           ₹{(row.original.actualRevenueWon || 0).toLocaleString('en-IN')}
@@ -76,8 +111,10 @@ export default function CampaignsPage() {
       ),
     },
     {
+      id: 'roiPercent',
       header: 'ROI %',
       accessorKey: 'roiPercent',
+      sortable: true,
       cell: ({ row }) => {
         const budget = Number(row.original.budget) || 0;
         const revenue = Number(row.original.actualRevenueWon) || 0;
@@ -94,61 +131,108 @@ export default function CampaignsPage() {
       },
     },
     {
+      id: 'leadsCount',
       header: 'Leads Generated',
       accessorKey: 'leadsCount',
+      sortable: true,
       cell: ({ row }) => (
         <span className="font-semibold text-xs text-zinc-800 dark:text-[#E6E8EE]">
           {row.original.leadsCount || 0} Leads
         </span>
       ),
     },
-  ];
+  ], []);
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Marketing Campaigns & Spend"
-        subtitle={`Monitoring ${campaigns.length} campaigns across digital, search, and marketplace channels.`}
-        actions={
-          <button
-            onClick={() => setIsCreateOpen(true)}
-            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5"
-          >
-            <Plus size={14} /> New Campaign
-          </button>
-        }
-      />
+        description="Monitoring campaigns across digital, search, and marketplace channels"
+      >
+        <button
+          onClick={() => setIsCreateOpen(true)}
+          className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>New Campaign</span>
+        </button>
+      </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          title="Total Budget Allocated"
-          value={`₹${(totalBudget / 100000).toFixed(1)}L`}
-          description="Cumulative marketing budget"
-          icon={<DollarSign className="w-5 h-5 text-indigo-500" />}
-        />
-        <StatCard
-          title="Revenue Won"
-          value={`₹${(totalRevenue / 100000).toFixed(1)}L`}
-          trend="up"
-          change="+24%"
-          description="Attributed closed deals"
-          icon={<TrendingUp className="w-5 h-5 text-emerald-500" />}
-        />
-        <StatCard
-          title="Portfolio ROI"
-          value={`${overallRoi}%`}
-          trend="up"
-          description="Marketing return on investment"
-          icon={<Target className="w-5 h-5 text-amber-500" />}
-        />
+      <div className="flex-1 p-6 overflow-hidden flex flex-col space-y-4">
+        {/* KPI Summary Strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 shrink-0">
+          <StatCard
+            title="Total Budget Allocated"
+            value={`₹${(totalBudget / 100000).toFixed(1)}L`}
+            description="Cumulative marketing budget"
+            icon={<DollarSign className="w-5 h-5 text-indigo-500" />}
+          />
+          <StatCard
+            title="Revenue Won"
+            value={`₹${(totalRevenue / 100000).toFixed(1)}L`}
+            trend="up"
+            change="+24%"
+            description="Attributed closed deals"
+            icon={<TrendingUp className="w-5 h-5 text-emerald-500" />}
+          />
+          <StatCard
+            title="Portfolio ROI"
+            value={`${overallRoi}%`}
+            trend="up"
+            description="Marketing return on investment"
+            icon={<Target className="w-5 h-5 text-amber-500" />}
+          />
+        </div>
+
+        {/* DataTable Container */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <DataTable
+            permissionFeature="CRM"
+            selectable
+            selectedRows={selectedRows}
+            onSelectionChange={setSelectedRows}
+            columns={columns}
+            data={campaigns}
+            rowKey="id"
+            loading={isLoading}
+            isRefreshing={isFetching}
+
+            // Search
+            searchable
+            searchValue={filters.searchKey || ''}
+            searchPlaceholder="Search campaign name, code..."
+            onSearchChange={(val) => setFilter('searchKey', val)}
+
+            // Reset & Refresh
+            onReset={resetFilters}
+            onRefresh={refetch}
+
+            // Column Visibility
+            visibleColumns={visibleColumns}
+            onVisibleColumnsChange={setVisibleColumns}
+
+            // Sorting
+            sort={{ key: sortBy, direction: sortOrder }}
+            onSortChange={({ key }) => handleColumnSort(key)}
+
+            // Pagination
+            pagination={{
+              page,
+              pageSize: apiParams.size || 10,
+              totalPages,
+              totalElements,
+            }}
+            pageIndexBase={1}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemName="campaigns"
+
+            // Empty State
+            emptyMessage="No campaigns found"
+            emptyDescription="Try adjusting your search criteria or create a new campaign."
+          />
+        </div>
       </div>
-
-      <DataTable
-        data={campaigns}
-        columns={columns}
-        isLoading={isLoading}
-        enablePagination={true}
-      />
 
       <CampaignFormModal
         isOpen={isCreateOpen}
@@ -159,4 +243,5 @@ export default function CampaignsPage() {
     </div>
   );
 }
+
 

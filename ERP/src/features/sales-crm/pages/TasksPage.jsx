@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   CheckSquare,
@@ -11,29 +11,62 @@ import {
   Building2,
   Users
 } from 'lucide-react';
-import { PageHeader } from '../../../components/common';
-import DataTable from '../../../components/data-table/DataTable';
+import PageHeader from '../../../components/common/PageHeader';
+import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
+import useUrlFilters from '../../../hooks/useUrlFilters';
 import {
   useGetCrmTasksQuery,
   useCompleteCrmTaskMutation,
 } from '../../../api/sales-crm/crm.api';
 import TaskFormModal from '../components/TaskFormModal';
 
+const DEFAULT_COLUMNS = [
+  'title',
+  'entityType',
+  'priority',
+  'dueDate',
+  'status',
+];
+
 export default function TasksPage() {
   const { companyId } = useParams();
-  const [selectedPriority, setSelectedPriority] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('PENDING');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
 
-  const { data: tasksRes, isLoading, refetch } = useGetCrmTasksQuery({
+  const {
+    page, setPage, setPageSize, apiParams,
+    sortBy, sortOrder, handleColumnSort,
+    filters, setFilter, resetFilters
+  } = useUrlFilters({ defaultPageSize: 10 });
+
+  const { data: tasksRes, isLoading, refetch, isFetching } = useGetCrmTasksQuery({
     companyId,
-    priority: selectedPriority || undefined,
-    status: selectedStatus || undefined,
+    priority: filters.priority || undefined,
+    status: filters.status !== undefined ? (filters.status || undefined) : 'PENDING',
   });
 
   const [completeTask] = useCompleteCrmTaskMutation();
 
-  const tasks = tasksRes?.data || [];
+  const allTasks = tasksRes?.data || [];
+  
+  // Client-side search and pagination if backend returns unpaginated list
+  const filteredTasks = useMemo(() => {
+    let res = allTasks;
+    if (filters.searchKey && filters.searchKey.trim()) {
+      const q = filters.searchKey.toLowerCase();
+      res = res.filter(t => (t.title || '').toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q));
+    }
+    return res;
+  }, [allTasks, filters.searchKey]);
+
+  const totalElements = filteredTasks.length;
+  const pageSize = apiParams.size || 10;
+  const totalPages = Math.ceil(totalElements / pageSize) || 1;
+  const paginatedTasks = useMemo(() => {
+    const start = ((page || 1) - 1) * pageSize;
+    return filteredTasks.slice(start, start + pageSize);
+  }, [filteredTasks, page, pageSize]);
 
   const handleToggleComplete = async (taskId) => {
     try {
@@ -44,10 +77,37 @@ export default function TasksPage() {
     }
   };
 
-  const columns = [
+  const basicFilters = useMemo(() => [
     {
+      key: 'status',
+      label: 'STATUS',
+      type: 'select',
+      options: [
+        { label: 'Pending Tasks', value: 'PENDING' },
+        { label: 'Completed Tasks', value: 'COMPLETED' },
+        { label: 'All Tasks', value: '' },
+      ],
+    },
+    {
+      key: 'priority',
+      label: 'PRIORITY',
+      type: 'select',
+      options: [
+        { label: 'All Priorities', value: '' },
+        { label: 'Urgent', value: 'URGENT' },
+        { label: 'High', value: 'HIGH' },
+        { label: 'Medium', value: 'MEDIUM' },
+        { label: 'Low', value: 'LOW' },
+      ],
+    },
+  ], []);
+
+  const columns = useMemo(() => [
+    {
+      id: 'title',
       header: 'Task Title & Description',
       accessorKey: 'title',
+      sortable: true,
       cell: ({ row }) => {
         const t = row.original;
         const isCompleted = t.status === 'COMPLETED';
@@ -73,8 +133,10 @@ export default function TasksPage() {
       },
     },
     {
+      id: 'entityType',
       header: 'Target Entity',
       accessorKey: 'entityType',
+      sortable: true,
       cell: ({ row }) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-100 dark:bg-[#1C202B] text-zinc-700 dark:text-[#E6E8EE]">
           {row.original.entityType || 'LEAD'}
@@ -82,25 +144,30 @@ export default function TasksPage() {
       ),
     },
     {
+      id: 'priority',
       header: 'Priority',
       accessorKey: 'priority',
+      sortable: true,
       cell: ({ row }) => {
         const p = row.original.priority || 'MEDIUM';
-        let color = 'bg-zinc-100 text-zinc-600';
-        if (p === 'URGENT') color = 'bg-rose-500/10 text-rose-500 font-bold';
-        else if (p === 'HIGH') color = 'bg-amber-500/10 text-amber-600 font-semibold';
-        else if (p === 'MEDIUM') color = 'bg-blue-500/10 text-blue-600';
+        let statusType = 'neutral';
+        if (p === 'URGENT') statusType = 'danger';
+        else if (p === 'HIGH') statusType = 'warning';
+        else if (p === 'MEDIUM') statusType = 'primary';
 
         return (
-          <span className={`px-2 py-0.5 rounded text-[11px] ${color}`}>
-            {p}
-          </span>
+          <DataTableStatusBadge
+            status={p}
+            variant={statusType}
+          />
         );
       },
     },
     {
+      id: 'dueDate',
       header: 'Due Date',
       accessorKey: 'dueDate',
+      sortable: true,
       cell: ({ row }) => {
         const date = row.original.dueDate ? new Date(row.original.dueDate) : null;
         const isOverdue = date && date < new Date() && row.original.status !== 'COMPLETED';
@@ -113,55 +180,102 @@ export default function TasksPage() {
         );
       },
     },
-  ];
+    {
+      id: 'status',
+      header: 'Status',
+      accessorKey: 'status',
+      sortable: true,
+      cell: ({ row }) => (
+        <DataTableStatusBadge
+          status={row.original.status || 'PENDING'}
+          variant={row.original.status === 'COMPLETED' ? 'success' : 'neutral'}
+        />
+      ),
+    },
+  ], []);
+
+  const rowActions = useMemo(() => [
+    {
+      key: 'complete',
+      label: 'Complete Task',
+      icon: CheckCircle2,
+      tooltip: 'Mark Completed',
+      hidden: (row) => row.status === 'COMPLETED',
+      className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20',
+      onClick: (row) => handleToggleComplete(row.id),
+    },
+  ], []);
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="CRM Action Tasks"
-        subtitle={`Tracking ${tasks.length} sales follow-ups, calls, and action items.`}
-        actions={
-          <button
-            onClick={() => setIsCreateOpen(true)}
-            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5"
-          >
-            <Plus size={14} /> New Task
-          </button>
-        }
-      />
+        description="Tracking sales follow-ups, calls, and action items"
+      >
+        <button
+          onClick={() => setIsCreateOpen(true)}
+          className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>New Task</span>
+        </button>
+      </PageHeader>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
-          >
-            <option value="PENDING">Pending Tasks</option>
-            <option value="COMPLETED">Completed Tasks</option>
-            <option value="">All Tasks</option>
-          </select>
+      <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        <DataTable
+          permissionFeature="CRM"
+          selectable
+          selectedRows={selectedRows}
+          onSelectionChange={setSelectedRows}
+          columns={columns}
+          data={paginatedTasks}
+          rowKey="id"
+          loading={isLoading}
+          isRefreshing={isFetching}
 
-          <select
-            value={selectedPriority}
-            onChange={(e) => setSelectedPriority(e.target.value)}
-            className="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
-          >
-            <option value="">All Priorities</option>
-            <option value="URGENT">Urgent</option>
-            <option value="HIGH">High</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LOW">Low</option>
-          </select>
-        </div>
+          // Search
+          searchable
+          searchValue={filters.searchKey || ''}
+          searchPlaceholder="Search task title, description..."
+          onSearchChange={(val) => setFilter('searchKey', val)}
+
+          // Filters
+          filters={basicFilters}
+          filterValues={filters}
+          onFilterChange={setFilter}
+
+          // Reset & Refresh
+          onReset={resetFilters}
+          onRefresh={refetch}
+
+          // Column Visibility
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={setVisibleColumns}
+
+          // Sorting
+          sort={{ key: sortBy, direction: sortOrder }}
+          onSortChange={({ key }) => handleColumnSort(key)}
+
+          // Row Actions
+          rowActions={rowActions}
+
+          // Pagination
+          pagination={{
+            page,
+            pageSize,
+            totalPages,
+            totalElements,
+          }}
+          pageIndexBase={1}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemName="tasks"
+
+          // Empty State
+          emptyMessage="No tasks found"
+          emptyDescription="Try adjusting your status or priority filters to find action items."
+        />
       </div>
-
-      <DataTable
-        data={tasks}
-        columns={columns}
-        isLoading={isLoading}
-        enablePagination={true}
-      />
 
       <TaskFormModal
         isOpen={isCreateOpen}
@@ -172,4 +286,5 @@ export default function TasksPage() {
     </div>
   );
 }
+
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -7,19 +7,21 @@ import {
   Download,
   Filter,
   Search,
-  MoreVertical,
   UserCheck,
   ArrowRightLeft,
   Trash2,
   Edit2,
+  Eye,
   ExternalLink,
   Flame,
   Phone,
   Mail,
   Building2
 } from 'lucide-react';
-import { PageHeader, ConfirmModal, StatusBadge } from '../../../components/common';
-import DataTable from '../../../components/data-table/DataTable';
+import PageHeader from '../../../components/common/PageHeader';
+import DataTable from '../../../components/data-table';
+import useUrlFilters from '../../../hooks/useUrlFilters';
+import ConfirmModal from '../../../components/common/ConfirmModal';
 import {
   useGetLeadsQuery,
   useDeleteLeadMutation,
@@ -31,15 +33,21 @@ import LeadConvertModal from '../components/LeadConvertModal';
 import LeadAssignModal from '../components/LeadAssignModal';
 import LeadImportModal from '../components/LeadImportModal';
 
+const DEFAULT_COLUMNS = [
+  'displayName',
+  'contact',
+  'leadScore',
+  'leadSource',
+  'leadStatus'
+];
+
 export default function LeadsPage() {
   const { companyId } = useParams();
   const navigate = useNavigate();
   const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedRating, setSelectedRating] = useState('');
-  const [page, setPage] = useState(0);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
 
   // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -49,14 +57,21 @@ export default function LeadsPage() {
   const [assigningLead, setAssigningLead] = useState(null);
   const [deletingLead, setDeletingLead] = useState(null);
 
+  const {
+    page, setPage, setPageSize, apiParams,
+    sortBy, sortOrder, handleColumnSort,
+    filters, setFilter, resetFilters
+  } = useUrlFilters({ defaultPageSize: 10 });
+
   // API hooks
-  const { data: leadsRes, isLoading, refetch } = useGetLeadsQuery({
+  const { data: leadsRes, isLoading, refetch, isFetching } = useGetLeadsQuery({
     companyId,
-    search: searchTerm || undefined,
-    statusId: selectedStatus || undefined,
-    rating: selectedRating || undefined,
+    search: filters.searchKey || undefined,
+    statusId: filters.statusId || undefined,
+    rating: filters.rating || undefined,
+    sourceId: filters.sourceId || undefined,
     page,
-    size: 15,
+    size: apiParams.size || 10,
   });
 
   const { data: sourcesRes } = useGetCrmLeadSourcesQuery(companyId);
@@ -68,6 +83,12 @@ export default function LeadsPage() {
   const totalElements = leadsRes?.data?.totalElements || leads.length;
   const sources = sourcesRes?.data || [];
   const statuses = statusesRes?.data || [];
+
+  const handleReset = () => {
+    resetFilters();
+    setPage(0);
+    setSelectedRows([]);
+  };
 
   const handleDeleteConfirm = async () => {
     if (!deletingLead) return;
@@ -103,12 +124,44 @@ export default function LeadsPage() {
     document.body.removeChild(link);
   };
 
-  const columns = [
+  const basicFilters = useMemo(() => [
     {
-      header: 'Lead Name & Company',
-      accessorKey: 'displayName',
-      cell: ({ row }) => {
-        const lead = row.original;
+      id: 'statusId',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { label: 'All Statuses', value: '' },
+        ...statuses.map((st) => ({ label: st.statusName, value: String(st.id) }))
+      ]
+    },
+    {
+      id: 'rating',
+      label: 'Score Tier',
+      type: 'select',
+      options: [
+        { label: 'All Scores', value: '' },
+        { label: 'Hot Leads (≥ 75)', value: 'HOT' },
+        { label: 'Warm Leads (45 - 74)', value: 'WARM' },
+        { label: 'Cold Leads (< 45)', value: 'COLD' }
+      ]
+    },
+    {
+      id: 'sourceId',
+      label: 'Source',
+      type: 'select',
+      options: [
+        { label: 'All Sources', value: '' },
+        ...sources.map((src) => ({ label: src.sourceName, value: String(src.id) }))
+      ]
+    }
+  ], [statuses, sources]);
+
+  const columns = useMemo(() => [
+    {
+      id: 'displayName',
+      label: 'Lead Name & Company',
+      sortable: true,
+      render: (val, lead) => {
         const name = lead.displayName || `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'New Lead';
         return (
           <div className="space-y-0.5">
@@ -125,36 +178,35 @@ export default function LeadsPage() {
             </div>
           </div>
         );
-      },
+      }
     },
     {
-      header: 'Communication',
-      accessorKey: 'phone',
-      cell: ({ row }) => {
-        const lead = row.original;
-        return (
-          <div className="space-y-1 text-xs">
-            {(lead.normalizedPhone || lead.phone) && (
-              <div className="flex items-center gap-1.5 font-mono text-zinc-700 dark:text-[#A0A6B5]">
-                <Phone size={11} className="text-zinc-400" />
-                <span>{lead.normalizedPhone || lead.phone}</span>
-              </div>
-            )}
-            {lead.email && (
-              <div className="flex items-center gap-1.5 text-zinc-500 text-[11px]">
-                <Mail size={11} className="text-zinc-400" />
-                <span className="truncate max-w-[150px]">{lead.email}</span>
-              </div>
-            )}
-          </div>
-        );
-      },
+      id: 'contact',
+      label: 'Contact',
+      sortable: false,
+      render: (val, lead) => (
+        <div className="space-y-1 text-xs">
+          {(lead.normalizedPhone || lead.phone) && (
+            <div className="flex items-center gap-1.5 font-mono text-zinc-700 dark:text-[#A0A6B5]">
+              <Phone size={11} className="text-zinc-400" />
+              <span>{lead.normalizedPhone || lead.phone}</span>
+            </div>
+          )}
+          {lead.email && (
+            <div className="flex items-center gap-1.5 text-zinc-500 text-[11px]">
+              <Mail size={11} className="text-zinc-400" />
+              <span className="truncate max-w-[150px]">{lead.email}</span>
+            </div>
+          )}
+        </div>
+      )
     },
     {
-      header: 'Lead Score',
-      accessorKey: 'leadScore',
-      cell: ({ row }) => {
-        const score = row.original.leadScore || 50;
+      id: 'leadScore',
+      label: 'Lead Score',
+      sortable: true,
+      render: (val, lead) => {
+        const score = lead.leadScore || 50;
         let badgeColor = 'bg-zinc-100 dark:bg-[#1C202B] text-zinc-600';
         let label = 'Cold';
         if (score >= 75) {
@@ -172,143 +224,152 @@ export default function LeadsPage() {
             <span className="text-[11px] font-medium text-zinc-500">{label}</span>
           </div>
         );
-      },
+      }
     },
     {
-      header: 'Source',
-      accessorKey: 'leadSource',
-      cell: ({ row }) => (
+      id: 'leadSource',
+      label: 'Source',
+      sortable: false,
+      render: (val, lead) => (
         <span className="text-xs text-zinc-700 dark:text-[#A0A6B5]">
-          {row.original.leadSource?.sourceName || row.original.utmSource || 'Direct'}
+          {lead.leadSource?.sourceName || lead.utmSource || 'Direct'}
         </span>
-      ),
+      )
     },
     {
-      header: 'Status',
-      accessorKey: 'leadStatus',
-      cell: ({ row }) => (
+      id: 'leadStatus',
+      label: 'Status',
+      sortable: true,
+      render: (val, lead) => (
         <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-primary/10 text-primary dark:text-primary-light">
-          {row.original.leadStatus?.statusName || 'NEW'}
+          {lead.leadStatus?.statusName || 'NEW'}
         </span>
-      ),
+      )
+    }
+  ], [crmBase, navigate]);
+
+  const rowActions = useMemo(() => [
+    {
+      key: 'view',
+      label: 'View Details',
+      icon: Eye,
+      onClick: (row) => navigate(`${crmBase}/leads/${row.id}`),
+      tooltip: 'View Details',
+      className: 'hover:text-blue-600 hover:bg-blue-50'
     },
     {
-      header: 'Actions',
-      id: 'actions',
-      cell: ({ row }) => {
-        const lead = row.original;
-        return (
-          <div className="flex items-center gap-1.5 justify-end">
-            <button
-              onClick={() => setAssigningLead(lead)}
-              className="p-1.5 text-zinc-500 hover:text-primary hover:bg-zinc-100 dark:hover:bg-[#1C202B] rounded transition-colors"
-              title="Assign Lead"
-            >
-              <UserCheck size={14} />
-            </button>
-            <button
-              onClick={() => setConvertingLead(lead)}
-              className="p-1.5 text-zinc-500 hover:text-emerald-500 hover:bg-zinc-100 dark:hover:bg-[#1C202B] rounded transition-colors"
-              title="Convert to Account & Deal"
-            >
-              <ArrowRightLeft size={14} />
-            </button>
-            <button
-              onClick={() => setEditingLead(lead)}
-              className="p-1.5 text-zinc-500 hover:text-blue-500 hover:bg-zinc-100 dark:hover:bg-[#1C202B] rounded transition-colors"
-              title="Edit Lead"
-            >
-              <Edit2 size={14} />
-            </button>
-            <button
-              onClick={() => setDeletingLead(lead)}
-              className="p-1.5 text-zinc-500 hover:text-rose-500 hover:bg-zinc-100 dark:hover:bg-[#1C202B] rounded transition-colors"
-              title="Delete Lead"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
-        );
-      },
+      key: 'assign',
+      label: 'Assign Lead',
+      icon: UserCheck,
+      onClick: (row) => setAssigningLead(row),
+      tooltip: 'Assign Lead',
+      className: 'hover:text-primary hover:bg-primary/10'
     },
-  ];
+    {
+      key: 'convert',
+      label: 'Convert to Account & Deal',
+      icon: ArrowRightLeft,
+      onClick: (row) => setConvertingLead(row),
+      tooltip: 'Convert to Account & Deal',
+      className: 'hover:text-emerald-600 hover:bg-emerald-50'
+    },
+    {
+      key: 'edit',
+      label: 'Edit Lead',
+      icon: Edit2,
+      onClick: (row) => setEditingLead(row),
+      tooltip: 'Edit Lead',
+      className: 'hover:text-indigo-600 hover:bg-indigo-50'
+    },
+    {
+      key: 'delete',
+      label: 'Delete Lead',
+      icon: Trash2,
+      danger: true,
+      onClick: (row) => setDeletingLead(row),
+      tooltip: 'Delete Lead'
+    }
+  ], [crmBase, navigate]);
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Lead Management"
-        subtitle={`Tracking, scoring and converting ${totalElements} commercial leads.`}
-        actions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={exportLeadsCsv}
-              className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
-            >
-              <Download size={13} /> Export
-            </button>
-            <button
-              onClick={() => setIsImportOpen(true)}
-              className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
-            >
-              <Upload size={13} /> Import CSV
-            </button>
-            <button
-              onClick={() => setIsCreateOpen(true)}
-              className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5"
-            >
-              <Plus size={14} /> Add Lead
-            </button>
-          </div>
-        }
-      />
+        description={`Tracking, scoring and converting ${totalElements} commercial leads.`}
+      >
+        <button
+          onClick={() => setIsImportOpen(true)}
+          className="btn-secondary flex items-center gap-2 text-xs"
+        >
+          <Upload size={14} />
+          <span>Import CSV</span>
+        </button>
+        <button
+          onClick={() => setIsCreateOpen(true)}
+          className="btn-primary flex items-center gap-2 text-xs"
+        >
+          <Plus size={14} />
+          <span>New Lead</span>
+        </button>
+      </PageHeader>
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
-        <div className="relative w-full sm:w-72">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Search by name, phone, GSTIN..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-        </div>
+      {/* Main Content Area */}
+      <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        <DataTable
+          permissionFeature="LEADS"
+          selectable
+          selectedRows={selectedRows}
+          onSelectionChange={setSelectedRows}
+          columns={columns}
+          data={leads}
+          rowKey="id"
+          loading={isLoading}
+          isRefreshing={isFetching}
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
-          >
-            <option value="">All Statuses</option>
-            {statuses.map((st) => (
-              <option key={st.id} value={st.id}>
-                {st.statusName}
-              </option>
-            ))}
-          </select>
+          // Search
+          searchable
+          searchValue={filters.searchKey || ''}
+          searchPlaceholder="Search by name, phone, GSTIN..."
+          onSearchChange={(val) => setFilter('searchKey', val)}
 
-          <select
-            value={selectedRating}
-            onChange={(e) => setSelectedRating(e.target.value)}
-            className="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
-          >
-            <option value="">All Scores</option>
-            <option value="HOT">Hot Leads (&ge; 75)</option>
-            <option value="WARM">Warm Leads (45 - 74)</option>
-            <option value="COLD">Cold Leads (&lt; 45)</option>
-          </select>
-        </div>
+          // Basic Filters
+          filters={basicFilters}
+          filterValues={filters}
+          onFilterChange={setFilter}
+
+          // Reset & Refresh & Export
+          onReset={handleReset}
+          onRefresh={refetch}
+          onExport={exportLeadsCsv}
+
+          // Column Visibility
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={setVisibleColumns}
+
+          // Sorting
+          sort={{ key: sortBy, direction: sortOrder }}
+          onSortChange={({ key }) => handleColumnSort(key)}
+
+          // Row Actions
+          rowActions={rowActions}
+
+          // Pagination
+          pagination={{
+            page,
+            pageSize: apiParams.size || 10,
+            totalPages: Math.ceil(totalElements / (apiParams.size || 10)) || 1,
+            totalElements: totalElements
+          }}
+          pageIndexBase={0}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemName="leads"
+
+          // Empty State
+          emptyMessage="No leads found"
+          emptyDescription="Try adjusting your search keywords or filter criteria to find commercial leads."
+        />
       </div>
-
-      {/* Main Table */}
-      <DataTable
-        data={leads}
-        columns={columns}
-        isLoading={isLoading}
-        enablePagination={true}
-      />
 
       {/* Modals */}
       <LeadFormModal
@@ -358,11 +419,10 @@ export default function LeadsPage() {
         onClose={() => setDeletingLead(null)}
         onConfirm={handleDeleteConfirm}
         title="Delete Lead Record"
-        message={`Are you sure you want to delete lead "${deletingLead?.displayName || 'this lead'}"? This action will mark the lead as deleted.`}
+        message={`Are you sure you want to delete lead "${deletingLead?.displayName || deletingLead?.firstName}"? This action cannot be undone.`}
         confirmText={isDeleting ? 'Deleting...' : 'Delete Lead'}
         variant="danger"
       />
     </div>
   );
 }
-

@@ -93,7 +93,7 @@ export default function LeadDetailsPage() {
   ];
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] overflow-auto p-6 space-y-4">
       {/* Top Navigation */}
       <div className="flex items-center gap-2">
         <button
@@ -102,7 +102,7 @@ export default function LeadDetailsPage() {
         >
           <ArrowLeft size={14} />
         </button>
-        <span className="text-xs text-zinc-500">Back to Leads Directory</span>
+        <span className="text-xs text-zinc-500 font-semibold">Back to Leads Directory</span>
       </div>
 
       {/* Header Profile Card */}

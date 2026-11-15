@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Globe,
@@ -11,8 +11,8 @@ import {
   ExternalLink,
   ShieldCheck
 } from 'lucide-react';
-import { PageHeader } from '../../../components/common';
-import DataTable from '../../../components/data-table/DataTable';
+import PageHeader from '../../../components/common/PageHeader';
+import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import {
   useGetCrmTenantIntegrationsQuery,
   useGetCrmIntegrationChannelsQuery,
@@ -26,8 +26,9 @@ export default function IntegrationsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [syncingId, setSyncingId] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
 
-  const { data: integrationsRes, isLoading, refetch } = useGetCrmTenantIntegrationsQuery(companyId);
+  const { data: integrationsRes, isLoading, refetch, isFetching } = useGetCrmTenantIntegrationsQuery(companyId);
   const { data: channelsRes } = useGetCrmIntegrationChannelsQuery();
   const { data: poolsRes } = useGetCrmRoundRobinPoolsQuery(companyId);
 
@@ -61,10 +62,12 @@ export default function IntegrationsPage() {
     }
   };
 
-  const columns = [
+  const columns = useMemo(() => [
     {
+      id: 'integrationName',
       header: 'Integration & Channel',
       accessorKey: 'integrationName',
+      sortable: true,
       cell: ({ row }) => {
         const item = row.original;
         return (
@@ -78,8 +81,10 @@ export default function IntegrationsPage() {
       },
     },
     {
+      id: 'webhookSlug',
       header: 'Webhook Inbound Endpoint',
       accessorKey: 'webhookSlug',
+      sortable: true,
       cell: ({ row }) => {
         const item = row.original;
         const slug = item.webhookSlug || item.id;
@@ -101,88 +106,100 @@ export default function IntegrationsPage() {
       },
     },
     {
+      id: 'isActive',
       header: 'Status',
       accessorKey: 'isActive',
+      sortable: true,
       cell: ({ row }) => (
-        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-600 flex items-center gap-1 w-fit">
-          <CheckCircle2 size={11} /> CONNECTED
-        </span>
+        <DataTableStatusBadge
+          status="CONNECTED"
+          variant="success"
+        />
       ),
     },
     {
+      id: 'lastSyncAt',
       header: 'Last Sync / Lead',
       accessorKey: 'lastSyncAt',
+      sortable: true,
       cell: ({ row }) => (
-        <span className="text-xs text-zinc-500">
+        <span className="text-xs text-zinc-500 font-mono">
           {row.original.lastSyncAt ? new Date(row.original.lastSyncAt).toLocaleString() : 'Listening for Webhooks'}
         </span>
       ),
     },
+  ], [copiedId]);
+
+  const rowActions = useMemo(() => [
     {
-      header: 'Actions',
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => handleManualSync(row.original.id)}
-            disabled={syncingId === row.original.id}
-            className="btn-secondary text-xs px-2.5 py-1 flex items-center gap-1"
-            title="Trigger Immediate Pull Sync"
-          >
-            <RotateCw size={11} className={syncingId === row.original.id ? 'animate-spin' : ''} />
-            {syncingId === row.original.id ? 'Syncing...' : 'Sync Now'}
-          </button>
-        </div>
-      ),
+      key: 'sync',
+      label: 'Sync Now',
+      icon: RotateCw,
+      tooltip: 'Trigger Pull Sync',
+      onClick: (row) => handleManualSync(row.id),
     },
-  ];
+  ], []);
 
   return (
-    <div className="space-y-5 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Marketplace & Webhook Integrations"
-        subtitle="Automatic lead ingestion from IndiaMART, TradeIndia, Meta Ads and custom webhooks."
-        actions={
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5"
-          >
-            <Plus size={14} /> Connect Channel
-          </button>
-        }
-      />
+        description="Automatic lead ingestion from IndiaMART, TradeIndia, Meta Ads and custom webhooks"
+      >
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Connect Channel</span>
+        </button>
+      </PageHeader>
 
-      {/* Available Marketplace Channels Catalog */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        {channels.map((ch) => (
-          <div
-            key={ch.code}
-            className="p-4 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm space-y-2"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-zinc-900 dark:text-white">{ch.name}</span>
-              <Globe size={16} className="text-primary" />
-            </div>
-            <p className="text-[11px] text-zinc-500 leading-relaxed">{ch.description}</p>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 pt-1"
+      <div className="flex-1 p-6 overflow-auto flex flex-col space-y-6">
+        {/* Marketplace Channels Catalog */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
+          {channels.map((ch) => (
+            <div
+              key={ch.code}
+              className="p-4 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm space-y-2 hover:border-primary/50 transition-colors"
             >
-              Configure Connection <Plus size={12} />
-            </button>
-          </div>
-        ))}
-      </div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-zinc-900 dark:text-white">{ch.name}</span>
+                <Globe size={16} className="text-primary" />
+              </div>
+              <p className="text-[11px] text-zinc-500 leading-relaxed">{ch.description}</p>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 pt-1"
+              >
+                Configure Connection <Plus size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
 
-      {/* Active Integrations Table */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-bold text-zinc-900 dark:text-white">Active Ingestion Pipelines</h2>
-        <DataTable
-          data={integrations}
-          columns={columns}
-          isLoading={isLoading}
-          enablePagination={true}
-        />
+        {/* Active Integrations Table */}
+        <div className="flex-1 overflow-hidden flex flex-col space-y-3">
+          <h2 className="text-sm font-bold text-zinc-900 dark:text-white shrink-0">Active Ingestion Pipelines</h2>
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <DataTable
+              permissionFeature="CRM"
+              selectable
+              selectedRows={selectedRows}
+              onSelectionChange={setSelectedRows}
+              columns={columns}
+              data={integrations}
+              rowKey="id"
+              loading={isLoading}
+              isRefreshing={isFetching}
+              onRefresh={refetch}
+              rowActions={rowActions}
+              itemName="integrations"
+              emptyMessage="No active integrations configured"
+              emptyDescription="Connect your marketplace accounts above or set up webhook endpoints."
+            />
+          </div>
+        </div>
       </div>
 
       <IntegrationFormModal
@@ -195,4 +212,3 @@ export default function IntegrationsPage() {
     </div>
   );
 }
-

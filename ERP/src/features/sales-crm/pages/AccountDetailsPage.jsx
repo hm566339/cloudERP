@@ -15,7 +15,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { PageHeader, Tabs } from '../../../components/common';
-import DataTable from '../../../components/data-table/DataTable';
+import DataTable from '../../../components/data-table';
 import {
   useGetCrmAccountByIdQuery,
   useGetCrmContactsQuery,
@@ -135,7 +135,7 @@ export default function AccountDetailsPage() {
   ];
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] overflow-auto p-6 space-y-4">
       <div className="flex items-center gap-2">
         <button
           onClick={() => navigate(`${crmBase}/accounts`)}
@@ -143,7 +143,7 @@ export default function AccountDetailsPage() {
         >
           <ArrowLeft size={14} />
         </button>
-        <span className="text-xs text-zinc-500">Back to Accounts Directory</span>
+        <span className="text-xs text-zinc-500 font-semibold">Back to Accounts Directory</span>
       </div>
 
       {/* Account Profile Header */}

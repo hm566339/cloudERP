@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Target,
@@ -12,10 +12,12 @@ import {
   Filter,
   Layers
 } from 'lucide-react';
-import { PageHeader, ConfirmModal } from '../../../components/common';
-import DataTable from '../../../components/data-table/DataTable';
+import PageHeader from '../../../components/common/PageHeader';
+import ConfirmModal from '../../../components/common/ConfirmModal';
+import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import CrmKanbanBoard from '../components/CrmKanbanBoard';
 import OpportunityFormModal from '../components/OpportunityFormModal';
+import useUrlFilters from '../../../hooks/useUrlFilters';
 import {
   useGetCrmPipelinesQuery,
   useGetCrmKanbanQuery,
@@ -23,6 +25,14 @@ import {
   useUpdateOpportunityStageMutation,
   useCloseOpportunityMutation,
 } from '../../../api/sales-crm/crm.api';
+
+const DEFAULT_COLUMNS = [
+  'title',
+  'stageName',
+  'dealValue',
+  'probabilityPercent',
+  'expectedCloseDate',
+];
 
 export default function OpportunitiesPage() {
   const { companyId } = useParams();
@@ -34,6 +44,14 @@ export default function OpportunitiesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [closingDeal, setClosingDeal] = useState(null); // { id, status: 'WON' | 'LOST' }
   const [lostReason, setLostReason] = useState('PRICE_HIGH');
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
+
+  const {
+    page, setPage, setPageSize, apiParams,
+    sortBy, sortOrder, handleColumnSort,
+    filters, setFilter, resetFilters
+  } = useUrlFilters({ defaultPageSize: 10 });
 
   const { data: pipelinesRes } = useGetCrmPipelinesQuery(companyId);
   const pipelines = pipelinesRes?.data || [];
@@ -44,8 +62,14 @@ export default function OpportunitiesPage() {
     { skip: !currentPipelineId }
   );
 
-  const { data: oppsRes, isLoading: isTableLoading, refetch: refetchTable } = useGetCrmOpportunitiesQuery(
-    { pipelineId: currentPipelineId, companyId },
+  const { data: oppsRes, isLoading: isTableLoading, refetch: refetchTable, isFetching } = useGetCrmOpportunitiesQuery(
+    {
+      pipelineId: currentPipelineId,
+      companyId,
+      search: filters.searchKey || undefined,
+      page: page ? page - 1 : 0,
+      size: apiParams.size || 10,
+    },
     { skip: !currentPipelineId }
   );
 
@@ -54,6 +78,8 @@ export default function OpportunitiesPage() {
 
   const kanbanColumns = kanbanRes?.data?.columns || [];
   const opportunities = oppsRes?.data?.content || oppsRes?.data || [];
+  const totalElements = oppsRes?.data?.totalElements || opportunities.length;
+  const totalPages = oppsRes?.data?.totalPages || Math.ceil(totalElements / (apiParams.size || 10)) || 1;
 
   const totalValue = opportunities.reduce((acc, o) => acc + (Number(o.dealValue) || 0), 0);
   const weightedValue = opportunities.reduce((acc, o) => {
@@ -93,10 +119,12 @@ export default function OpportunitiesPage() {
     }
   };
 
-  const tableColumns = [
+  const tableColumns = useMemo(() => [
     {
+      id: 'title',
       header: 'Deal Title',
       accessorKey: 'title',
+      sortable: true,
       cell: ({ row }) => (
         <span className="font-semibold text-zinc-900 dark:text-white text-xs">
           {row.original.title}
@@ -104,8 +132,10 @@ export default function OpportunitiesPage() {
       ),
     },
     {
+      id: 'stageName',
       header: 'Stage',
       accessorKey: 'stageName',
+      sortable: true,
       cell: ({ row }) => (
         <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-primary/10 text-primary">
           {row.original.stageName}
@@ -113,8 +143,10 @@ export default function OpportunitiesPage() {
       ),
     },
     {
+      id: 'dealValue',
       header: 'Deal Value',
       accessorKey: 'dealValue',
+      sortable: true,
       cell: ({ row }) => (
         <span className="font-mono font-semibold text-xs text-zinc-900 dark:text-white">
           ₹{(row.original.dealValue || 0).toLocaleString('en-IN')}
@@ -122,72 +154,74 @@ export default function OpportunitiesPage() {
       ),
     },
     {
+      id: 'probabilityPercent',
       header: 'Win Probability',
       accessorKey: 'probabilityPercent',
+      sortable: true,
       cell: ({ row }) => (
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-xs">{row.original.probabilityPercent || 50}%</span>
+          <span className="font-mono text-xs font-semibold text-emerald-600">{row.original.probabilityPercent || 50}%</span>
         </div>
       ),
     },
     {
+      id: 'expectedCloseDate',
       header: 'Close Date',
       accessorKey: 'expectedCloseDate',
+      sortable: true,
       cell: ({ row }) => (
         <span className="text-xs text-zinc-500">
           {row.original.expectedCloseDate ? new Date(row.original.expectedCloseDate).toLocaleDateString() : 'N/A'}
         </span>
       ),
     },
+  ], []);
+
+  const rowActions = useMemo(() => [
     {
-      header: 'Actions',
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1.5 justify-end">
-          <button
-            onClick={() => setClosingDeal({ id: row.original.id, status: 'WON' })}
-            className="p-1.5 text-zinc-400 hover:text-emerald-500 rounded"
-            title="Mark Won"
-          >
-            <CheckCircle2 size={14} />
-          </button>
-          <button
-            onClick={() => setClosingDeal({ id: row.original.id, status: 'LOST' })}
-            className="p-1.5 text-zinc-400 hover:text-rose-500 rounded"
-            title="Mark Lost"
-          >
-            <XCircle size={14} />
-          </button>
-        </div>
-      ),
+      key: 'won',
+      label: 'Mark Won',
+      icon: CheckCircle2,
+      tooltip: 'Mark Won',
+      className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20',
+      onClick: (row) => setClosingDeal({ id: row.id, status: 'WON' }),
     },
-  ];
+    {
+      key: 'lost',
+      label: 'Mark Lost',
+      icon: XCircle,
+      tooltip: 'Mark Lost',
+      className: 'hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20',
+      onClick: (row) => setClosingDeal({ id: row.id, status: 'LOST' }),
+    },
+  ], []);
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Opportunities & Pipelines"
-        subtitle="Visual deal progression, Kanban pipeline forecasting, and revenue pipeline."
-        actions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate(`${crmBase}/pipelines`)}
-              className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
-            >
-              <Layers size={13} /> Configure Pipelines
-            </button>
-            <button
-              onClick={() => setIsCreateOpen(true)}
-              className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5"
-            >
-              <Plus size={14} /> New Opportunity
-            </button>
-          </div>
-        }
-      />
+        description="Visual deal progression, Kanban pipeline forecasting, and revenue pipeline"
+      >
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(`${crmBase}/pipelines`)}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-300 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1C202B] text-xs font-semibold rounded-lg shadow-sm transition-all active:scale-95"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Configure Pipelines</span>
+          </button>
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Opportunity</span>
+          </button>
+        </div>
+      </PageHeader>
 
-      {/* Pipeline Toolbar & Forecast Stats */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
+      {/* Top Filter and Mode Switcher Strip */}
+      <div className="px-6 py-2.5 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3">
           <select
             value={currentPipelineId || ''}
@@ -204,7 +238,7 @@ export default function OpportunitiesPage() {
           <div className="flex items-center bg-zinc-100 dark:bg-[#1C202B] p-0.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D]">
             <button
               onClick={() => setViewMode('kanban')}
-              className={`p-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 viewMode === 'kanban'
                   ? 'bg-white dark:bg-[#161922] shadow text-primary'
                   : 'text-zinc-500'
@@ -214,7 +248,7 @@ export default function OpportunitiesPage() {
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 viewMode === 'table'
                   ? 'bg-white dark:bg-[#161922] shadow text-primary'
                   : 'text-zinc-500'
@@ -244,20 +278,66 @@ export default function OpportunitiesPage() {
       </div>
 
       {/* Main View Area */}
-      {viewMode === 'kanban' ? (
-        <CrmKanbanBoard
-          columns={kanbanColumns}
-          onStageChange={handleStageChange}
-          onOpportunityClick={(opp) => console.log('View opp', opp)}
-        />
-      ) : (
-        <DataTable
-          data={opportunities}
-          columns={tableColumns}
-          isLoading={isTableLoading}
-          enablePagination={true}
-        />
-      )}
+      <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        {viewMode === 'kanban' ? (
+          <div className="flex-1 overflow-x-auto overflow-y-hidden">
+            <CrmKanbanBoard
+              columns={kanbanColumns}
+              onStageChange={handleStageChange}
+              onOpportunityClick={(opp) => console.log('View opp', opp)}
+            />
+          </div>
+        ) : (
+          <DataTable
+            permissionFeature="CRM"
+            selectable
+            selectedRows={selectedRows}
+            onSelectionChange={setSelectedRows}
+            columns={tableColumns}
+            data={opportunities}
+            rowKey="id"
+            loading={isTableLoading}
+            isRefreshing={isFetching}
+
+            // Search
+            searchable
+            searchValue={filters.searchKey || ''}
+            searchPlaceholder="Search deal title..."
+            onSearchChange={(val) => setFilter('searchKey', val)}
+
+            // Reset & Refresh
+            onReset={resetFilters}
+            onRefresh={refetchTable}
+
+            // Column Visibility
+            visibleColumns={visibleColumns}
+            onVisibleColumnsChange={setVisibleColumns}
+
+            // Sorting
+            sort={{ key: sortBy, direction: sortOrder }}
+            onSortChange={({ key }) => handleColumnSort(key)}
+
+            // Row Actions
+            rowActions={rowActions}
+
+            // Pagination
+            pagination={{
+              page,
+              pageSize: apiParams.size || 10,
+              totalPages,
+              totalElements,
+            }}
+            pageIndexBase={1}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemName="opportunities"
+
+            // Empty State
+            emptyMessage="No opportunities found"
+            emptyDescription="Try adjusting your search query or pipeline filter."
+          />
+        )}
+      </div>
 
       {/* Modals */}
       <OpportunityFormModal
@@ -286,4 +366,5 @@ export default function OpportunitiesPage() {
     </div>
   );
 }
+
 

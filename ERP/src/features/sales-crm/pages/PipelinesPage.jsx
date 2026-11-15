@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Layers, Plus, CheckCircle2, ChevronRight, ArrowLeft } from 'lucide-react';
-import { PageHeader } from '../../../components/common';
+import PageHeader from '../../../components/common/PageHeader';
 import { useGetCrmPipelinesQuery } from '../../../api/sales-crm/crm.api';
 import PipelineFormModal from '../components/PipelineFormModal';
 
@@ -15,39 +15,43 @@ export default function PipelinesPage() {
   const pipelines = pipelinesRes?.data || [];
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => navigate(`${crmBase}/opportunities`)}
-          className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]"
-        >
-          <ArrowLeft size={14} />
-        </button>
-        <span className="text-xs text-zinc-500">Back to Opportunities Board</span>
-      </div>
-
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Sales Pipelines & Stage Progression"
-        subtitle="Configure deal progression funnels, probability weights, and stage sequences."
-        actions={
+        description="Configure deal progression funnels, probability weights, and stage sequences"
+      >
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(`${crmBase}/opportunities`)}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-300 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1C202B] text-xs font-semibold rounded-lg shadow-sm transition-all active:scale-95"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Opportunities Board</span>
+          </button>
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5"
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
           >
-            <Plus size={14} /> New Pipeline
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Pipeline</span>
           </button>
-        }
-      />
+        </div>
+      </PageHeader>
 
-      <div className="space-y-4">
+      <div className="flex-1 p-6 overflow-auto flex flex-col space-y-4">
         {isLoading ? (
           <div className="p-8 text-center text-xs text-zinc-400">Loading pipelines...</div>
         ) : pipelines.length === 0 ? (
-          <div className="p-10 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-center space-y-2">
-            <Layers size={32} className="mx-auto text-zinc-400" />
+          <div className="p-12 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-center space-y-3">
+            <Layers size={36} className="mx-auto text-zinc-400" />
             <p className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">No pipelines configured</p>
-            <button onClick={() => setIsCreateOpen(true)} className="btn-primary text-xs px-3 py-1.5">
-              Create First Pipeline
+            <p className="text-xs text-zinc-500">Create a sales pipeline to structure stages and probabilities for your deals.</p>
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
+            >
+              <Plus size={13} />
+              <span>Create First Pipeline</span>
             </button>
           </div>
         ) : (
@@ -105,4 +109,5 @@ export default function PipelinesPage() {
     </div>
   );
 }
+
 

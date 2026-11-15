@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Cpu,
@@ -12,8 +12,9 @@ import {
   Clock,
   Layers
 } from 'lucide-react';
-import { PageHeader, Tabs, ConfirmModal } from '../../../components/common';
-import DataTable from '../../../components/data-table/DataTable';
+import PageHeader from '../../../components/common/PageHeader';
+import ConfirmModal from '../../../components/common/ConfirmModal';
+import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import {
   useGetCrmAutomationRulesQuery,
   useGetCrmRoundRobinPoolsQuery,
@@ -30,10 +31,11 @@ export default function AutomationPage() {
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
   const [isPoolModalOpen, setIsPoolModalOpen] = useState(false);
   const [deletingRule, setDeletingRule] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
 
   const { data: rulesRes, isLoading: isRulesLoading, refetch: refetchRules } = useGetCrmAutomationRulesQuery(companyId);
   const { data: poolsRes, isLoading: isPoolsLoading, refetch: refetchPools } = useGetCrmRoundRobinPoolsQuery(companyId);
-  const { data: logsRes, isLoading: isLogsLoading } = useGetCrmAutomationLogsQuery({ companyId });
+  const { data: logsRes, isLoading: isLogsLoading, refetch: refetchLogs } = useGetCrmAutomationLogsQuery({ companyId });
 
   const [deleteRule] = useDeleteCrmAutomationRuleMutation();
   const [updateRule] = useUpdateCrmAutomationRuleMutation();
@@ -69,10 +71,12 @@ export default function AutomationPage() {
     }
   };
 
-  const ruleColumns = [
+  const ruleColumns = useMemo(() => [
     {
+      id: 'ruleName',
       header: 'Rule Name & Trigger',
       accessorKey: 'ruleName',
+      sortable: true,
       cell: ({ row }) => {
         const r = row.original;
         return (
@@ -84,8 +88,10 @@ export default function AutomationPage() {
       },
     },
     {
+      id: 'conditionExpression',
       header: 'Condition Expression (SpEL)',
       accessorKey: 'conditionExpression',
+      sortable: true,
       cell: ({ row }) => (
         <span className="font-mono text-xs text-zinc-700 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1C202B] px-2 py-0.5 rounded">
           {row.original.conditionExpression || 'Always True (Default)'}
@@ -93,8 +99,10 @@ export default function AutomationPage() {
       ),
     },
     {
+      id: 'actionType',
       header: 'Automated Action',
       accessorKey: 'actionType',
+      sortable: true,
       cell: ({ row }) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-primary/10 text-primary">
           {row.original.actionType?.replace(/_/g, ' ')}
@@ -102,43 +110,44 @@ export default function AutomationPage() {
       ),
     },
     {
+      id: 'isActive',
       header: 'Active State',
       accessorKey: 'isActive',
+      sortable: true,
       cell: ({ row }) => {
         const active = row.original.isActive;
         return (
           <button
             onClick={() => handleToggleActive(row.original)}
-            className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-              active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-zinc-100 text-zinc-500'
-            }`}
+            className="cursor-pointer focus:outline-none"
           >
-            {active ? 'ACTIVE' : 'PAUSED'}
+            <DataTableStatusBadge
+              status={active ? 'ACTIVE' : 'PAUSED'}
+              variant={active ? 'success' : 'neutral'}
+            />
           </button>
         );
       },
     },
-    {
-      header: 'Actions',
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1.5 justify-end">
-          <button
-            onClick={() => setDeletingRule(row.original)}
-            className="p-1.5 text-zinc-400 hover:text-rose-500 rounded"
-            title="Delete Rule"
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  ], []);
 
-  const poolColumns = [
+  const ruleActions = useMemo(() => [
     {
+      key: 'delete',
+      label: 'Delete Rule',
+      icon: Trash2,
+      danger: true,
+      tooltip: 'Delete Rule',
+      onClick: (row) => setDeletingRule(row),
+    },
+  ], []);
+
+  const poolColumns = useMemo(() => [
+    {
+      id: 'poolName',
       header: 'Pool Name',
       accessorKey: 'poolName',
+      sortable: true,
       cell: ({ row }) => (
         <span className="font-semibold text-xs text-zinc-900 dark:text-white">
           {row.original.poolName}
@@ -146,8 +155,10 @@ export default function AutomationPage() {
       ),
     },
     {
+      id: 'routingStrategy',
       header: 'Routing Strategy',
       accessorKey: 'routingStrategy',
+      sortable: true,
       cell: ({ row }) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-zinc-100 dark:bg-[#1C202B] text-zinc-700 dark:text-[#E6E8EE]">
           {row.original.routingStrategy}
@@ -155,20 +166,24 @@ export default function AutomationPage() {
       ),
     },
     {
+      id: 'members',
       header: 'Active Reps',
       accessorKey: 'members',
+      sortable: true,
       cell: ({ row }) => (
         <span className="text-xs text-zinc-700 dark:text-[#A0A6B5]">
           {(row.original.members || []).length} Sales Reps
         </span>
       ),
     },
-  ];
+  ], []);
 
-  const logColumns = [
+  const logColumns = useMemo(() => [
     {
+      id: 'triggerEvent',
       header: 'Trigger Event',
       accessorKey: 'triggerEvent',
+      sortable: true,
       cell: ({ row }) => (
         <span className="font-mono text-xs font-semibold text-zinc-900 dark:text-white">
           {row.original.triggerEvent}
@@ -176,98 +191,150 @@ export default function AutomationPage() {
       ),
     },
     {
+      id: 'actionType',
       header: 'Action Executed',
       accessorKey: 'actionType',
+      sortable: true,
       cell: ({ row }) => (
         <span className="text-xs text-primary font-medium">{row.original.actionType}</span>
       ),
     },
     {
+      id: 'executionStatus',
       header: 'Result Status',
       accessorKey: 'executionStatus',
+      sortable: true,
       cell: ({ row }) => {
         const success = row.original.executionStatus === 'SUCCESS';
         return (
-          <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-            success ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'
-          }`}>
-            {row.original.executionStatus || 'SUCCESS'}
-          </span>
+          <DataTableStatusBadge
+            status={row.original.executionStatus || 'SUCCESS'}
+            variant={success ? 'success' : 'danger'}
+          />
         );
       },
     },
     {
+      id: 'createdAt',
       header: 'Timestamp',
       accessorKey: 'createdAt',
+      sortable: true,
       cell: ({ row }) => (
         <span className="text-xs text-zinc-500 font-mono">
           {new Date(row.original.createdAt || Date.now()).toLocaleString()}
         </span>
       ),
     },
-  ];
+  ], []);
 
   return (
-    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Sales Automation & Round-Robin Routing"
-        subtitle="Event-driven workflows, dynamic lead assignment pools, and execution audit history."
-        actions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsPoolModalOpen(true)}
-              className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
-            >
-              <Users size={13} /> New Sales Pool
-            </button>
-            <button
-              onClick={() => setIsRuleModalOpen(true)}
-              className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5"
-            >
-              <Plus size={14} /> New Automation Rule
-            </button>
-          </div>
-        }
-      />
+        description="Event-driven workflows, dynamic lead assignment pools, and execution audit history"
+      >
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsPoolModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-300 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1C202B] text-xs font-semibold rounded-lg shadow-sm transition-all active:scale-95"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>New Sales Pool</span>
+          </button>
+          <button
+            onClick={() => setIsRuleModalOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Automation Rule</span>
+          </button>
+        </div>
+      </PageHeader>
 
-      <div className="p-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
-        <Tabs
-          tabs={[
-            { id: 'rules', label: `Automation Rules (${rules.length})` },
-            { id: 'pools', label: `Round-Robin Pools (${pools.length})` },
-            { id: 'logs', label: `Execution Audit Trail (${logs.length})` },
-          ]}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-        />
+      {/* Tabs bar */}
+      <div className="px-6 py-2.5 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => setActiveTab('rules')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            activeTab === 'rules'
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]'
+          }`}
+        >
+          <Cpu size={13} /> Automation Rules ({rules.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('pools')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            activeTab === 'pools'
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]'
+          }`}
+        >
+          <Users size={13} /> Round-Robin Pools ({pools.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('logs')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            activeTab === 'logs'
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]'
+          }`}
+        >
+          <Clock size={13} /> Audit Logs ({logs.length})
+        </button>
       </div>
 
-      {activeTab === 'rules' && (
-        <DataTable
-          data={rules}
-          columns={ruleColumns}
-          isLoading={isRulesLoading}
-          enablePagination={true}
-        />
-      )}
+      <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        {activeTab === 'rules' && (
+          <DataTable
+            permissionFeature="CRM"
+            selectable
+            selectedRows={selectedRows}
+            onSelectionChange={setSelectedRows}
+            columns={ruleColumns}
+            data={rules}
+            rowKey="id"
+            loading={isRulesLoading}
+            onRefresh={refetchRules}
+            rowActions={ruleActions}
+            itemName="rules"
+            emptyMessage="No automation rules found"
+            emptyDescription="Create automated trigger-action rules for inbound leads and events."
+          />
+        )}
 
-      {activeTab === 'pools' && (
-        <DataTable
-          data={pools}
-          columns={poolColumns}
-          isLoading={isPoolsLoading}
-          enablePagination={true}
-        />
-      )}
+        {activeTab === 'pools' && (
+          <DataTable
+            permissionFeature="CRM"
+            selectable
+            selectedRows={selectedRows}
+            onSelectionChange={setSelectedRows}
+            columns={poolColumns}
+            data={pools}
+            rowKey="id"
+            loading={isPoolsLoading}
+            onRefresh={refetchPools}
+            itemName="pools"
+            emptyMessage="No round-robin pools configured"
+            emptyDescription="Define sales rep pools for automatic lead distribution."
+          />
+        )}
 
-      {activeTab === 'logs' && (
-        <DataTable
-          data={logs}
-          columns={logColumns}
-          isLoading={isLogsLoading}
-          enablePagination={true}
-        />
-      )}
+        {activeTab === 'logs' && (
+          <DataTable
+            permissionFeature="CRM"
+            columns={logColumns}
+            data={logs}
+            rowKey="id"
+            loading={isLogsLoading}
+            onRefresh={refetchLogs}
+            itemName="logs"
+            emptyMessage="No audit logs found"
+            emptyDescription="Execution events from automated triggers will appear here."
+          />
+        )}
+      </div>
 
       <AutomationRuleModal
         isOpen={isRuleModalOpen}
@@ -296,4 +363,3 @@ export default function AutomationPage() {
     </div>
   );
 }
-
