@@ -124,3 +124,4 @@ describe('Sales & CRM End-to-End Routing & Dynamic Sidebar Test Suite', () => {
     assert.equal(resolveCompanyRedirect('accounts/transactions/delivery-challans', null), '/accounts/transactions/delivery-challans');
   });
 });
+
