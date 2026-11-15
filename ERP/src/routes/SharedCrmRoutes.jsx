@@ -173,7 +173,7 @@ export function SharedCrmRoutes({ prefix = "" }) {
         }
       />
 
-      {/* 12. Customer Communication (both plural and singular aliases) */}
+      {/* 12. Customer Communication (plural, singular, and hyphenated aliases) */}
       <Route
         path={`${prefix}communications`}
         element={
@@ -184,6 +184,14 @@ export function SharedCrmRoutes({ prefix = "" }) {
       />
       <Route
         path={`${prefix}communication`}
+        element={
+          <ProtectedRoute module="CRM">
+            <CommunicationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}customer-communication`}
         element={
           <ProtectedRoute module="CRM">
             <CommunicationsPage />

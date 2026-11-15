@@ -53,7 +53,7 @@ export default function QuotationsPage() {
     companyId,
     search: filters.searchKey || undefined,
     status: filters.status || undefined,
-    page: page ? page - 1 : 0,
+    page,
     size: apiParams.size || 10,
   });
 
@@ -263,7 +263,7 @@ export default function QuotationsPage() {
             totalPages,
             totalElements,
           }}
-          pageIndexBase={1}
+          pageIndexBase={0}
           onPageChange={setPage}
           onPageSizeChange={setPageSize}
           itemName="quotations"

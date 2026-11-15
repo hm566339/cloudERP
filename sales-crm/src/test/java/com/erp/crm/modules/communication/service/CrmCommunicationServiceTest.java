@@ -5,6 +5,7 @@ import com.erp.crm.modules.communication.dto.MessageResponse;
 import com.erp.crm.modules.communication.entity.CrmCallLog;
 import com.erp.crm.modules.communication.entity.CrmConversation;
 import com.erp.crm.modules.communication.entity.CrmMessage;
+import com.erp.crm.modules.communication.enums.CommunicationChannel;
 import com.erp.crm.modules.communication.enums.MessageDirection;
 import com.erp.crm.modules.communication.repository.CrmCallLogRepository;
 import com.erp.crm.modules.communication.repository.CrmConversationRepository;
@@ -92,6 +93,7 @@ class CrmCommunicationServiceTest {
                 .id(convId)
                 .entityType("LEAD")
                 .entityId(leadId)
+                .channel(CommunicationChannel.WHATSAPP)
                 .build();
         conv.setCompanyId(companyId);
 
@@ -99,7 +101,7 @@ class CrmCommunicationServiceTest {
                 .id(UUID.randomUUID())
                 .conversationId(convId)
                 .direction(MessageDirection.OUTBOUND)
-                .channel("WHATSAPP")
+                .channel(CommunicationChannel.WHATSAPP)
                 .recipientIdentifier("+919876543210")
                 .bodyText("Hello from Mark2 CRM")
                 .build();

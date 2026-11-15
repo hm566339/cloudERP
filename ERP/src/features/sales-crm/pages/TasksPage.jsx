@@ -260,7 +260,7 @@ export default function TasksPage() {
             totalPages,
             totalElements,
           }}
-          pageIndexBase={1}
+          pageIndexBase={0}
           onPageChange={setPage}
           onPageSizeChange={setPageSize}
           itemName="tasks"

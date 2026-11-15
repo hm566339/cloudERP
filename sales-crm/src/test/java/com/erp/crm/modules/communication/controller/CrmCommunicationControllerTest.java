@@ -3,6 +3,7 @@ package com.erp.crm.modules.communication.controller;
 import com.erp.crm.common.dto.response.ApiResponse;
 import com.erp.crm.modules.communication.dto.CallLogResponse;
 import com.erp.crm.modules.communication.dto.MessageResponse;
+import com.erp.crm.modules.communication.enums.CommunicationChannel;
 import com.erp.crm.modules.communication.service.CrmCommunicationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,6 +60,7 @@ class CrmCommunicationControllerTest {
                 UUID leadId = UUID.randomUUID();
                 MessageResponse msg = MessageResponse.builder()
                                 .id(UUID.randomUUID())
+                                .channel(CommunicationChannel.WHATSAPP)
                                 .recipientIdentifier("+919876543210")
                                 .subject("Follow up")
                                 .build();

@@ -67,7 +67,7 @@ export default function OpportunitiesPage() {
       pipelineId: currentPipelineId,
       companyId,
       search: filters.searchKey || undefined,
-      page: page ? page - 1 : 0,
+      page,
       size: apiParams.size || 10,
     },
     { skip: !currentPipelineId }
@@ -324,7 +324,7 @@ export default function OpportunitiesPage() {
               totalPages,
               totalElements,
             }}
-            pageIndexBase={1}
+            pageIndexBase={0}
             onPageChange={setPage}
             onPageSizeChange={setPageSize}
             itemName="opportunities"

@@ -41,7 +41,7 @@ export default function CampaignsPage() {
   const { data: campaignsRes, isLoading, refetch, isFetching } = useGetCrmCampaignsQuery({
     companyId,
     search: filters.searchKey || undefined,
-    page: page ? page - 1 : 0,
+    page,
     size: apiParams.size || 10,
   });
 
@@ -213,7 +213,7 @@ export default function CampaignsPage() {
               totalPages,
               totalElements,
             }}
-            pageIndexBase={1}
+            pageIndexBase={0}
             onPageChange={setPage}
             onPageSizeChange={setPageSize}
             itemName="campaigns"
