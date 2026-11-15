@@ -151,15 +151,35 @@ public class CrmOpportunityServiceImpl implements CrmOpportunityService {
     @Transactional(readOnly = true)
     public KanbanViewResponse getKanbanView(UUID pipelineId, UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
-        var pipeline = pipelineRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, pipelineId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pipeline not found: " + pipelineId));
 
-        List<CrmPipelineStage> stages = stageRepository.findByPipelineIdAndIsDeletedFalseOrderByStageOrderAsc(pipelineId);
+        UUID effectivePipelineId = pipelineId;
+        if (effectivePipelineId == null) {
+            effectivePipelineId = pipelineRepository.findByCompanyIdAndIsDefaultTrueAndIsDeletedFalse(companyId)
+                    .map(com.erp.crm.modules.pipeline.entity.CrmSalesPipeline::getId)
+                    .or(() -> pipelineRepository.findByCompanyIdAndIsDeletedFalseOrderByDisplayOrderAsc(companyId).stream().map(com.erp.crm.modules.pipeline.entity.CrmSalesPipeline::getId).findFirst())
+                    .orElse(null);
+        }
+
+        if (effectivePipelineId == null) {
+            return KanbanViewResponse.builder()
+                    .pipelineId(null)
+                    .pipelineName("Default Pipeline")
+                    .columns(new ArrayList<>())
+                    .totalDeals(0)
+                    .totalPipelineValue(BigDecimal.ZERO)
+                    .build();
+        }
+
+        final UUID finalPipelineId = effectivePipelineId;
+        var pipeline = pipelineRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, finalPipelineId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pipeline not found: " + finalPipelineId));
+
+        List<CrmPipelineStage> stages = stageRepository.findByPipelineIdAndIsDeletedFalseOrderByStageOrderAsc(finalPipelineId);
         List<KanbanViewResponse.KanbanStage> kanbanStages = new ArrayList<>();
 
         for (CrmPipelineStage stage : stages) {
             List<CrmOpportunity> stageDeals = opportunityRepository.findByCompanyIdAndPipelineIdAndCurrentStageIdAndIsDeletedFalse(
-                    companyId, pipelineId, stage.getId());
+                    companyId, finalPipelineId, stage.getId());
 
             BigDecimal stageTotal = BigDecimal.ZERO;
             List<KanbanViewResponse.KanbanDeal> deals = new ArrayList<>();

@@ -14,8 +14,12 @@ public interface CrmCommunicationService {
 
     List<MessageResponse> getConversationMessages(UUID conversationId, UUID requestCompanyId);
 
+    List<MessageResponse> getMessages(UUID conversationId, String entityType, UUID entityId, UUID requestCompanyId);
+
     CallLogResponse logCall(CallLogRequest request, UUID requestCompanyId);
 
     List<CallLogResponse> getCallsForEntity(String entityType, UUID entityId, UUID requestCompanyId);
+
+    List<CallLogResponse> getCalls(String entityType, UUID entityId, UUID requestCompanyId);
 }
 

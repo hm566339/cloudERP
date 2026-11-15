@@ -370,9 +370,14 @@ export const crmApiSlice = baseApi.injectEndpoints({
     }),
 
     getCrmConversationMessages: builder.query({
-      query: ({ conversationId, companyId }) => ({
+      query: ({ conversationId, entityType, entityId, companyId } = {}) => ({
         url: '/api/crm/communication/messages',
-        params: { conversationId },
+        params: {
+          conversationId: conversationId || undefined,
+          entityType: entityType || undefined,
+          entityId: entityId || undefined,
+          companyId: companyId || undefined,
+        },
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_COMMUNICATIONS'],
@@ -389,9 +394,13 @@ export const crmApiSlice = baseApi.injectEndpoints({
     }),
 
     getCrmCalls: builder.query({
-      query: ({ entityType, entityId, companyId }) => ({
+      query: ({ entityType, entityId, companyId } = {}) => ({
         url: '/api/crm/communication/calls',
-        params: { entityType, entityId },
+        params: {
+          entityType: entityType || undefined,
+          entityId: entityId || undefined,
+          companyId: companyId || undefined,
+        },
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_COMMUNICATIONS'],

@@ -12,6 +12,7 @@ import java.util.UUID;
 @Repository
 public interface CrmMessageRepository extends JpaRepository<CrmMessage, UUID> {
     List<CrmMessage> findByCompanyIdAndConversationIdOrderByCreatedAtAsc(UUID companyId, UUID conversationId);
+    List<CrmMessage> findByCompanyIdOrderByCreatedAtDesc(UUID companyId);
     Page<CrmMessage> findByCompanyIdAndConversationId(UUID companyId, UUID conversationId, Pageable pageable);
 }
 

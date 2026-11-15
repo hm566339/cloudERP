@@ -84,8 +84,26 @@ public class CrmCommunicationServiceImpl implements CrmCommunicationService {
     @Override
     @Transactional(readOnly = true)
     public List<MessageResponse> getConversationMessages(UUID conversationId, UUID requestCompanyId) {
+        return getMessages(conversationId, null, null, requestCompanyId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MessageResponse> getMessages(UUID conversationId, String entityType, UUID entityId, UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
-        return messageRepository.findByCompanyIdAndConversationIdOrderByCreatedAtAsc(companyId, conversationId)
+        if (conversationId != null) {
+            return messageRepository.findByCompanyIdAndConversationIdOrderByCreatedAtAsc(companyId, conversationId)
+                    .stream().map(this::mapToMessageResponse).toList();
+        }
+        if (entityType != null && !entityType.isBlank() && entityId != null) {
+            List<CrmConversation> convs = conversationRepository.findByCompanyIdAndEntityTypeAndEntityIdAndIsDeletedFalseOrderByLastMessageAtDesc(
+                    companyId, entityType.trim().toUpperCase(), entityId);
+            return convs.stream()
+                    .flatMap(c -> messageRepository.findByCompanyIdAndConversationIdOrderByCreatedAtAsc(companyId, c.getId()).stream())
+                    .map(this::mapToMessageResponse)
+                    .toList();
+        }
+        return messageRepository.findByCompanyIdOrderByCreatedAtDesc(companyId)
                 .stream().map(this::mapToMessageResponse).toList();
     }
 
@@ -118,10 +136,29 @@ public class CrmCommunicationServiceImpl implements CrmCommunicationService {
     @Override
     @Transactional(readOnly = true)
     public List<CallLogResponse> getCallsForEntity(String entityType, UUID entityId, UUID requestCompanyId) {
+        return getCalls(entityType, entityId, requestCompanyId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CallLogResponse> getCalls(String entityType, UUID entityId, UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
-        return callLogRepository.findByCompanyIdAndEntityTypeAndEntityIdAndIsDeletedFalseOrderByStartTimeDesc(
-                companyId, entityType.toUpperCase(), entityId)
-                .stream().map(this::mapToCallResponse).toList();
+
+        boolean hasEntityType = entityType != null && !entityType.isBlank();
+        boolean hasEntityId = entityId != null;
+
+        List<CrmCallLog> calls;
+        if (hasEntityType && hasEntityId) {
+            calls = callLogRepository.findByCompanyIdAndEntityTypeAndEntityIdAndIsDeletedFalseOrderByStartTimeDesc(
+                    companyId, entityType.trim().toUpperCase(), entityId);
+        } else if (hasEntityType) {
+            calls = callLogRepository.findByCompanyIdAndEntityTypeAndIsDeletedFalseOrderByStartTimeDesc(
+                    companyId, entityType.trim().toUpperCase());
+        } else {
+            calls = callLogRepository.findByCompanyIdAndIsDeletedFalseOrderByStartTimeDesc(companyId);
+        }
+
+        return calls.stream().map(this::mapToCallResponse).toList();
     }
 
     private MessageResponse mapToMessageResponse(CrmMessage m) {

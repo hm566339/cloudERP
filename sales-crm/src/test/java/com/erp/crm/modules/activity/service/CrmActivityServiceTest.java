@@ -160,3 +160,4 @@ class CrmActivityServiceTest {
         verify(activityRepository, times(1)).findByCompanyIdAndEntityTypeAndEntityIdAndIsDeletedFalseOrderByActivityAtDesc(eq(companyId), eq("LEAD"), eq(leadId));
     }
 }
+

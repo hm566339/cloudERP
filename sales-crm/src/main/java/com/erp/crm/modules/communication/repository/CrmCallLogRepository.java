@@ -13,6 +13,8 @@ import java.util.UUID;
 @Repository
 public interface CrmCallLogRepository extends JpaRepository<CrmCallLog, UUID> {
     List<CrmCallLog> findByCompanyIdAndEntityTypeAndEntityIdAndIsDeletedFalseOrderByStartTimeDesc(UUID companyId, String entityType, UUID entityId);
+    List<CrmCallLog> findByCompanyIdAndEntityTypeAndIsDeletedFalseOrderByStartTimeDesc(UUID companyId, String entityType);
+    List<CrmCallLog> findByCompanyIdAndIsDeletedFalseOrderByStartTimeDesc(UUID companyId);
     Page<CrmCallLog> findByCompanyIdAndIsDeletedFalse(UUID companyId, Pageable pageable);
     Optional<CrmCallLog> findByCompanyIdAndIdAndIsDeletedFalse(UUID companyId, UUID id);
 }

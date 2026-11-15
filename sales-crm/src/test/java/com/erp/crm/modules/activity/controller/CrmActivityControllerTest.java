@@ -53,3 +53,4 @@ class CrmActivityControllerTest {
         verify(activityService, times(1)).getActivities(null, null, null, companyId);
     }
 }
+

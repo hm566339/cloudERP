@@ -60,7 +60,7 @@ public class CrmOpportunityController {
     @GetMapping("/kanban")
     @Operation(summary = "Get Kanban View Grouped by Pipeline Stages")
     public ResponseEntity<ApiResponse<KanbanViewResponse>> getKanbanView(
-            @RequestParam UUID pipelineId,
+            @RequestParam(required = false) UUID pipelineId,
             @RequestParam(required = false) UUID companyId) {
         KanbanViewResponse response = opportunityService.getKanbanView(pipelineId, companyId);
         return ResponseEntity.ok(ApiResponse.success(response));

@@ -37,11 +37,13 @@ public class CrmCommunicationController {
     }
 
     @GetMapping("/messages")
-    @Operation(summary = "Get Messages for Conversation Thread")
+    @Operation(summary = "Get Messages for Conversation Thread or Entity")
     public ResponseEntity<ApiResponse<List<MessageResponse>>> getConversationMessages(
-            @RequestParam UUID conversationId,
+            @RequestParam(required = false) UUID conversationId,
+            @RequestParam(required = false) String entityType,
+            @RequestParam(required = false) UUID entityId,
             @RequestParam(required = false) UUID companyId) {
-        List<MessageResponse> messages = communicationService.getConversationMessages(conversationId, companyId);
+        List<MessageResponse> messages = communicationService.getMessages(conversationId, entityType, entityId, companyId);
         return ResponseEntity.ok(ApiResponse.success(messages));
     }
 
@@ -56,12 +58,12 @@ public class CrmCommunicationController {
     }
 
     @GetMapping("/calls")
-    @Operation(summary = "Get Call History for an Entity")
+    @Operation(summary = "Get Call History (Optionally for an Entity)")
     public ResponseEntity<ApiResponse<List<CallLogResponse>>> getCalls(
-            @RequestParam String entityType,
-            @RequestParam UUID entityId,
+            @RequestParam(required = false) String entityType,
+            @RequestParam(required = false) UUID entityId,
             @RequestParam(required = false) UUID companyId) {
-        List<CallLogResponse> calls = communicationService.getCallsForEntity(entityType, entityId, companyId);
+        List<CallLogResponse> calls = communicationService.getCalls(entityType, entityId, companyId);
         return ResponseEntity.ok(ApiResponse.success(calls));
     }
 }
