@@ -46,10 +46,39 @@ public class CrmActivityServiceImpl implements CrmActivityService {
     @Override
     @Transactional(readOnly = true)
     public List<ActivityResponse> getTimeline(String entityType, UUID entityId, UUID requestCompanyId) {
+        return getActivities(entityType, entityId, null, requestCompanyId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ActivityResponse> getActivities(String entityType, UUID entityId, String activityType, UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
-        return activityRepository.findByCompanyIdAndEntityTypeAndEntityIdAndIsDeletedFalseOrderByActivityAtDesc(
-                companyId, entityType.toUpperCase(), entityId)
-                .stream().map(this::mapToResponse).toList();
+
+        boolean hasEntityType = entityType != null && !entityType.isBlank();
+        boolean hasEntityId = entityId != null;
+        boolean hasType = activityType != null && !activityType.isBlank();
+
+        List<CrmActivity> activities;
+        if (hasEntityType && hasEntityId && hasType) {
+            activities = activityRepository.findByCompanyIdAndEntityTypeAndEntityIdAndActivityTypeAndIsDeletedFalseOrderByActivityAtDesc(
+                    companyId, entityType.trim().toUpperCase(), entityId, activityType.trim().toUpperCase());
+        } else if (hasEntityType && hasEntityId) {
+            activities = activityRepository.findByCompanyIdAndEntityTypeAndEntityIdAndIsDeletedFalseOrderByActivityAtDesc(
+                    companyId, entityType.trim().toUpperCase(), entityId);
+        } else if (hasEntityType && hasType) {
+            activities = activityRepository.findByCompanyIdAndEntityTypeAndActivityTypeAndIsDeletedFalseOrderByActivityAtDesc(
+                    companyId, entityType.trim().toUpperCase(), activityType.trim().toUpperCase());
+        } else if (hasEntityType) {
+            activities = activityRepository.findByCompanyIdAndEntityTypeAndIsDeletedFalseOrderByActivityAtDesc(
+                    companyId, entityType.trim().toUpperCase());
+        } else if (hasType) {
+            activities = activityRepository.findByCompanyIdAndActivityTypeAndIsDeletedFalseOrderByActivityAtDesc(
+                    companyId, activityType.trim().toUpperCase());
+        } else {
+            activities = activityRepository.findByCompanyIdAndIsDeletedFalseOrderByActivityAtDesc(companyId);
+        }
+
+        return activities.stream().map(this::mapToResponse).toList();
     }
 
     private ActivityResponse mapToResponse(CrmActivity a) {

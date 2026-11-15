@@ -333,9 +333,14 @@ export const crmApiSlice = baseApi.injectEndpoints({
     }),
 
     getCrmActivities: builder.query({
-      query: ({ entityType, entityId, companyId }) => ({
+      query: ({ entityType, entityId, activityType, companyId } = {}) => ({
         url: '/api/crm/activities',
-        params: { entityType, entityId },
+        params: {
+          entityType: entityType || undefined,
+          entityId: entityId || undefined,
+          activityType: activityType || undefined,
+          companyId: companyId || undefined,
+        },
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_ACTIVITIES'],

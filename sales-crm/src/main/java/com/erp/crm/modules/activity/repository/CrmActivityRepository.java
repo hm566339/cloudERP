@@ -13,6 +13,11 @@ import java.util.UUID;
 @Repository
 public interface CrmActivityRepository extends JpaRepository<CrmActivity, UUID> {
     List<CrmActivity> findByCompanyIdAndEntityTypeAndEntityIdAndIsDeletedFalseOrderByActivityAtDesc(UUID companyId, String entityType, UUID entityId);
+    List<CrmActivity> findByCompanyIdAndEntityTypeAndEntityIdAndActivityTypeAndIsDeletedFalseOrderByActivityAtDesc(UUID companyId, String entityType, UUID entityId, String activityType);
+    List<CrmActivity> findByCompanyIdAndEntityTypeAndActivityTypeAndIsDeletedFalseOrderByActivityAtDesc(UUID companyId, String entityType, String activityType);
+    List<CrmActivity> findByCompanyIdAndEntityTypeAndIsDeletedFalseOrderByActivityAtDesc(UUID companyId, String entityType);
+    List<CrmActivity> findByCompanyIdAndActivityTypeAndIsDeletedFalseOrderByActivityAtDesc(UUID companyId, String activityType);
+    List<CrmActivity> findByCompanyIdAndIsDeletedFalseOrderByActivityAtDesc(UUID companyId);
     Page<CrmActivity> findByCompanyIdAndIsDeletedFalse(UUID companyId, Pageable pageable);
     Optional<CrmActivity> findByCompanyIdAndIdAndIsDeletedFalse(UUID companyId, UUID id);
 }

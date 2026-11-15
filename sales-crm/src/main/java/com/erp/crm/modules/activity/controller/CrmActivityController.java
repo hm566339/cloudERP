@@ -35,12 +35,13 @@ public class CrmActivityController {
     }
 
     @GetMapping
-    @Operation(summary = "Get Chronological Activity Timeline for an Entity")
-    public ResponseEntity<ApiResponse<List<ActivityResponse>>> getTimeline(
-            @RequestParam String entityType,
-            @RequestParam UUID entityId,
+    @Operation(summary = "Get Chronological Activity Timeline (Optionally filtered by Entity or Activity Type)")
+    public ResponseEntity<ApiResponse<List<ActivityResponse>>> getActivities(
+            @RequestParam(required = false) String entityType,
+            @RequestParam(required = false) UUID entityId,
+            @RequestParam(required = false) String activityType,
             @RequestParam(required = false) UUID companyId) {
-        List<ActivityResponse> timeline = activityService.getTimeline(entityType, entityId, companyId);
+        List<ActivityResponse> timeline = activityService.getActivities(entityType, entityId, activityType, companyId);
         return ResponseEntity.ok(ApiResponse.success(timeline));
     }
 }
