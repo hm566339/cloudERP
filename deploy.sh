@@ -254,7 +254,7 @@ log_success "RabbitMQ message broker is healthy."
 
 # 6b. Verify application databases and execute automated schema migrations on healthy db
 log_info "Verifying application databases in PostgreSQL..."
-for target_db in account sso workflow_db inventory manufacturing communication_db; do
+for target_db in account sso workflow_db inventory manufacturing communication_db crm_db; do
     if ! docker exec erp-db psql -U "${POSTGRES_USER:-postgres}" -tc "SELECT 1 FROM pg_database WHERE datname = '$target_db'" 2>/dev/null | grep -q 1; then
         log_info "Creating database '$target_db'..."
         docker exec erp-db psql -U "${POSTGRES_USER:-postgres}" -c "CREATE DATABASE $target_db;" 2>/dev/null || true
@@ -289,6 +289,7 @@ REQUIRED_CONTAINERS=(
     "erp-inventory-service"
     "erp-communication-service"
     "erp-manufacturing-service"
+    "erp-sales-crm"
     "erp-frontend"
 )
 

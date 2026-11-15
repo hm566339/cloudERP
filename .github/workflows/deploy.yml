@@ -41,14 +41,16 @@ jobs:
           - name: manufacturing
             context: ./manufacturing
             dockerfile: ./manufacturing/Dockerfile
-
+          - name: sales-crm
+            context: ./sales-crm
+            dockerfile: ./sales-crm/Dockerfile
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Java JDK 17
-        if: matrix.service.name == 'communication'
+        if: matrix.service.name == 'communication' || matrix.service.name == 'sales-crm'
         uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -58,6 +60,13 @@ jobs:
         if: matrix.service.name == 'communication'
         run: |
           cd communication-service
+          chmod +x mvnw
+          ./mvnw test
+
+      - name: Run Sales & CRM Service Tests
+        if: matrix.service.name == 'sales-crm'
+        run: |
+          cd sales-crm
           chmod +x mvnw
           ./mvnw test
 
