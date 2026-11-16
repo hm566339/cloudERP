@@ -17,11 +17,18 @@ public class TenantIntegrationResponse {
     private UUID companyId;
     private UUID integrationChannelId;
     private String connectionName;
+    private String integrationName;
+    private String channelCode;
+    private String providerName;
     private String authType;
     private String webhookSlug;
+    private String webhookUrl;
     private Integer syncFrequencyMinutes;
     private IntegrationSyncStatus syncStatus;
     private LocalDateTime lastSyncAt;
+    private Boolean autoQualify;
+    private UUID roundRobinPoolId;
+    private String settingsJson;
     private Boolean isEnabled;
     private LocalDateTime createdAt;
 }

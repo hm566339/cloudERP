@@ -25,6 +25,24 @@ public class CrmIntegrationController {
 
     private final CrmIntegrationService integrationService;
 
+    @GetMapping(value = "/webhook/{slug}", produces = org.springframework.http.MediaType.TEXT_PLAIN_VALUE)
+    @Operation(summary = "Meta Ads / Webhook Verification Handshake (hub.challenge)")
+    public ResponseEntity<String> verifyWebhook(
+            @PathVariable String slug,
+            @RequestParam(name = "hub.mode", required = false) String hubMode,
+            @RequestParam(name = "hub.challenge", required = false) String hubChallenge,
+            @RequestParam(name = "hub.verify_token", required = false) String hubVerifyToken,
+            @RequestParam(name = "hub_mode", required = false) String altMode,
+            @RequestParam(name = "hub_challenge", required = false) String altChallenge,
+            @RequestParam(name = "hub_verify_token", required = false) String altVerifyToken) {
+        String mode = hubMode != null ? hubMode : altMode;
+        String challenge = hubChallenge != null ? hubChallenge : altChallenge;
+        String verifyToken = hubVerifyToken != null ? hubVerifyToken : altVerifyToken;
+
+        String result = integrationService.verifyWebhook(slug, mode, challenge, verifyToken);
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping("/webhook/{slug}")
     @Operation(summary = "Public Inbound Webhook Listener (IndiaMART, Meta, Google, etc.)")
     public ResponseEntity<WebhookAckResponse> handleWebhook(

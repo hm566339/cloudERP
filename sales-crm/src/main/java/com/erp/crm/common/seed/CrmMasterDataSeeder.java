@@ -102,6 +102,14 @@ public class CrmMasterDataSeeder implements CommandLineRunner {
                         .isActive(true)
                         .build(),
                 CrmIntegrationChannel.builder()
+                        .providerCode(IntegrationProvider.WEBHOOK)
+                        .providerName("Custom Generic Webhook")
+                        .providerCategory("INBOUND")
+                        .supportsPush(true)
+                        .supportsPull(false)
+                        .isActive(true)
+                        .build(),
+                CrmIntegrationChannel.builder()
                         .providerCode(IntegrationProvider.CSV_IMPORT)
                         .providerName("CSV / Excel Lead Import")
                         .providerCategory("IMPORT")

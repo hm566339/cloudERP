@@ -13,6 +13,8 @@ public interface CrmIntegrationService {
 
     WebhookAckResponse handleWebhook(String slug, String payload, String sourceIp, Map<String, String> headers);
 
+    String verifyWebhook(String slug, String mode, String challenge, String verifyToken);
+
     TenantIntegrationResponse createTenantIntegration(TenantIntegrationRequest request, UUID requestCompanyId);
 
     List<TenantIntegrationResponse> getTenantIntegrations(UUID requestCompanyId);

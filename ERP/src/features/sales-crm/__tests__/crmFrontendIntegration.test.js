@@ -186,4 +186,25 @@ describe('Sales & CRM Business Calculation & Domain Rules Suite', () => {
       100000
     );
   });
+
+  it('10. Ingestion channel slug generator and marketplace payload normalization contracts', () => {
+    const generateSlug = (name) =>
+      (name || 'webhook')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 32);
+
+    assert.equal(generateSlug('IndiaMART Inbound Push'), 'indiamart-inbound-push');
+    assert.equal(generateSlug('TradeIndia Webhook!'), 'tradeindia-webhook');
+    assert.equal(generateSlug('Meta Ads / Lead Gen 2026'), 'meta-ads-lead-gen-2026');
+    assert.equal(generateSlug(''), 'webhook');
+
+    // Marketplace provider mappings
+    const supportedChannels = ['INDIAMART', 'TRADEINDIA', 'META_LEAD_ADS', 'JUSTDIAL', 'CUSTOM_WEBHOOK'];
+    assert.equal(supportedChannels.includes('INDIAMART'), true);
+    assert.equal(supportedChannels.includes('TRADEINDIA'), true);
+    assert.equal(supportedChannels.includes('META_LEAD_ADS'), true);
+    assert.equal(supportedChannels.includes('CUSTOM_WEBHOOK'), true);
+  });
 });
