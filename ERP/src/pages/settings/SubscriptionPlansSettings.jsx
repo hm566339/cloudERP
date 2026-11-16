@@ -153,15 +153,49 @@ export default function SubscriptionPlansSettings() {
         }
       }
 
+      let modList = [];
       if (modulesRes.status === 'fulfilled') {
         const rawMods = modulesRes.value;
-        const modList = Array.isArray(rawMods)
+        modList = Array.isArray(rawMods)
           ? rawMods
-          : rawMods?.data && Array.isArray(rawMods.data)
+          : Array.isArray(rawMods?.modules)
+          ? rawMods.modules
+          : Array.isArray(rawMods?.data?.modules)
+          ? rawMods.data.modules
+          : Array.isArray(rawMods?.data)
           ? rawMods.data
+          : Array.isArray(rawMods?.content)
+          ? rawMods.content
+          : Array.isArray(rawMods?.items)
+          ? rawMods.items
           : [];
-        setAvailableModules(modList);
       }
+
+      // Fallback: If module catalog is empty or modules request failed, harvest modules from plans
+      if (modList.length === 0 && plansRes.status === 'fulfilled') {
+        const planList = Array.isArray(plansRes.value)
+          ? plansRes.value
+          : Array.isArray(plansRes.value?.data)
+          ? plansRes.value.data
+          : Array.isArray(plansRes.value?.plans)
+          ? plansRes.value.plans
+          : [];
+        const harvestedMap = new Map();
+        planList.forEach((p) => {
+          (p.modules || []).forEach((m) => {
+            const mId = m.moduleId || m.id;
+            const mName = m.moduleName || m.name;
+            if (mId && mName && !harvestedMap.has(mId)) {
+              harvestedMap.set(mId, { id: mId, name: mName, active: m.active !== false });
+            }
+          });
+        });
+        if (harvestedMap.size > 0) {
+          modList = Array.from(harvestedMap.values());
+        }
+      }
+
+      setAvailableModules(modList);
     } catch (err) {
       const msg = getSafeErrorMessage(err, 'Failed to connect to subscription service');
       setErrorMessage(msg);

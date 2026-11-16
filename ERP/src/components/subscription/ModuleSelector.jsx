@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers } from 'lucide-react';
+import { Layers, RefreshCw } from 'lucide-react';
 import { formatModuleName } from './planUiUtils';
 
 export default function ModuleSelector({
@@ -9,6 +9,7 @@ export default function ModuleSelector({
   onSelectAll,
   onClearAll,
   error,
+  isLoading = false,
 }) {
   return (
     <div className="space-y-3 pt-2">
@@ -45,10 +46,12 @@ export default function ModuleSelector({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto p-1">
         {availableModules.length > 0 ? (
           availableModules.map((mod) => {
-            const isChecked = selectedModuleIds.includes(mod.id);
+            const modId = mod.id || mod.moduleId;
+            const isChecked = selectedModuleIds.includes(modId);
+            const modName = mod.name || mod.moduleName || mod.code || 'Module';
             return (
               <label
-                key={mod.id}
+                key={modId}
                 className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer select-none transition-all ${
                   isChecked
                     ? 'bg-zinc-100 dark:bg-[#1D212C] border-zinc-300 dark:border-[#4C8DFF]/40 text-zinc-900 dark:text-[#E6E8EE] font-bold shadow-2xs'
@@ -58,19 +61,24 @@ export default function ModuleSelector({
                 <input
                   type="checkbox"
                   checked={isChecked}
-                  onChange={() => onToggleModule(mod.id)}
+                  onChange={() => onToggleModule(modId)}
                   className="w-4 h-4 text-zinc-900 rounded border-zinc-300 dark:border-[#2A2F3D] focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] accent-zinc-900 dark:accent-[#4C8DFF]"
                 />
                 <div className="min-w-0 flex-1">
-                  <span className="text-xs block truncate">{formatModuleName(mod.name)}</span>
-                  <span className="font-mono text-[10px] text-zinc-400 dark:text-[#6B7184] block uppercase">{mod.name}</span>
+                  <span className="text-xs block truncate">{formatModuleName(modName)}</span>
+                  <span className="font-mono text-[10px] text-zinc-400 dark:text-[#6B7184] block uppercase">{modName}</span>
                 </div>
               </label>
             );
           })
+        ) : isLoading ? (
+          <div className="col-span-2 text-center py-4 text-xs text-zinc-400 dark:text-[#6B7184] flex items-center justify-center gap-2">
+            <RefreshCw size={14} className="animate-spin text-primary" />
+            <span>Loading active modules from server...</span>
+          </div>
         ) : (
           <div className="col-span-2 text-center py-4 text-xs text-zinc-400 dark:text-[#6B7184]">
-            Loading active modules from server...
+            No modules available to select.
           </div>
         )}
       </div>

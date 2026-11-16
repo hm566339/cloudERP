@@ -464,4 +464,84 @@ describe('Subscription Plan Frontend Rules & Management Tests', () => {
     });
   });
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // 17. Module Catalog Unpacking & Fallback Harvesting
+  // ──────────────────────────────────────────────────────────────────────────
+  describe('17. Module Catalog Unpacking & Fallback Harvesting', () => {
+    function extractModules(rawMods) {
+      return Array.isArray(rawMods)
+        ? rawMods
+        : Array.isArray(rawMods?.modules)
+        ? rawMods.modules
+        : Array.isArray(rawMods?.data?.modules)
+        ? rawMods.data.modules
+        : Array.isArray(rawMods?.data)
+        ? rawMods.data
+        : Array.isArray(rawMods?.content)
+        ? rawMods.content
+        : Array.isArray(rawMods?.items)
+        ? rawMods.items
+        : [];
+    }
+
+    it('correctly extracts modules from { modules: [...] } backend payload', () => {
+      const ssoResponse = {
+        modules: [
+          { id: 'mod-1', name: 'ACCOUNT', moduleStatus: true },
+          { id: 'mod-2', name: 'INVENTORY', moduleStatus: true },
+          { id: 'mod-3', name: 'CRM', moduleStatus: true },
+        ],
+        pagination: { page: 0, pageSize: 200, totalElements: 3, totalPages: 1 }
+      };
+
+      const extracted = extractModules(ssoResponse);
+      assert.strictEqual(extracted.length, 3);
+      assert.strictEqual(extracted[0].name, 'ACCOUNT');
+    });
+
+    it('correctly extracts modules from direct array or nested data envelope', () => {
+      const directArray = [{ id: 'm-1', name: 'WORKFLOW' }];
+      assert.strictEqual(extractModules(directArray).length, 1);
+
+      const nestedEnvelope = { data: { modules: [{ id: 'm-2', name: 'HR' }] } };
+      assert.strictEqual(extractModules(nestedEnvelope).length, 1);
+      assert.strictEqual(extractModules(nestedEnvelope)[0].name, 'HR');
+    });
+
+    it('harvests module definitions from plan modules when server catalog is empty', () => {
+      const emptyServerMods = { modules: [] };
+      let mods = extractModules(emptyServerMods);
+      assert.strictEqual(mods.length, 0);
+
+      const editingPlan = {
+        name: '30-Day Free Trial',
+        modules: [
+          { moduleId: 'm-1', moduleName: 'ACCOUNT', active: true },
+          { moduleId: 'm-2', moduleName: 'INVENTORY', active: true },
+          { moduleId: 'm-3', moduleName: 'CRM', active: true },
+          { moduleId: 'm-4', moduleName: 'WORKFLOW', active: true },
+          { moduleId: 'm-5', moduleName: 'MANUFACTURING', active: true },
+        ]
+      };
+
+      const harvested = [...mods];
+      const existingIds = new Set(harvested.map((m) => m.id));
+      editingPlan.modules.forEach((pm) => {
+        const modId = pm.moduleId || pm.id;
+        if (modId && !existingIds.has(modId)) {
+          existingIds.add(modId);
+          harvested.push({
+            id: modId,
+            name: pm.moduleName || pm.name,
+            active: pm.active !== false,
+          });
+        }
+      });
+
+      assert.strictEqual(harvested.length, 5);
+      assert.strictEqual(harvested[0].name, 'ACCOUNT');
+      assert.strictEqual(harvested[4].name, 'MANUFACTURING');
+    });
+  });
+
 });

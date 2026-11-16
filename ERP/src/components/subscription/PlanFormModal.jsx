@@ -14,6 +14,7 @@ import {
   createSubscriptionPlan,
   updateSubscriptionPlan,
 } from '../../api/sso/subscriptionPlan.api';
+import { getModules } from '../../api/sso/module';
 import { addAlert } from '../../features/notifications/notificationSlice';
 import { getSafeErrorMessage } from '../../utils/apiErrorHelper';
 import {
@@ -49,9 +50,74 @@ export default function PlanFormModal({
   const dispatch = useDispatch();
 
   const [formData, setFormData] = useState(initialFormState);
+  const [internalModules, setInternalModules] = useState([]);
+  const [isLoadingModules, setIsLoadingModules] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formValidationErrors, setFormValidationErrors] = useState({});
   const [serverFormError, setServerFormError] = useState(null);
+
+  // Fallback loader if parent did not pass available modules or on slow load
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (availableModules && availableModules.length > 0) {
+      setInternalModules(availableModules);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingModules(true);
+    getModules({ page: 0, pageSize: 200 })
+      .then((res) => {
+        if (!isMounted) return;
+        const list = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.modules)
+          ? res.modules
+          : Array.isArray(res?.data?.modules)
+          ? res.data.modules
+          : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.content)
+          ? res.content
+          : [];
+        if (list.length > 0) {
+          setInternalModules(list);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load modules in PlanFormModal:', err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingModules(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, availableModules]);
+
+  // Combined available modules: catalog modules + any attached to editingPlan
+  const effectiveAvailableModules = React.useMemo(() => {
+    const baseList = internalModules.length > 0 ? internalModules : availableModules;
+    const list = [...baseList];
+    const existingIds = new Set(list.map((m) => m.id || m.moduleId));
+
+    if (editingPlan?.modules && Array.isArray(editingPlan.modules)) {
+      editingPlan.modules.forEach((pm) => {
+        const modId = pm.moduleId || pm.id;
+        if (modId && !existingIds.has(modId)) {
+          existingIds.add(modId);
+          list.push({
+            id: modId,
+            name: pm.moduleName || pm.name || 'Module',
+            active: pm.active !== false,
+          });
+        }
+      });
+    }
+    return list;
+  }, [internalModules, availableModules, editingPlan]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -84,13 +150,14 @@ export default function PlanFormModal({
         moduleIds: selectedModIds,
       });
     } else {
-      const defaultModIds = availableModules.map((m) => m.id);
+      const baseList = effectiveAvailableModules.length > 0 ? effectiveAvailableModules : availableModules;
+      const defaultModIds = baseList.map((m) => m.id || m.moduleId).filter(Boolean);
       setFormData({
         ...initialFormState,
         moduleIds: defaultModIds,
       });
     }
-  }, [isOpen, editingPlan, availableModules]);
+  }, [isOpen, editingPlan, effectiveAvailableModules, availableModules]);
 
   if (!isOpen) return null;
 
@@ -110,7 +177,10 @@ export default function PlanFormModal({
   };
 
   const handleSelectAllModules = () => {
-    setFormData((prev) => ({ ...prev, moduleIds: availableModules.map((m) => m.id) }));
+    setFormData((prev) => ({
+      ...prev,
+      moduleIds: effectiveAvailableModules.map((m) => m.id || m.moduleId).filter(Boolean),
+    }));
     if (formValidationErrors.moduleIds) {
       setFormValidationErrors((prev) => ({ ...prev, moduleIds: undefined }));
     }
@@ -533,12 +603,13 @@ export default function PlanFormModal({
 
             {/* SECTION 3: PLAN MODULES */}
             <ModuleSelector
-              availableModules={availableModules}
+              availableModules={effectiveAvailableModules}
               selectedModuleIds={formData.moduleIds}
               onToggleModule={handleToggleModule}
               onSelectAll={handleSelectAllModules}
               onClearAll={handleClearAllModules}
               error={formValidationErrors.moduleIds}
+              isLoading={isLoadingModules}
             />
           </form>
 
