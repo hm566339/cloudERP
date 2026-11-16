@@ -76,8 +76,18 @@ export default function IntegrationsPage() {
 
   const [triggerSync] = useTriggerCrmIntegrationSyncMutation();
 
-  const rawIntegrations = integrationsRes?.data || [];
-  const pools = poolsRes?.data || [];
+  const rawIntegrations = useMemo(() => {
+    if (Array.isArray(integrationsRes)) return integrationsRes;
+    if (Array.isArray(integrationsRes?.data)) return integrationsRes.data;
+    if (Array.isArray(integrationsRes?.content)) return integrationsRes.content;
+    return [];
+  }, [integrationsRes]);
+
+  const pools = useMemo(() => {
+    if (Array.isArray(poolsRes)) return poolsRes;
+    if (Array.isArray(poolsRes?.data)) return poolsRes.data;
+    return [];
+  }, [poolsRes]);
 
   const filteredIntegrations = useMemo(() => {
     if (!searchKey.trim()) return rawIntegrations;

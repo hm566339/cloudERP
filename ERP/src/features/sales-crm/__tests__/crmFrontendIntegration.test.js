@@ -207,4 +207,34 @@ describe('Sales & CRM Business Calculation & Domain Rules Suite', () => {
     assert.equal(supportedChannels.includes('META_LEAD_ADS'), true);
     assert.equal(supportedChannels.includes('CUSTOM_WEBHOOK'), true);
   });
+
+  it('11. Integrations response unpacking handles both direct unwrapped array and wrapped ApiResponse envelope', () => {
+    const unpackIntegrations = (res) => {
+      if (Array.isArray(res)) return res;
+      if (Array.isArray(res?.data)) return res.data;
+      if (Array.isArray(res?.content)) return res.content;
+      return [];
+    };
+
+    const mockItem = {
+      id: '38de58ed-662f-40a8-a171-bc503b6adb6a',
+      connectionName: 'TradeIndia Webhook',
+      channelCode: 'TRADEINDIA',
+      webhookSlug: 'tradeindia-webhook'
+    };
+
+    // Scenario A: baseApi unwrapResponseByContract returns array directly
+    const directArray = [mockItem];
+    assert.equal(unpackIntegrations(directArray).length, 1);
+    assert.equal(unpackIntegrations(directArray)[0].connectionName, 'TradeIndia Webhook');
+
+    // Scenario B: Wrapped in ApiResponse { data: [ ... ] }
+    const wrappedRes = { success: true, data: [mockItem] };
+    assert.equal(unpackIntegrations(wrappedRes).length, 1);
+    assert.equal(unpackIntegrations(wrappedRes)[0].connectionName, 'TradeIndia Webhook');
+
+    // Scenario C: Empty array or null
+    assert.equal(unpackIntegrations(null).length, 0);
+    assert.equal(unpackIntegrations([]).length, 0);
+  });
 });
