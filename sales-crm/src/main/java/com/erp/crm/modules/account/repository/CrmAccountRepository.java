@@ -20,6 +20,8 @@ public interface CrmAccountRepository extends JpaRepository<CrmAccount, UUID>, J
 
     Page<CrmAccount> findByCompanyIdAndIsDeletedFalse(UUID companyId, Pageable pageable);
 
+    long countByCompanyIdAndIsDeletedFalse(UUID companyId);
+
     List<CrmAccount> findByCompanyIdAndAccountNameContainingIgnoreCaseAndIsDeletedFalse(UUID companyId, String name);
 }
 

@@ -151,6 +151,10 @@ public class CurrentUserContext {
     public static UUID resolveCompanyId(UUID requestCompanyId) {
         if (isSystemAdmin()) {
             if (requestCompanyId == null) {
+                UUID headerOrContext = getCompanyId();
+                if (headerOrContext != null) {
+                    return headerOrContext;
+                }
                 throw new BusinessValidationException(
                         "Company ID is required for system administrator operations.");
             }
@@ -169,7 +173,7 @@ public class CurrentUserContext {
 
     public static UUID resolveCompanyIdForQuery(UUID requestCompanyId) {
         if (isSystemAdmin()) {
-            return requestCompanyId;
+            return requestCompanyId != null ? requestCompanyId : getCompanyId();
         }
 
         UUID tenantCompanyId = getCompanyId();

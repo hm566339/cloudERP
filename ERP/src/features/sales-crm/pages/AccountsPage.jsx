@@ -67,8 +67,15 @@ export default function AccountsPage() {
 
   const [onboardAccount, { isLoading: isOnboarding }] = useOnboardAccountToErpMutation();
 
-  const accounts = accountsRes?.data?.content || accountsRes?.data || [];
-  const totalElements = accountsRes?.data?.totalElements || accounts.length;
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
+  const accounts = toArray(accountsRes);
+  const totalElements = accountsRes?.data?.totalElements || accountsRes?.totalElements || accounts.length;
 
   const handleReset = () => {
     resetFilters();

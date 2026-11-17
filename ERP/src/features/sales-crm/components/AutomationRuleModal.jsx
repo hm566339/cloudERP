@@ -1,7 +1,17 @@
-import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import React, { useState, useMemo } from 'react';
+import { Modal, FormField, Input, Select, Button } from '../../../components/common';
 import { Cpu, AlertCircle } from 'lucide-react';
-import { useCreateCrmAutomationRuleMutation } from '../../../api/sales-crm/crm.api';
+import {
+  useCreateCrmAutomationRuleMutation,
+  useGetCrmRoundRobinPoolsQuery,
+} from '../../../api/sales-crm/crm.api';
+
+const toArray = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.data?.content)) return res.data.content;
+  return [];
+};
 
 export default function AutomationRuleModal({
   isOpen,
@@ -20,6 +30,14 @@ export default function AutomationRuleModal({
     isActive: true,
   });
 
+  const { data: fetchedPoolsRes } = useGetCrmRoundRobinPoolsQuery(companyId, { skip: !isOpen });
+
+  const availablePools = useMemo(() => {
+    const fromProps = toArray(pools);
+    if (fromProps.length > 0) return fromProps;
+    return toArray(fetchedPoolsRes);
+  }, [pools, fetchedPoolsRes]);
+
   const [errorMsg, setErrorMsg] = useState(null);
   const [createRule, { isLoading }] = useCreateCrmAutomationRuleMutation();
 
@@ -34,7 +52,7 @@ export default function AutomationRuleModal({
       setErrorMsg(null);
       const actionPayload = {};
       if (formData.actionType === 'AUTO_ASSIGN_ROUND_ROBIN') {
-        actionPayload.poolId = formData.poolId || (pools[0]?.id || null);
+        actionPayload.poolId = formData.poolId || (availablePools[0]?.id || null);
       } else if (formData.actionType === 'CREATE_TASK') {
         actionPayload.taskTitle = formData.taskTitle || 'Follow up Lead immediately';
         actionPayload.priority = 'HIGH';
@@ -73,103 +91,80 @@ export default function AutomationRuleModal({
           </div>
         )}
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-            Rule Name *
-          </label>
-          <input
+        <FormField label="Rule Name" required>
+          <Input
             type="text"
             required
             placeholder="e.g. Auto-assign high intent website leads"
             value={formData.ruleName}
             onChange={(e) => setFormData({ ...formData, ruleName: e.target.value })}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
           />
-        </div>
+        </FormField>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Trigger Event
-            </label>
-            <select
+          <FormField label="Trigger Event">
+            <Select
               value={formData.triggerEvent}
               onChange={(e) => setFormData({ ...formData, triggerEvent: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             >
               <option value="LEAD_CREATED">When New Lead is Created</option>
               <option value="LEAD_SCORE_CHANGED">When Lead Score Changes</option>
               <option value="DEAL_STAGE_CHANGED">When Opportunity Moves Stage</option>
               <option value="DEAL_WON">When Opportunity is Won</option>
               <option value="QUOTATION_APPROVED">When Quotation is Approved</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Action to Execute
-            </label>
-            <select
+          <FormField label="Action to Execute">
+            <Select
               value={formData.actionType}
               onChange={(e) => setFormData({ ...formData, actionType: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             >
               <option value="AUTO_ASSIGN_ROUND_ROBIN">Auto Assign via Round-Robin Pool</option>
               <option value="CREATE_TASK">Generate Automated Task</option>
               <option value="DISPATCH_NOTIFICATION">Send Alert Notification</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-            Condition Expression (Spring SpEL)
-          </label>
-          <input
+        <FormField
+          label="Condition Expression (Spring SpEL)"
+          hint="Safe expression evaluated against inbound entity context (e.g. #lead.leadScore, #deal.dealValue)"
+        >
+          <Input
             type="text"
             placeholder="#lead.leadScore >= 50 or #lead.state == 'Maharashtra'"
             value={formData.conditionExpression}
             onChange={(e) => setFormData({ ...formData, conditionExpression: e.target.value })}
-            className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE]"
+            className="font-mono"
           />
-          <span className="text-[10px] text-zinc-500 mt-1 block">
-            Safe expression evaluated against inbound entity context (e.g. #lead.leadScore, #deal.dealValue)
-          </span>
-        </div>
+        </FormField>
 
         {formData.actionType === 'AUTO_ASSIGN_ROUND_ROBIN' && (
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Select Round-Robin Sales Pool
-            </label>
-            <select
+          <FormField label="Select Round-Robin Sales Pool">
+            <Select
               value={formData.poolId}
               onChange={(e) => setFormData({ ...formData, poolId: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             >
               <option value="">Default Sales Rep Pool</option>
-              {pools.map((p) => (
+              {availablePools.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.poolName} ({p.routingStrategy})
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
         )}
 
         {formData.actionType === 'CREATE_TASK' && (
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Automated Task Title
-            </label>
-            <input
+          <FormField label="Automated Task Title">
+            <Input
               type="text"
               placeholder="e.g. Connect within 15 minutes - High Intent Lead"
               value={formData.taskTitle}
               onChange={(e) => setFormData({ ...formData, taskTitle: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             />
-          </div>
+          </FormField>
         )}
 
         <div className="flex items-center gap-2 pt-1">
@@ -178,7 +173,7 @@ export default function AutomationRuleModal({
             id="isRuleActive"
             checked={formData.isActive}
             onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-            className="rounded border-zinc-300 dark:border-[#2A2F3D] text-primary"
+            className="rounded border-zinc-300 dark:border-[#2A2F3D] text-primary cursor-pointer"
           />
           <label htmlFor="isRuleActive" className="text-xs text-zinc-700 dark:text-[#A0A6B5] cursor-pointer">
             Rule is active and evaluated on all real-time events
@@ -186,21 +181,23 @@ export default function AutomationRuleModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            icon={Cpu}
           >
-            <Cpu size={13} />
-            {isLoading ? 'Saving...' : 'Save Automation Rule'}
-          </button>
+            Save Automation Rule
+          </Button>
         </div>
       </form>
     </Modal>

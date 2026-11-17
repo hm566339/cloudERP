@@ -48,10 +48,17 @@ export default function ContactsPage() {
     role: filters.role || undefined,
   });
 
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
   const { data: accountsRes } = useGetCrmAccountsQuery({ companyId, page: 0, size: 100 });
-  const accounts = accountsRes?.data?.content || accountsRes?.data || [];
-  const contacts = contactsRes?.data?.content || contactsRes?.data || [];
-  const totalElements = contactsRes?.data?.totalElements || contacts.length;
+  const accounts = toArray(accountsRes);
+  const contacts = toArray(contactsRes);
+  const totalElements = contactsRes?.data?.totalElements || contactsRes?.totalElements || contacts.length;
 
   const handleReset = () => {
     resetFilters();
@@ -233,6 +240,7 @@ export default function ContactsPage() {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         companyId={companyId}
+        accounts={accounts}
         onSuccess={() => refetch()}
       />
 
@@ -241,6 +249,7 @@ export default function ContactsPage() {
         onClose={() => setEditingContact(null)}
         initialData={editingContact}
         companyId={companyId}
+        accounts={accounts}
         onSuccess={() => refetch()}
       />
     </div>

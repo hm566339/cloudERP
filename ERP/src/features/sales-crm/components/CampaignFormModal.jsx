@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import { Modal, FormField, Input, Select, Button } from '../../../components/common';
 import { Megaphone, AlertCircle } from 'lucide-react';
 import { useCreateCrmCampaignMutation } from '../../../api/sales-crm/crm.api';
 
@@ -74,43 +74,32 @@ export default function CampaignFormModal({
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Campaign Name *
-            </label>
-            <input
+          <FormField label="Campaign Name" required>
+            <Input
               type="text"
               required
               placeholder="e.g. Q4 IndiaMART B2B Lead Gen"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Campaign Code
-            </label>
-            <input
+          <FormField label="Campaign Code">
+            <Input
               type="text"
               placeholder="e.g. CMP-2026-Q4"
               value={formData.code}
               onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white uppercase"
+              className="uppercase"
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Campaign Type
-            </label>
-            <select
+          <FormField label="Campaign Type">
+            <Select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             >
               <option value="SEARCH">Search Engine Ads</option>
               <option value="SOCIAL">Social Media Campaign</option>
@@ -118,17 +107,13 @@ export default function CampaignFormModal({
               <option value="MARKETPLACE">B2B Portal (IndiaMART/TradeIndia)</option>
               <option value="EVENT">Trade Show / Expo</option>
               <option value="REFERRAL">Referral Program</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Channel
-            </label>
-            <select
+          <FormField label="Channel">
+            <Select
               value={formData.channel}
               onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             >
               <option value="GOOGLE_ADS">Google Ads</option>
               <option value="META_ADS">Meta (Facebook / Instagram)</option>
@@ -136,62 +121,48 @@ export default function CampaignFormModal({
               <option value="INDIAMART">IndiaMART Portal</option>
               <option value="TRADEINDIA">TradeIndia</option>
               <option value="WHATSAPP">WhatsApp Broadcast</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Budget Allocated (₹)
-            </label>
-            <input
+          <FormField label="Budget Allocated (₹)">
+            <Input
               type="number"
               min="0"
               value={formData.budget}
               onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white font-mono"
+              className="font-mono"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Target Revenue (₹)
-            </label>
-            <input
+          <FormField label="Target Revenue (₹)">
+            <Input
               type="number"
               min="0"
               value={formData.targetRevenue}
               onChange={(e) => setFormData({ ...formData, targetRevenue: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white font-mono"
+              className="font-mono"
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Start Date
-            </label>
-            <input
+          <FormField label="Start Date">
+            <Input
               type="date"
               value={formData.startDate}
               onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              End Date
-            </label>
-            <input
+          <FormField label="End Date">
+            <Input
               type="date"
               value={formData.endDate}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             />
-          </div>
+          </FormField>
         </div>
 
         {/* UTM Tracking Params */}
@@ -199,52 +170,54 @@ export default function CampaignFormModal({
           <p className="text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE] mb-2">UTM Attribution Tags</p>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="text-[10px] text-zinc-500 uppercase">utm_source</label>
-              <input
+              <label className="text-[10px] text-zinc-500 uppercase block mb-1">utm_source</label>
+              <Input
+                size="sm"
                 type="text"
                 value={formData.utmSource}
                 onChange={(e) => setFormData({ ...formData, utmSource: e.target.value })}
-                className="w-full px-2 py-1 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
               />
             </div>
             <div>
-              <label className="text-[10px] text-zinc-500 uppercase">utm_medium</label>
-              <input
+              <label className="text-[10px] text-zinc-500 uppercase block mb-1">utm_medium</label>
+              <Input
+                size="sm"
                 type="text"
                 value={formData.utmMedium}
                 onChange={(e) => setFormData({ ...formData, utmMedium: e.target.value })}
-                className="w-full px-2 py-1 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
               />
             </div>
             <div>
-              <label className="text-[10px] text-zinc-500 uppercase">utm_campaign</label>
-              <input
+              <label className="text-[10px] text-zinc-500 uppercase block mb-1">utm_campaign</label>
+              <Input
+                size="sm"
                 type="text"
                 value={formData.utmCampaign}
                 placeholder="optional"
                 onChange={(e) => setFormData({ ...formData, utmCampaign: e.target.value })}
-                className="w-full px-2 py-1 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
               />
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            icon={Megaphone}
           >
-            <Megaphone size={13} />
-            {isLoading ? 'Creating...' : 'Launch Campaign'}
-          </button>
+            Launch Campaign
+          </Button>
         </div>
       </form>
     </Modal>

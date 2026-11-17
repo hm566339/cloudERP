@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal } from '../../../components/common';
+import { Modal, Button } from '../../../components/common';
 import { Printer, Download } from 'lucide-react';
 
 export default function QuotationPrintModal({
@@ -105,21 +105,23 @@ export default function QuotationPrintModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Close
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
+            size="sm"
             onClick={handlePrint}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            icon={Printer}
           >
-            <Printer size={14} />
             Print / Save PDF
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

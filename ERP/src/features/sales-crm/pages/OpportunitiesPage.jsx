@@ -53,8 +53,15 @@ export default function OpportunitiesPage() {
     filters, setFilter, resetFilters
   } = useUrlFilters({ defaultPageSize: 10 });
 
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
   const { data: pipelinesRes } = useGetCrmPipelinesQuery(companyId);
-  const pipelines = pipelinesRes?.data || [];
+  const pipelines = toArray(pipelinesRes);
   const currentPipelineId = selectedPipelineId || pipelines[0]?.id;
 
   const { data: kanbanRes, isLoading: isKanbanLoading, refetch: refetchKanban } = useGetCrmKanbanQuery(
@@ -225,7 +232,7 @@ export default function OpportunitiesPage() {
           >
             {pipelines.map((p) => (
               <option key={p.id} value={p.id}>
-                Pipeline: {p.name} {p.isDefault ? '(Default)' : ''}
+                Pipeline: {p.pipelineName || p.name} {p.isDefault ? '(Default)' : ''}
               </option>
             ))}
           </select>

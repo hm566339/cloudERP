@@ -6,6 +6,9 @@ import com.erp.crm.modules.account.dto.request.AccountCreateRequest;
 import com.erp.crm.modules.account.dto.response.AccountResponse;
 import com.erp.crm.modules.account.entity.CrmAccount;
 import com.erp.crm.modules.account.entity.CrmAddress;
+import com.erp.crm.modules.account.enums.AccountTier;
+import com.erp.crm.modules.account.enums.AccountType;
+import com.erp.crm.modules.account.enums.BusinessType;
 import com.erp.crm.modules.account.mapper.AccountMapper;
 import com.erp.crm.modules.account.repository.CrmAccountRepository;
 import com.erp.crm.modules.account.repository.CrmAddressRepository;
@@ -81,19 +84,44 @@ public class CrmAccountServiceImpl implements CrmAccountService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<AccountResponse> getAllAccounts(UUID requestCompanyId, Pageable pageable) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
-        return accountRepository.findByCompanyIdAndIsDeletedFalse(companyId, pageable)
-                .map(accountMapper::toResponse);
+        Page<CrmAccount> page = accountRepository.findByCompanyIdAndIsDeletedFalse(companyId, pageable);
+        if (page.isEmpty() && (pageable == null || pageable.getPageNumber() == 0)) {
+            seedDefaultAccount(companyId);
+            page = accountRepository.findByCompanyIdAndIsDeletedFalse(companyId, pageable);
+        }
+        return page.map(accountMapper::toResponse);
+    }
+
+    private void seedDefaultAccount(UUID companyId) {
+        log.info("Auto-seeding default B2B Client Account for company [{}]", companyId);
+        try {
+            CrmAccount defaultAccount = CrmAccount.builder()
+                    .accountCode(generateAccountCode())
+                    .accountName("General B2B Clients & Direct Accounts")
+                    .accountType(AccountType.CUSTOMER)
+                    .industry("Corporate / Commercial")
+                    .businessType(BusinessType.PVT_LTD)
+                    .tier(AccountTier.TIER_2)
+                    .isActive(true)
+                    .build();
+            defaultAccount.setCompanyId(companyId);
+            accountRepository.save(defaultAccount);
+        } catch (Exception e) {
+            log.warn("Could not auto-seed default account: {}", e.getMessage());
+        }
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<AccountResponse> searchAccounts(String query, UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
-        return accountRepository.findByCompanyIdAndAccountNameContainingIgnoreCaseAndIsDeletedFalse(companyId, query)
-                .stream().map(accountMapper::toResponse).toList();
+        List<CrmAccount> list = accountRepository.findByCompanyIdAndAccountNameContainingIgnoreCaseAndIsDeletedFalse(companyId, query);
+        if (list.isEmpty() && accountRepository.countByCompanyIdAndIsDeletedFalse(companyId) == 0) {
+            seedDefaultAccount(companyId);
+            list = accountRepository.findByCompanyIdAndAccountNameContainingIgnoreCaseAndIsDeletedFalse(companyId, query);
+        }
+        return list.stream().map(accountMapper::toResponse).toList();
     }
 
     @Override

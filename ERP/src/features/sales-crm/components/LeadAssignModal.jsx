@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import React, { useState, useMemo } from 'react';
+import { Modal, FormField, Input, Select, Button } from '../../../components/common';
 import { useAssignLeadMutation, useGetCrmRoundRobinPoolsQuery } from '../../../api/sales-crm/crm.api';
+
+const toArray = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.data?.content)) return res.data.content;
+  return [];
+};
 
 export default function LeadAssignModal({
   isOpen,
@@ -15,8 +22,24 @@ export default function LeadAssignModal({
   const [selectedPoolId, setSelectedPoolId] = useState('');
   const [reason, setReason] = useState('Manual reassignment');
 
-  const { data: poolsData } = useGetCrmRoundRobinPoolsQuery(companyId);
-  const pools = poolsData?.data || [];
+  const { data: poolsData } = useGetCrmRoundRobinPoolsQuery(companyId, { skip: !isOpen });
+  const pools = useMemo(() => toArray(poolsData), [poolsData]);
+
+  const currentAuth = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('auth_user') || localStorage.getItem('user'));
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const availableUsers = useMemo(() => {
+    if (users && users.length > 0) return users;
+    if (currentAuth?.id) {
+      return [{ id: currentAuth.id, name: currentAuth.fullName || currentAuth.username || 'Current User (You)' }];
+    }
+    return [{ id: 'CURRENT_USER', name: 'Current Sales Representative' }];
+  }, [users, currentAuth]);
 
   const [assignLead, { isLoading }] = useAssignLeadMutation();
 
@@ -72,34 +95,26 @@ export default function LeadAssignModal({
         </div>
 
         {mode === 'direct' ? (
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Select Sales Representative *
-            </label>
-            <select
+          <FormField label="Select Sales Representative" required>
+            <Select
               required
               value={targetUserId}
               onChange={(e) => setTargetUserId(e.target.value)}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             >
               <option value="">Select user...</option>
-              {users.map((u) => (
+              {availableUsers.map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.name || u.email}
+                  {u.name || u.fullName || u.email || u.username}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
         ) : (
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Select Routing Pool *
-            </label>
-            <select
+          <FormField label="Select Routing Pool" required>
+            <Select
               required
               value={selectedPoolId}
               onChange={(e) => setSelectedPoolId(e.target.value)}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             >
               <option value="">Select pool...</option>
               {pools.map((p) => (
@@ -107,37 +122,35 @@ export default function LeadAssignModal({
                   {p.poolName} ({p.routingStrategy})
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
         )}
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-            Reason / Assignment Remarks
-          </label>
-          <input
+        <FormField label="Reason / Assignment Remarks">
+          <Input
             type="text"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
           />
-        </div>
+        </FormField>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
           >
-            {isLoading ? 'Assigning...' : 'Confirm Assignment'}
-          </button>
+            Confirm Assignment
+          </Button>
         </div>
       </form>
     </Modal>

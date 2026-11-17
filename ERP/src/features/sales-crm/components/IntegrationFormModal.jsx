@@ -1,7 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Modal } from '../../../components/common';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Modal, FormField, Input, Select, Button } from '../../../components/common';
 import { Globe, Key, AlertCircle, Copy, Check, Info, Code2, ChevronDown, ChevronRight, ShieldCheck, Zap } from 'lucide-react';
-import { useCreateCrmTenantIntegrationMutation } from '../../../api/sales-crm/crm.api';
+import {
+  useCreateCrmTenantIntegrationMutation,
+  useGetCrmRoundRobinPoolsQuery,
+} from '../../../api/sales-crm/crm.api';
+
+const toArray = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.data?.content)) return res.data.content;
+  return [];
+};
 
 const CHANNEL_CONFIGS = {
   INDIAMART: {
@@ -111,6 +121,14 @@ export default function IntegrationFormModal({
     roundRobinPoolId: '',
   });
 
+  const { data: fetchedPoolsRes } = useGetCrmRoundRobinPoolsQuery(companyId, { skip: !isOpen });
+
+  const availablePools = useMemo(() => {
+    const fromProps = toArray(pools);
+    if (fromProps.length > 0) return fromProps;
+    return toArray(fetchedPoolsRes);
+  }, [pools, fetchedPoolsRes]);
+
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedCurl, setCopiedCurl] = useState(false);
   const [showSample, setShowSample] = useState(false);
@@ -201,35 +219,27 @@ export default function IntegrationFormModal({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Channel Platform *
-            </label>
-            <select
+          <FormField label="Channel Platform" required>
+            <Select
               value={formData.channelCode}
               onChange={(e) => handleChannelChange(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
             >
               <option value="INDIAMART">IndiaMART Inbound Push</option>
               <option value="TRADEINDIA">TradeIndia Marketplace</option>
               <option value="META_LEAD_ADS">Meta / Facebook & Instagram Ads</option>
               <option value="JUSTDIAL">Justdial Leads</option>
               <option value="CUSTOM_WEBHOOK">Custom Generic JSON Webhook</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Integration Name *
-            </label>
-            <input
+          <FormField label="Integration Name" required>
+            <Input
               type="text"
               required
               value={formData.integrationName}
               onChange={(e) => setFormData({ ...formData, integrationName: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
-          </div>
+          </FormField>
         </div>
 
         {/* Channel setup guidance badge */}
@@ -241,76 +251,64 @@ export default function IntegrationFormModal({
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE]">
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
               Public Inbound Webhook Endpoint
             </label>
             <span className="text-[11px] text-zinc-500 font-mono">Accepts POST / GET</span>
           </div>
           <div className="flex items-center gap-2">
-            <input
+            <Input
               type="text"
               readOnly
               value={webhookUrl}
-              className="flex-1 px-3 py-2 text-xs font-mono rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE] select-all"
+              className="flex-1 font-mono select-all bg-zinc-50 dark:bg-[#161922]"
             />
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="md"
               onClick={copyToClipboard}
-              className="px-3 py-2 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1C202B] flex items-center gap-1.5 transition-colors"
-              title="Copy URL"
+              icon={copiedUrl ? Check : Copy}
             >
-              {copiedUrl ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-              <span>{copiedUrl ? 'Copied' : 'Copy'}</span>
-            </button>
+              {copiedUrl ? 'Copied' : 'Copy'}
+            </Button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              API Key / CRM Key (Optional)
-            </label>
-            <input
+          <FormField label="API Key / CRM Key (Optional)">
+            <Input
               type="password"
               placeholder={currentConfig.apiKeyPlaceholder}
               value={formData.apiKey}
               onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Webhook Secret / Verify Token
-            </label>
-            <input
+          <FormField label="Webhook Secret / Verify Token">
+            <Input
               type="password"
               placeholder={currentConfig.secretPlaceholder}
               value={formData.webhookSecret}
               onChange={(e) => setFormData({ ...formData, webhookSecret: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
-          </div>
+          </FormField>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-            Auto Route Inbound Leads to Pool (Optional)
-          </label>
-          <select
+        <FormField label="Auto Route Inbound Leads to Pool (Optional)">
+          <Select
             value={formData.roundRobinPoolId}
             onChange={(e) => setFormData({ ...formData, roundRobinPoolId: e.target.value })}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
           >
             <option value="">Default System Lead Queue</option>
-            {pools.map((p) => (
+            {availablePools.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.poolName} ({p.routingStrategy})
               </option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </FormField>
 
         <div className="flex items-center gap-2 pt-1">
           <input
@@ -318,7 +316,7 @@ export default function IntegrationFormModal({
             id="autoQualifyLead"
             checked={formData.autoQualify}
             onChange={(e) => setFormData({ ...formData, autoQualify: e.target.checked })}
-            className="rounded border-zinc-300 dark:border-[#2A2F3D] text-emerald-600 focus:ring-emerald-500"
+            className="rounded border-zinc-300 dark:border-[#2A2F3D] text-emerald-600 focus:ring-emerald-500 cursor-pointer"
           />
           <label htmlFor="autoQualifyLead" className="text-xs text-zinc-700 dark:text-[#A0A6B5] cursor-pointer">
             Automatically mark incoming marketplace inquiries as Qualified
@@ -330,7 +328,7 @@ export default function IntegrationFormModal({
           <button
             type="button"
             onClick={() => setShowSample(!showSample)}
-            className="w-full px-3 py-2 bg-zinc-50 dark:bg-[#161922] hover:bg-zinc-100 dark:hover:bg-[#1C202B] flex items-center justify-between text-xs font-medium text-zinc-700 dark:text-[#E6E8EE] transition-colors"
+            className="w-full px-3 py-2 bg-zinc-50 dark:bg-[#161922] hover:bg-zinc-100 dark:hover:bg-[#1C202B] flex items-center justify-between text-xs font-medium text-zinc-700 dark:text-[#E6E8EE] transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-1.5">
               <Code2 size={14} className="text-emerald-500" />
@@ -346,7 +344,7 @@ export default function IntegrationFormModal({
                 <button
                   type="button"
                   onClick={copyCurlCommand}
-                  className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-[11px] text-zinc-200 flex items-center gap-1 transition-colors"
+                  className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-[11px] text-zinc-200 flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   {copiedCurl ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                   <span>{copiedCurl ? 'cURL Copied' : 'Copy cURL'}</span>
@@ -360,21 +358,23 @@ export default function IntegrationFormModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            icon={Globe}
           >
-            <Globe size={13} />
-            {isLoading ? 'Connecting Channel...' : 'Save & Activate Integration'}
-          </button>
+            Save & Activate Integration
+          </Button>
         </div>
       </form>
     </Modal>

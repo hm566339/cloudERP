@@ -32,15 +32,22 @@ export default function CrmSettingsPage() {
   const { data: settingsRes, refetch: refetchSettings } = useGetCrmCompanySettingsQuery(companyId);
   const [updateSettings, { isLoading: isSaving }] = useUpdateCrmCompanySettingsMutation();
 
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
   const { data: sourcesRes } = useGetCrmLeadSourcesQuery(companyId);
   const { data: statusesRes } = useGetCrmLeadStatusesQuery(companyId);
   const { data: reasonsRes } = useGetCrmLostReasonsQuery(companyId);
   const { data: tagsRes, refetch: refetchTags } = useGetCrmTagsQuery(companyId);
 
-  const sources = sourcesRes?.data || [];
-  const statuses = statusesRes?.data || [];
-  const reasons = reasonsRes?.data || [];
-  const tags = tagsRes?.data || [];
+  const sources = toArray(sourcesRes);
+  const statuses = toArray(statusesRes);
+  const reasons = toArray(reasonsRes);
+  const tags = toArray(tagsRes);
 
   const [formData, setFormData] = useState({
     defaultQuotationValidityDays: 30,

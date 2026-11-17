@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import { Modal, FormField, Input, Select, Textarea, Button } from '../../../components/common';
 import { Phone, Users, FileText, Mail, AlertCircle, Plus } from 'lucide-react';
 import { useLogCrmActivityMutation } from '../../../api/sales-crm/crm.api';
 
@@ -92,82 +92,68 @@ export default function ActivityFormModal({
           })}
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-            Subject *
-          </label>
-          <input
+        <FormField label="Subject" required>
+          <Input
             type="text"
             required
             placeholder="e.g. Discovery call on warehouse requirements"
             value={formData.subject}
             onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
           />
-        </div>
+        </FormField>
 
         {formData.activityType === 'CALL' && (
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-                Call Outcome
-              </label>
-              <select
+            <FormField label="Call Outcome">
+              <Select
                 value={formData.outcome}
                 onChange={(e) => setFormData({ ...formData, outcome: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
               >
                 <option value="CONNECTED">Connected / Discussed</option>
                 <option value="BUSY">Line Busy</option>
                 <option value="NO_ANSWER">No Answer</option>
                 <option value="LEFT_VOICEMAIL">Left Voicemail</option>
                 <option value="WRONG_NUMBER">Wrong Number</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-                Duration (Minutes)
-              </label>
-              <input
+              </Select>
+            </FormField>
+            <FormField label="Duration (Minutes)">
+              <Input
                 type="number"
                 min="1"
                 value={formData.durationMinutes}
                 onChange={(e) => setFormData({ ...formData, durationMinutes: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
               />
-            </div>
+            </FormField>
           </div>
         )}
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-            Notes & Key Takeaways
-          </label>
-          <textarea
+        <FormField label="Notes & Key Takeaways">
+          <Textarea
             rows={3}
             placeholder="Summarize key points discussed, client pain points, or next scheduled steps..."
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
           />
-        </div>
+        </FormField>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            icon={Plus}
           >
-            <Plus size={13} />
-            {isLoading ? 'Saving...' : 'Log Activity'}
-          </button>
+            Log Activity
+          </Button>
         </div>
       </form>
     </Modal>

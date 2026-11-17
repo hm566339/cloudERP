@@ -1,6 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { Modal } from '../../../components/common';
-import { useCreateLeadMutation, useUpdateLeadMutation } from '../../../api/sales-crm/crm.api';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Modal, FormField, Input, Select, Textarea, Button } from '../../../components/common';
+import {
+  useCreateLeadMutation,
+  useUpdateLeadMutation,
+  useGetCrmLeadSourcesQuery,
+  useGetCrmLeadStatusesQuery,
+} from '../../../api/sales-crm/crm.api';
+
+const DEFAULT_SOURCES = [
+  { id: 'DIRECT', sourceName: 'Direct / Inbound' },
+  { id: 'WEBSITE', sourceName: 'Company Website' },
+  { id: 'INDIAMART', sourceName: 'IndiaMART Marketplace' },
+  { id: 'TRADEINDIA', sourceName: 'TradeIndia Marketplace' },
+  { id: 'JUSTDIAL', sourceName: 'JustDial Portal' },
+  { id: 'META_ADS', sourceName: 'Facebook / Instagram Ads' },
+  { id: 'GOOGLE_ADS', sourceName: 'Google Ads' },
+  { id: 'COLD_CALL', sourceName: 'Cold Outreach' },
+  { id: 'REFERRAL', sourceName: 'Customer Referral' },
+  { id: 'EXHIBITION', sourceName: 'Trade Show / Exhibition' },
+  { id: 'OTHER', sourceName: 'Other / General' },
+];
+
+const DEFAULT_STATUSES = [
+  { id: 'NEW', statusName: 'New / Open' },
+  { id: 'CONTACTED', statusName: 'Contacted' },
+  { id: 'QUALIFIED', statusName: 'Qualified' },
+  { id: 'PROPOSAL', statusName: 'Proposal Sent' },
+  { id: 'NEGOTIATION', statusName: 'In Negotiation' },
+  { id: 'UNQUALIFIED', statusName: 'Unqualified' },
+  { id: 'CONVERTED', statusName: 'Converted to Deal' },
+  { id: 'LOST', statusName: 'Lost Lead' },
+];
+
+const toArray = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.data?.content)) return res.data.content;
+  return [];
+};
 
 export default function LeadFormModal({
   isOpen,
@@ -25,6 +62,25 @@ export default function LeadFormModal({
     leadScore: 50,
   });
 
+  const { data: fetchedSourcesRes } = useGetCrmLeadSourcesQuery(companyId, { skip: !isOpen });
+  const { data: fetchedStatusesRes } = useGetCrmLeadStatusesQuery(companyId, { skip: !isOpen });
+
+  const availableSources = useMemo(() => {
+    const fromProps = toArray(sources);
+    if (fromProps.length > 0) return fromProps;
+    const fromApi = toArray(fetchedSourcesRes);
+    if (fromApi.length > 0) return fromApi;
+    return DEFAULT_SOURCES;
+  }, [sources, fetchedSourcesRes]);
+
+  const availableStatuses = useMemo(() => {
+    const fromProps = toArray(statuses);
+    if (fromProps.length > 0) return fromProps;
+    const fromApi = toArray(fetchedStatusesRes);
+    if (fromApi.length > 0) return fromApi;
+    return DEFAULT_STATUSES;
+  }, [statuses, fetchedStatusesRes]);
+
   const [createLead, { isLoading: isCreating }] = useCreateLeadMutation();
   const [updateLead, { isLoading: isUpdating }] = useUpdateLeadMutation();
 
@@ -36,8 +92,8 @@ export default function LeadFormModal({
         organizationName: initialData.organizationName || '',
         email: initialData.email || '',
         phone: initialData.phone || '',
-        leadSourceId: initialData.leadSourceId || '',
-        leadStatusId: initialData.leadStatusId || '',
+        leadSourceId: initialData.leadSourceId || availableSources[0]?.id || '',
+        leadStatusId: initialData.leadStatusId || availableStatuses[0]?.id || '',
         state: initialData.state || '',
         gstin: initialData.gstin || '',
         notes: initialData.rawInquiryText || initialData.notes || '',
@@ -50,15 +106,15 @@ export default function LeadFormModal({
         organizationName: '',
         email: '',
         phone: '',
-        leadSourceId: sources[0]?.id || '',
-        leadStatusId: statuses[0]?.id || '',
+        leadSourceId: availableSources[0]?.id || '',
+        leadStatusId: availableStatuses[0]?.id || '',
         state: '',
         gstin: '',
         notes: '',
         leadScore: 50,
       });
     }
-  }, [initialData, isOpen, sources, statuses]);
+  }, [initialData, isOpen, availableSources, availableStatuses]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,177 +147,140 @@ export default function LeadFormModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              First Name *
-            </label>
-            <input
+          <FormField label="First Name" required>
+            <Input
               type="text"
               name="firstName"
               required
               value={formData.firstName}
               onChange={handleChange}
               placeholder="e.g. Rahul"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Last Name
-            </label>
-            <input
+          </FormField>
+          <FormField label="Last Name">
+            <Input
               type="text"
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
               placeholder="e.g. Verma"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
+          </FormField>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-            Company / Organization Name
-          </label>
-          <input
+        <FormField label="Company / Organization Name">
+          <Input
             type="text"
             name="organizationName"
             value={formData.organizationName}
             onChange={handleChange}
             placeholder="e.g. Apex Enterprises Pvt Ltd"
-            className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
           />
-        </div>
+        </FormField>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Email Address
-            </label>
-            <input
+          <FormField label="Email Address">
+            <Input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="rahul@apex.com"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Mobile / Phone Number *
-            </label>
-            <input
+          </FormField>
+          <FormField label="Mobile / Phone Number" required>
+            <Input
               type="tel"
               name="phone"
               required
               value={formData.phone}
               onChange={handleChange}
               placeholder="+91 98220 12345"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Lead Source
-            </label>
-            <select
+          <FormField label="Lead Source">
+            <Select
               name="leadSourceId"
               value={formData.leadSourceId}
               onChange={handleChange}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             >
               <option value="">Select source...</option>
-              {sources.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.sourceName}
+              {availableSources.map((s) => (
+                <option key={s.id || s.sourceCode} value={s.id || s.sourceCode}>
+                  {s.sourceName || s.name || s.sourceCode}
                 </option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Lead Status
-            </label>
-            <select
+            </Select>
+          </FormField>
+          <FormField label="Lead Status">
+            <Select
               name="leadStatusId"
               value={formData.leadStatusId}
               onChange={handleChange}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             >
               <option value="">Select status...</option>
-              {statuses.map((st) => (
-                <option key={st.id} value={st.id}>
-                  {st.statusName}
+              {availableStatuses.map((st) => (
+                <option key={st.id || st.statusCode} value={st.id || st.statusCode}>
+                  {st.statusName || st.name || st.statusCode}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              State / Region
-            </label>
-            <input
+          <FormField label="State / Region">
+            <Input
               type="text"
               name="state"
               value={formData.state}
               onChange={handleChange}
               placeholder="e.g. Maharashtra"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              GSTIN (B2B)
-            </label>
-            <input
+          </FormField>
+          <FormField label="GSTIN (B2B)">
+            <Input
               type="text"
               name="gstin"
               value={formData.gstin}
               onChange={handleChange}
               placeholder="27AABCA1234A1Z5"
               maxLength={15}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] uppercase focus:ring-1 focus:ring-primary focus:outline-hidden"
+              className="uppercase"
             />
-          </div>
+          </FormField>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-            Inquiry Notes / Requirements
-          </label>
-          <textarea
+        <FormField label="Inquiry Notes / Requirements">
+          <Textarea
             name="notes"
             rows={2}
             value={formData.notes}
             onChange={handleChange}
             placeholder="Client needs 500 units of industrial components..."
-            className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
           />
-        </div>
+        </FormField>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isSubmitting}
-            className="btn-primary text-xs px-4 py-1.5"
+            variant="primary"
+            size="sm"
+            loading={isSubmitting}
           >
-            {isSubmitting ? 'Saving...' : initialData?.id ? 'Update Lead' : 'Create Lead'}
-          </button>
+            {initialData?.id ? 'Update Lead' : 'Create Lead'}
+          </Button>
         </div>
       </form>
     </Modal>

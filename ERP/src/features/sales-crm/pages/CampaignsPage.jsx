@@ -45,8 +45,15 @@ export default function CampaignsPage() {
     size: apiParams.size || 10,
   });
 
-  const campaigns = campaignsRes?.data?.content || campaignsRes?.data || [];
-  const totalElements = campaignsRes?.data?.totalElements || campaigns.length;
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
+  const campaigns = toArray(campaignsRes);
+  const totalElements = campaignsRes?.data?.totalElements || campaignsRes?.totalElements || campaigns.length;
   const totalPages = campaignsRes?.data?.totalPages || Math.ceil(totalElements / (apiParams.size || 10)) || 1;
 
   const totalBudget = campaigns.reduce((acc, c) => acc + (Number(c.budget) || 0), 0);

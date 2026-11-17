@@ -39,14 +39,21 @@ export default function AccountDetailsPage() {
   const { data: accountRes, isLoading: isAccLoading, refetch: refetchAcc } = useGetCrmAccountByIdQuery({ id, companyId });
   const account = accountRes?.data || null;
 
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
   const { data: contactsRes, refetch: refetchContacts } = useGetCrmContactsQuery({ accountId: id, companyId });
-  const contacts = contactsRes?.data?.content || contactsRes?.data || [];
+  const contacts = toArray(contactsRes);
 
   const { data: oppsRes } = useGetCrmOpportunitiesQuery({ accountId: id, companyId });
-  const opportunities = oppsRes?.data?.content || oppsRes?.data || [];
+  const opportunities = toArray(oppsRes);
 
   const { data: quotesRes } = useGetCrmQuotationsQuery({ accountId: id, companyId });
-  const quotations = quotesRes?.data?.content || quotesRes?.data || [];
+  const quotations = toArray(quotesRes);
 
   if (isAccLoading) {
     return <div className="p-8 text-center text-xs text-zinc-400">Loading Account dossier...</div>;

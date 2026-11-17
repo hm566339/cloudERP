@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import { Modal, FormField, Textarea, Button } from '../../../components/common';
 import { Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useSubmitQuotationApprovalMutation } from '../../../api/sales-crm/crm.api';
 
@@ -62,35 +62,33 @@ export default function QuotationApprovalModal({
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-            Submission Remarks / Justification
-          </label>
-          <textarea
+        <FormField label="Submission Remarks / Justification">
+          <Textarea
             rows={3}
             placeholder="Add justification (e.g. strategic customer, high volume, pre-negotiated discount rate)..."
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary"
           />
-        </div>
+        </FormField>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            icon={Send}
           >
-            <Send size={13} />
-            {isLoading ? 'Submitting...' : 'Submit to Workflow'}
-          </button>
+            Submit to Workflow
+          </Button>
         </div>
       </form>
     </Modal>

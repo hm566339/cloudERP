@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import { Modal, FormField, Input, Button } from '../../../components/common';
 import { Tag, AlertCircle } from 'lucide-react';
 import { useCreateCrmTagMutation } from '../../../api/sales-crm/crm.api';
 
@@ -55,22 +55,18 @@ export default function TaxonomyModal({
           </div>
         )}
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-            Tag Name *
-          </label>
-          <input
+        <FormField label="Tag Name" required>
+          <Input
             type="text"
             required
             placeholder="e.g. VIP-Account, High-Priority, Manufacturing"
             value={tagName}
             onChange={(e) => setTagName(e.target.value)}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
           />
-        </div>
+        </FormField>
 
         <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-2">
+          <label className="block text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
             Tag Badge Color
           </label>
           <div className="flex items-center gap-2">
@@ -79,7 +75,7 @@ export default function TaxonomyModal({
                 key={c}
                 type="button"
                 onClick={() => setColorCode(c)}
-                className={`w-7 h-7 rounded-full border-2 transition-transform ${
+                className={`w-7 h-7 rounded-full border-2 transition-transform cursor-pointer ${
                   colorCode === c ? 'scale-110 border-white ring-2 ring-primary' : 'border-transparent'
                 }`}
                 style={{ backgroundColor: c }}
@@ -99,21 +95,23 @@ export default function TaxonomyModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            icon={Tag}
           >
-            <Tag size={13} />
-            {isLoading ? 'Creating...' : 'Create Tag'}
-          </button>
+            Create Tag
+          </Button>
         </div>
       </form>
     </Modal>

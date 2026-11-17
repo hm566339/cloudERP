@@ -57,13 +57,20 @@ export default function QuotationsPage() {
     size: apiParams.size || 10,
   });
 
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
   const { data: accountsRes } = useGetCrmAccountsQuery({ companyId, page: 0, size: 100 });
-  const accounts = accountsRes?.data?.content || accountsRes?.data || [];
+  const accounts = toArray(accountsRes);
 
   const [convertToOrder, { isLoading: isConverting }] = useConvertQuotationToOrderMutation();
 
-  const quotations = quotesRes?.data?.content || quotesRes?.data || [];
-  const totalElements = quotesRes?.data?.totalElements || quotations.length;
+  const quotations = toArray(quotesRes);
+  const totalElements = quotesRes?.data?.totalElements || quotesRes?.totalElements || quotations.length;
   const totalPages = quotesRes?.data?.totalPages || Math.ceil(totalElements / (apiParams.size || 10)) || 1;
 
   const handleConvertOrderConfirm = async () => {

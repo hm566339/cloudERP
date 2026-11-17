@@ -186,14 +186,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // Resolve company only for non-system-admin users (tenant isolation).
-        if (!isSystemAdmin) {
+        // Resolve company: honor X-Company-Id header first, otherwise fallback to user company
+        String companyIdHeader = request.getHeader("X-Company-Id");
+        if (companyIdHeader != null && !companyIdHeader.isBlank()) {
+            try {
+                CurrentUserContext.setCompanyId(UUID.fromString(companyIdHeader.trim()));
+            } catch (Exception ignored) {}
+        } else if (!isSystemAdmin) {
             if (user.getCompanyId() != null) {
                 CurrentUserContext.setCompanyId(user.getCompanyId());
             }
         } else {
             CurrentUserContext.clearCompanyId();
-            log.debug("SYSTEM_ADMIN detected for user [{}]; skipping tenant resolution", username);
+            log.debug("SYSTEM_ADMIN detected for user [{}] without X-Company-Id header", username);
         }
 
         // Populate SecurityContext (always overwrite — stateless session).

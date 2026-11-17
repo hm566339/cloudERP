@@ -237,4 +237,42 @@ describe('Sales & CRM Business Calculation & Domain Rules Suite', () => {
     assert.equal(unpackIntegrations(null).length, 0);
     assert.equal(unpackIntegrations([]).length, 0);
   });
+
+  it('12. Dropdown select helper safely unpacks data and applies fallback defaults', () => {
+    const toArray = (res) => {
+      if (Array.isArray(res)) return res;
+      if (Array.isArray(res?.data)) return res.data;
+      if (Array.isArray(res?.data?.content)) return res.data.content;
+      return [];
+    };
+
+    const DEFAULT_SOURCES = [
+      { id: 'DIRECT', sourceName: 'Direct / Inbound' },
+      { id: 'WEBSITE', sourceName: 'Company Website' },
+    ];
+
+    // Scenario A: direct array from baseApi unwrap
+    const directSources = [{ id: 'src-1', sourceName: 'IndiaMART' }];
+    assert.equal(toArray(directSources).length, 1);
+    assert.equal(toArray(directSources)[0].sourceName, 'IndiaMART');
+
+    // Scenario B: nested ApiResponse data envelope
+    const envelopeSources = { success: true, data: [{ id: 'src-2', sourceName: 'TradeIndia' }] };
+    assert.equal(toArray(envelopeSources).length, 1);
+    assert.equal(toArray(envelopeSources)[0].sourceName, 'TradeIndia');
+
+    // Scenario C: empty or undefined falls back cleanly to defaults
+    const resolveSources = (propsList, apiRes) => {
+      const fromProps = toArray(propsList);
+      if (fromProps.length > 0) return fromProps;
+      const fromApi = toArray(apiRes);
+      if (fromApi.length > 0) return fromApi;
+      return DEFAULT_SOURCES;
+    };
+
+    assert.equal(resolveSources([], null).length, 2);
+    assert.equal(resolveSources([], null)[0].id, 'DIRECT');
+    assert.equal(resolveSources(directSources, null)[0].id, 'src-1');
+    assert.equal(resolveSources([], envelopeSources)[0].id, 'src-2');
+  });
 });

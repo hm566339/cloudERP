@@ -48,7 +48,14 @@ export default function TasksPage() {
 
   const [completeTask] = useCompleteCrmTaskMutation();
 
-  const allTasks = tasksRes?.data || [];
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
+  const allTasks = toArray(tasksRes);
   
   // Client-side search and pagination if backend returns unpaginated list
   const filteredTasks = useMemo(() => {

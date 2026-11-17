@@ -79,10 +79,17 @@ export default function LeadsPage() {
 
   const [deleteLead, { isLoading: isDeleting }] = useDeleteLeadMutation();
 
-  const leads = leadsRes?.data?.content || leadsRes?.data || [];
-  const totalElements = leadsRes?.data?.totalElements || leads.length;
-  const sources = sourcesRes?.data || [];
-  const statuses = statusesRes?.data || [];
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
+  const leads = toArray(leadsRes);
+  const totalElements = leadsRes?.data?.totalElements || leadsRes?.totalElements || leads.length;
+  const sources = toArray(sourcesRes);
+  const statuses = toArray(statusesRes);
 
   const handleReset = () => {
     resetFilters();

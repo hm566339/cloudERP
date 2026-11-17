@@ -43,26 +43,33 @@ export default function LeadDetailsPage() {
   const { data: leadRes, isLoading: isLeadLoading, refetch: refetchLead } = useGetLeadByIdQuery({ id, companyId });
   const lead = leadRes?.data || null;
 
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
   const { data: activitiesRes } = useGetCrmActivitiesQuery({
     entityType: 'LEAD',
     entityId: id,
     companyId,
   });
-  const activities = activitiesRes?.data || [];
+  const activities = toArray(activitiesRes);
 
   const { data: tasksRes } = useGetCrmTasksQuery({
     entityType: 'LEAD',
     entityId: id,
     companyId,
   });
-  const tasks = tasksRes?.data || [];
+  const tasks = toArray(tasksRes);
 
   const { data: messagesRes } = useGetCrmConversationMessagesQuery({
     entityType: 'LEAD',
     entityId: id,
     companyId,
   });
-  const messages = messagesRes?.data || [];
+  const messages = toArray(messagesRes);
 
   if (isLeadLoading) {
     return (

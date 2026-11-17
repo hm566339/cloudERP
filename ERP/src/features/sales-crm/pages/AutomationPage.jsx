@@ -40,9 +40,16 @@ export default function AutomationPage() {
   const [deleteRule] = useDeleteCrmAutomationRuleMutation();
   const [updateRule] = useUpdateCrmAutomationRuleMutation();
 
-  const rules = rulesRes?.data || [];
-  const pools = poolsRes?.data || [];
-  const logs = logsRes?.data?.content || logsRes?.data || [];
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
+  const rules = toArray(rulesRes);
+  const pools = toArray(poolsRes);
+  const logs = toArray(logsRes);
 
   const handleDeleteRuleConfirm = async () => {
     if (!deletingRule) return;

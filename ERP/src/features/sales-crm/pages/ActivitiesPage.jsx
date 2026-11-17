@@ -26,7 +26,14 @@ export default function ActivitiesPage() {
     activityType: selectedType || undefined,
   });
 
-  const activities = activitiesRes?.data || [];
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
+  const activities = toArray(activitiesRes);
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">

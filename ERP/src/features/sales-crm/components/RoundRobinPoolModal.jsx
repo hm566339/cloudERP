@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import { Modal, FormField, Input, Select, Button } from '../../../components/common';
 import { Users, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useCreateCrmRoundRobinPoolMutation } from '../../../api/sales-crm/crm.api';
 
@@ -92,34 +92,26 @@ export default function RoundRobinPoolModal({
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Pool Name *
-            </label>
-            <input
+          <FormField label="Pool Name" required>
+            <Input
               type="text"
               required
               placeholder="e.g. West Region Inbound Sales"
               value={formData.poolName}
               onChange={(e) => setFormData({ ...formData, poolName: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Routing Strategy
-            </label>
-            <select
+          <FormField label="Routing Strategy">
+            <Select
               value={formData.routingStrategy}
               onChange={(e) => setFormData({ ...formData, routingStrategy: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             >
               <option value="ROUND_ROBIN">Strict Round-Robin (Equal Turn)</option>
               <option value="WEIGHTED_CAPACITY">Weighted by Experience / Capacity</option>
               <option value="LEAST_RECENTLY_ASSIGNED">Least Recently Assigned First</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
         </div>
 
         {/* Member Allocation */}
@@ -143,40 +135,44 @@ export default function RoundRobinPoolModal({
                 key={idx}
                 className="flex items-center gap-2 p-2 bg-zinc-50 dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg"
               >
-                <input
-                  type="text"
-                  required
-                  placeholder="Rep Name"
-                  value={m.userName}
-                  onChange={(e) => handleMemberChange(idx, 'userName', e.target.value)}
-                  className="flex-1 px-2.5 py-1 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
-                />
+                <div className="flex-1">
+                  <Input
+                    size="sm"
+                    type="text"
+                    required
+                    placeholder="Rep Name"
+                    value={m.userName}
+                    onChange={(e) => handleMemberChange(idx, 'userName', e.target.value)}
+                  />
+                </div>
                 <div className="flex items-center gap-1 w-24">
                   <span className="text-[10px] text-zinc-500">Weight:</span>
-                  <input
+                  <Input
+                    size="sm"
                     type="number"
                     min="1"
                     max="10"
                     value={m.weight}
                     onChange={(e) => handleMemberChange(idx, 'weight', e.target.value)}
-                    className="w-10 px-1 py-1 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE] text-center"
+                    className="w-12 text-center"
                   />
                 </div>
                 <div className="flex items-center gap-1 w-28">
                   <span className="text-[10px] text-zinc-500">Max/day:</span>
-                  <input
+                  <Input
+                    size="sm"
                     type="number"
                     min="1"
                     value={m.dailyCapacityLimit}
                     onChange={(e) => handleMemberChange(idx, 'dailyCapacityLimit', e.target.value)}
-                    className="w-12 px-1 py-1 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE] text-center"
+                    className="w-14 text-center"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => removeMember(idx)}
                   disabled={members.length <= 1}
-                  className="p-1 text-zinc-400 hover:text-rose-500 disabled:opacity-30"
+                  className="p-1 text-zinc-400 hover:text-rose-500 disabled:opacity-30 cursor-pointer"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -186,21 +182,23 @@ export default function RoundRobinPoolModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            icon={Users}
           >
-            <Users size={13} />
-            {isLoading ? 'Saving...' : 'Save Pool'}
-          </button>
+            Save Pool
+          </Button>
         </div>
       </form>
     </Modal>

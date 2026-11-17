@@ -107,11 +107,45 @@ public class CrmPipelineServiceImpl implements CrmPipelineService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<PipelineResponse> getAllPipelines(UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
-        return pipelineRepository.findByCompanyIdAndIsDeletedFalseOrderByDisplayOrderAsc(companyId)
-                .stream().map(p -> getPipelineById(p.getId(), companyId)).toList();
+        List<CrmSalesPipeline> list = pipelineRepository.findByCompanyIdAndIsDeletedFalseOrderByDisplayOrderAsc(companyId);
+        if (list.isEmpty()) {
+            seedDefaultPipeline(companyId);
+            list = pipelineRepository.findByCompanyIdAndIsDeletedFalseOrderByDisplayOrderAsc(companyId);
+        }
+        return list.stream().map(p -> getPipelineById(p.getId(), companyId)).toList();
+    }
+
+    private void seedDefaultPipeline(UUID companyId) {
+        log.info("Auto-seeding standard Sales Pipeline for company [{}]", companyId);
+        try {
+            CrmSalesPipeline pipeline = CrmSalesPipeline.builder()
+                    .pipelineCode(generatePipelineCode())
+                    .pipelineName("Standard Sales Pipeline")
+                    .description("Default end-to-end sales lifecycle pipeline")
+                    .isDefault(true)
+                    .isActive(true)
+                    .displayOrder(0)
+                    .build();
+            pipeline.setCompanyId(companyId);
+            CrmSalesPipeline savedPipeline = pipelineRepository.save(pipeline);
+
+            List<CrmPipelineStage> defaultStages = List.of(
+                    CrmPipelineStage.builder().pipelineId(savedPipeline.getId()).stageCode("QUALIFICATION").stageName("Qualification").stageOrder(1).stageCategory(PipelineStageCategory.PROSPECTING).winProbabilityPct(10).rottingDays(14).slaDays(7).colorCode("#3B82F6").isActive(true).build(),
+                    CrmPipelineStage.builder().pipelineId(savedPipeline.getId()).stageCode("NEEDS_ANALYSIS").stageName("Needs Analysis").stageOrder(2).stageCategory(PipelineStageCategory.QUALIFICATION).winProbabilityPct(25).rottingDays(14).slaDays(7).colorCode("#F59E0B").isActive(true).build(),
+                    CrmPipelineStage.builder().pipelineId(savedPipeline.getId()).stageCode("PROPOSAL").stageName("Proposal / Quote").stageOrder(3).stageCategory(PipelineStageCategory.PROPOSAL).winProbabilityPct(50).rottingDays(14).slaDays(7).colorCode("#6366F1").isActive(true).build(),
+                    CrmPipelineStage.builder().pipelineId(savedPipeline.getId()).stageCode("NEGOTIATION").stageName("Negotiation").stageOrder(4).stageCategory(PipelineStageCategory.NEGOTIATION).winProbabilityPct(75).rottingDays(14).slaDays(7).colorCode("#8B5CF6").isActive(true).build(),
+                    CrmPipelineStage.builder().pipelineId(savedPipeline.getId()).stageCode("CLOSED_WON").stageName("Closed Won").stageOrder(5).stageCategory(PipelineStageCategory.WON).winProbabilityPct(100).rottingDays(0).slaDays(0).colorCode("#10B981").isActive(true).build(),
+                    CrmPipelineStage.builder().pipelineId(savedPipeline.getId()).stageCode("CLOSED_LOST").stageName("Closed Lost").stageOrder(6).stageCategory(PipelineStageCategory.LOST).winProbabilityPct(0).rottingDays(0).slaDays(0).colorCode("#EF4444").isActive(true).build()
+            );
+            for (CrmPipelineStage s : defaultStages) {
+                s.setCompanyId(companyId);
+            }
+            stageRepository.saveAll(defaultStages);
+        } catch (Exception e) {
+            log.warn("Could not auto-seed default pipeline: {}", e.getMessage());
+        }
     }
 
     private String generatePipelineCode() {

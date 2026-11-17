@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import { Modal, FormField, Input, Select, Textarea, Button } from '../../../components/common';
 import { CheckSquare, AlertCircle } from 'lucide-react';
 import { useCreateCrmTaskMutation } from '../../../api/sales-crm/crm.api';
 
@@ -65,79 +65,65 @@ export default function TaskFormModal({
           </div>
         )}
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-            Task Title *
-          </label>
-          <input
+        <FormField label="Task Title" required>
+          <Input
             type="text"
             required
             placeholder="e.g. Follow up on proposal discount discussion"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary"
           />
-        </div>
+        </FormField>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Priority
-            </label>
-            <select
+          <FormField label="Priority">
+            <Select
               value={formData.priority}
               onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             >
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
               <option value="HIGH">High</option>
               <option value="URGENT">Urgent (Immediate)</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Due Date
-            </label>
-            <input
+          <FormField label="Due Date">
+            <Input
               type="date"
               value={formData.dueDate}
               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             />
-          </div>
+          </FormField>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-            Description / Checklist
-          </label>
-          <textarea
+        <FormField label="Description / Checklist">
+          <Textarea
             rows={3}
             placeholder="Add details, talking points or action items..."
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary"
           />
-        </div>
+        </FormField>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            icon={CheckSquare}
           >
-            <CheckSquare size={13} />
-            {isLoading ? 'Creating...' : 'Create Task'}
-          </button>
+            Create Task
+          </Button>
         </div>
       </form>
     </Modal>

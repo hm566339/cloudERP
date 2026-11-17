@@ -50,11 +50,18 @@ export default function CrmDashboardPage() {
   const { data: dashboardRes, isLoading: isDashboardLoading, refetch } = useGetCrmDashboardQuery(companyId);
   const dashboard = dashboardRes?.data || {};
 
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
   const { data: leadsRes } = useGetLeadsQuery({ companyId, page: 0, size: 5 });
-  const recentLeads = leadsRes?.data?.content || leadsRes?.data || [];
+  const recentLeads = toArray(leadsRes);
 
   const { data: tasksRes } = useGetCrmTasksQuery({ companyId, status: 'PENDING' });
-  const pendingTasks = (tasksRes?.data || []).slice(0, 5);
+  const pendingTasks = toArray(tasksRes).slice(0, 5);
 
   const pipelineStagesData = (dashboard.pipelineByStage || [
     { stage: 'Prospecting', value: 450000, count: 12 },

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import { Modal, FormField, Input, Select, Button } from '../../../components/common';
 import { Plus, Trash2, Layers } from 'lucide-react';
 import { useCreateCrmPipelineMutation } from '../../../api/sales-crm/crm.api';
 
@@ -93,31 +93,24 @@ export default function PipelineFormModal({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Pipeline Name *
-            </label>
-            <input
+          <FormField label="Pipeline Name" required>
+            <Input
               type="text"
               required
               placeholder="e.g. Enterprise Sales"
               value={pipelineName}
               onChange={(e) => setPipelineName(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Pipeline Code
-            </label>
-            <input
+          </FormField>
+          <FormField label="Pipeline Code">
+            <Input
               type="text"
               placeholder="e.g. ENTERPRISE_B2B"
               value={pipelineCode}
               onChange={(e) => setPipelineCode(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white uppercase focus:outline-none focus:ring-1 focus:ring-primary"
+              className="uppercase"
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="flex items-center gap-2">
@@ -126,7 +119,7 @@ export default function PipelineFormModal({
             id="isDefaultPipeline"
             checked={isDefault}
             onChange={(e) => setIsDefault(e.target.checked)}
-            className="rounded border-zinc-300 dark:border-[#2A2F3D] text-primary"
+            className="rounded border-zinc-300 dark:border-[#2A2F3D] text-primary cursor-pointer"
           />
           <label htmlFor="isDefaultPipeline" className="text-xs text-zinc-700 dark:text-[#A0A6B5] cursor-pointer">
             Set as default pipeline for new deals
@@ -156,34 +149,39 @@ export default function PipelineFormModal({
                 <span className="text-[11px] font-mono font-bold text-zinc-400 w-5">
                   #{idx + 1}
                 </span>
-                <input
-                  type="text"
-                  required
-                  placeholder="Stage Name"
-                  value={stg.stageName}
-                  onChange={(e) => handleStageChange(idx, 'stageName', e.target.value)}
-                  className="flex-1 px-2.5 py-1.5 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
-                />
-                <select
-                  value={stg.category}
-                  onChange={(e) => handleStageChange(idx, 'category', e.target.value)}
-                  className="w-32 px-2 py-1.5 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
-                >
-                  <option value="LEAD">Lead</option>
-                  <option value="CONTACTED">Contacted</option>
-                  <option value="PROPOSAL">Proposal</option>
-                  <option value="NEGOTIATION">Negotiation</option>
-                  <option value="WON">Won (100%)</option>
-                  <option value="LOST">Lost (0%)</option>
-                </select>
+                <div className="flex-1">
+                  <Input
+                    size="sm"
+                    type="text"
+                    required
+                    placeholder="Stage Name"
+                    value={stg.stageName}
+                    onChange={(e) => handleStageChange(idx, 'stageName', e.target.value)}
+                  />
+                </div>
+                <div className="w-32">
+                  <Select
+                    size="sm"
+                    value={stg.category}
+                    onChange={(e) => handleStageChange(idx, 'category', e.target.value)}
+                  >
+                    <option value="LEAD">Lead</option>
+                    <option value="CONTACTED">Contacted</option>
+                    <option value="PROPOSAL">Proposal</option>
+                    <option value="NEGOTIATION">Negotiation</option>
+                    <option value="WON">Won (100%)</option>
+                    <option value="LOST">Lost (0%)</option>
+                  </Select>
+                </div>
                 <div className="flex items-center gap-1 w-20">
-                  <input
+                  <Input
+                    size="sm"
                     type="number"
                     min="0"
                     max="100"
                     value={stg.defaultProbability}
                     onChange={(e) => handleStageChange(idx, 'defaultProbability', Number(e.target.value))}
-                    className="w-14 px-2 py-1.5 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE] text-center"
+                    className="text-center"
                   />
                   <span className="text-xs text-zinc-500">%</span>
                 </div>
@@ -201,20 +199,22 @@ export default function PipelineFormModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
           >
-            {isLoading ? 'Saving...' : 'Save Pipeline'}
-          </button>
+            Save Pipeline
+          </Button>
         </div>
       </form>
     </Modal>

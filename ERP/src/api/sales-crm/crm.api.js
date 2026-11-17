@@ -230,6 +230,7 @@ export const crmApiSlice = baseApi.injectEndpoints({
     getCrmPipelines: builder.query({
       query: (companyId) => ({
         url: '/api/crm/pipelines',
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_OPPORTUNITIES'],
@@ -449,6 +450,7 @@ export const crmApiSlice = baseApi.injectEndpoints({
     getCrmRoundRobinPools: builder.query({
       query: (companyId) => ({
         url: '/api/crm/automation/round-robin-pools',
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_ROUND_ROBIN'],
@@ -570,6 +572,7 @@ export const crmApiSlice = baseApi.injectEndpoints({
     getCrmCompanySettings: builder.query({
       query: (companyId) => ({
         url: '/api/crm/settings/company',
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_SETTINGS'],
@@ -580,6 +583,7 @@ export const crmApiSlice = baseApi.injectEndpoints({
         url: '/api/crm/settings/company',
         method: 'PUT',
         data,
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       invalidatesTags: ['CRM_SETTINGS'],
@@ -588,6 +592,7 @@ export const crmApiSlice = baseApi.injectEndpoints({
     getCrmLeadStatuses: builder.query({
       query: (companyId) => ({
         url: '/api/crm/settings/lead-statuses',
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_SETTINGS'],
@@ -596,6 +601,7 @@ export const crmApiSlice = baseApi.injectEndpoints({
     getCrmLeadSources: builder.query({
       query: (companyId) => ({
         url: '/api/crm/settings/lead-sources',
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_SETTINGS'],
@@ -604,6 +610,7 @@ export const crmApiSlice = baseApi.injectEndpoints({
     getCrmLostReasons: builder.query({
       query: (companyId) => ({
         url: '/api/crm/settings/lost-reasons',
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_SETTINGS'],
@@ -612,6 +619,7 @@ export const crmApiSlice = baseApi.injectEndpoints({
     getCrmTags: builder.query({
       query: (companyId) => ({
         url: '/api/crm/settings/tags',
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       providesTags: ['CRM_SETTINGS'],

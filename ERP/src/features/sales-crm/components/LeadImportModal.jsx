@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import { Modal, Button } from '../../../components/common';
 import { UploadCloud, FileText, CheckCircle2, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useImportLeadsCsvMutation } from '../../../api/sales-crm/crm.api';
 
@@ -93,20 +93,23 @@ export default function LeadImportModal({
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={reset}
-                className="btn-secondary text-xs px-3.5 py-1.5"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                disabled={!file || isLoading}
-                className="btn-primary text-xs px-4 py-1.5"
+                variant="primary"
+                size="sm"
+                disabled={!file}
+                loading={isLoading}
               >
-                {isLoading ? 'Processing CSV...' : 'Start Import'}
-              </button>
+                Start Import
+              </Button>
             </div>
           </form>
         ) : (
@@ -149,13 +152,15 @@ export default function LeadImportModal({
               </div>
             )}
 
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="md"
               onClick={reset}
-              className="btn-primary text-xs px-5 py-2 w-full"
+              className="w-full"
             >
               Done
-            </button>
+            </Button>
           </div>
         )}
       </div>

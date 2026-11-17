@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
-import { Modal } from '../../../components/common';
+import React, { useState, useMemo } from 'react';
+import { Modal, FormField, Input, Select, Textarea, Button } from '../../../components/common';
 import { Plus, Trash2, Calculator, AlertTriangle, FileCheck2 } from 'lucide-react';
-import { useCreateCrmQuotationMutation } from '../../../api/sales-crm/crm.api';
+import {
+  useCreateCrmQuotationMutation,
+  useGetCrmAccountsQuery,
+  useGetCrmOpportunitiesQuery,
+} from '../../../api/sales-crm/crm.api';
 
 const GST_SLABS = [0, 5, 12, 18, 28];
+
+const toArray = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.data?.content)) return res.data.content;
+  return [];
+};
 
 export default function QuotationFormModal({
   isOpen,
@@ -22,6 +33,27 @@ export default function QuotationFormModal({
     termsAndConditions: '1. Prices are valid for 30 days.\n2. Delivery within 14 business days from PO.\n3. Standard warranty applies.',
     notes: '',
   });
+
+  const { data: fetchedAccountsRes } = useGetCrmAccountsQuery(
+    { companyId, page: 0, size: 100 },
+    { skip: !isOpen }
+  );
+  const { data: fetchedOppsRes } = useGetCrmOpportunitiesQuery(
+    { companyId, page: 0, size: 100 },
+    { skip: !isOpen }
+  );
+
+  const availableAccounts = useMemo(() => {
+    const fromProps = toArray(accounts);
+    if (fromProps.length > 0) return fromProps;
+    return toArray(fetchedAccountsRes);
+  }, [accounts, fetchedAccountsRes]);
+
+  const availableOpportunities = useMemo(() => {
+    const fromProps = toArray(opportunities);
+    if (fromProps.length > 0) return fromProps;
+    return toArray(fetchedOppsRes);
+  }, [opportunities, fetchedOppsRes]);
 
   const [items, setItems] = useState([
     {
@@ -147,55 +179,43 @@ export default function QuotationFormModal({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Account / Client *
-            </label>
-            <select
+          <FormField label="Account / Client" required>
+            <Select
               required
               value={formData.accountId}
               onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             >
               <option value="">Select Account...</option>
-              {accounts.map((acc) => (
+              {availableAccounts.map((acc) => (
                 <option key={acc.id} value={acc.id}>
                   {acc.accountName || acc.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Linked Opportunity (Optional)
-            </label>
-            <select
+          <FormField label="Linked Opportunity (Optional)">
+            <Select
               value={formData.opportunityId}
               onChange={(e) => setFormData({ ...formData, opportunityId: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             >
               <option value="">None / Direct Quotation</option>
-              {opportunities.map((opp) => (
+              {availableOpportunities.map((opp) => (
                 <option key={opp.id} value={opp.id}>
-                  {opp.title} ({opp.stageName})
+                  {opp.opportunityName || opp.title} ({opp.stageName || 'Active'})
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
-              Quotation Title / Subject
-            </label>
-            <input
+          <FormField label="Quotation Title / Subject">
+            <Input
               type="text"
               placeholder="e.g. Q4 Cloud Infrastructure Supply"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-white"
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="flex items-center gap-6 p-2.5 bg-zinc-50 dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg">
@@ -205,7 +225,7 @@ export default function QuotationFormModal({
               id="isInterState"
               checked={formData.isInterState}
               onChange={(e) => setFormData({ ...formData, isInterState: e.target.checked })}
-              className="rounded border-zinc-300 dark:border-[#2A2F3D] text-primary"
+              className="rounded border-zinc-300 dark:border-[#2A2F3D] text-primary cursor-pointer"
             />
             <label htmlFor="isInterState" className="text-xs text-zinc-700 dark:text-[#A0A6B5] cursor-pointer">
               Inter-State Transaction (Apply IGST instead of CGST + SGST)
@@ -351,12 +371,11 @@ export default function QuotationFormModal({
                 </span>
               </div>
             )}
-            <textarea
+            <Textarea
               rows={2}
               placeholder="Terms & Conditions..."
               value={formData.termsAndConditions}
               onChange={(e) => setFormData({ ...formData, termsAndConditions: e.target.value })}
-              className="w-full px-2.5 py-1.5 text-xs rounded border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
             />
           </div>
 
@@ -387,21 +406,23 @@ export default function QuotationFormModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5"
+            variant="primary"
+            size="sm"
+            loading={isLoading}
+            icon={FileCheck2}
           >
-            <FileCheck2 size={14} />
-            {isLoading ? 'Creating Quotation...' : 'Create Quotation'}
-          </button>
+            Create Quotation
+          </Button>
         </div>
       </form>
     </Modal>

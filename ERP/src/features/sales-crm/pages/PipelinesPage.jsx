@@ -11,8 +11,15 @@ export default function PipelinesPage() {
   const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.content)) return res.data.content;
+    return [];
+  };
+
   const { data: pipelinesRes, isLoading, refetch } = useGetCrmPipelinesQuery(companyId);
-  const pipelines = pipelinesRes?.data || [];
+  const pipelines = toArray(pipelinesRes);
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">

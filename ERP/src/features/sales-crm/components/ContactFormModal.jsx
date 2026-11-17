@@ -1,6 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Modal } from '../../../components/common';
-import { useCreateCrmContactMutation } from '../../../api/sales-crm/crm.api';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Modal, FormField, Input, Select, Button } from '../../../components/common';
+import { Plus, Building2 } from 'lucide-react';
+import {
+  useCreateCrmContactMutation,
+  useGetCrmAccountsQuery,
+  useCreateCrmAccountMutation,
+} from '../../../api/sales-crm/crm.api';
+
+const toArray = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.data?.content)) return res.data.content;
+  return [];
+};
 
 export default function ContactFormModal({
   isOpen,
@@ -22,7 +34,22 @@ export default function ContactFormModal({
     isPrimaryContact: false,
   });
 
+  const [isNewAccountMode, setIsNewAccountMode] = useState(false);
+  const [newAccountName, setNewAccountName] = useState('');
+
+  const { data: fetchedAccountsRes } = useGetCrmAccountsQuery(
+    { companyId, page: 0, size: 100 },
+    { skip: !isOpen }
+  );
+
+  const availableAccounts = useMemo(() => {
+    const fromProps = toArray(accounts);
+    if (fromProps.length > 0) return fromProps;
+    return toArray(fetchedAccountsRes);
+  }, [accounts, fetchedAccountsRes]);
+
   const [createContact, { isLoading }] = useCreateCrmContactMutation();
+  const [createAccount, { isLoading: isCreatingAccount }] = useCreateCrmAccountMutation();
 
   useEffect(() => {
     if (initialData) {
@@ -37,9 +64,11 @@ export default function ContactFormModal({
         decisionMakerRole: initialData.decisionMakerRole || 'INFLUENCER',
         isPrimaryContact: !!initialData.isPrimaryContact,
       });
+      setIsNewAccountMode(false);
+      setNewAccountName('');
     } else {
       setFormData({
-        accountId: accounts[0]?.id || '',
+        accountId: availableAccounts[0]?.id || '',
         firstName: '',
         lastName: '',
         designation: '',
@@ -49,8 +78,10 @@ export default function ContactFormModal({
         decisionMakerRole: 'INFLUENCER',
         isPrimaryContact: false,
       });
+      setIsNewAccountMode(false);
+      setNewAccountName('');
     }
-  }, [initialData, isOpen, accounts]);
+  }, [initialData, isOpen, availableAccounts]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -60,13 +91,36 @@ export default function ContactFormModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createContact({ data: formData, companyId }).unwrap();
+      let targetAccountId = formData.accountId;
+
+      // If user typed a new account name inline, create the account first
+      if (isNewAccountMode && newAccountName.trim()) {
+        const createdAccRes = await createAccount({
+          data: {
+            accountName: newAccountName.trim(),
+            accountType: 'CUSTOMER',
+          },
+          companyId,
+        }).unwrap();
+        targetAccountId = createdAccRes?.id || createdAccRes?.data?.id;
+      }
+
+      await createContact({
+        data: {
+          ...formData,
+          accountId: targetAccountId || undefined,
+        },
+        companyId,
+      }).unwrap();
+
       onSuccess?.();
       onClose();
     } catch (err) {
       console.error('Failed to save contact:', err);
     }
   };
+
+  const isSaving = isLoading || isCreatingAccount;
 
   return (
     <Modal
@@ -77,115 +131,122 @@ export default function ContactFormModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-            Associated Account / Organization *
-          </label>
-          <select
-            name="accountId"
-            required
-            value={formData.accountId}
-            onChange={handleChange}
-            className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
-          >
-            <option value="">Select Account...</option>
-            {accounts.map((acc) => (
-              <option key={acc.id} value={acc.id}>
-                {acc.accountName}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+              Associated Account / Organization <span className="text-rose-500">*</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsNewAccountMode(!isNewAccountMode)}
+              className="text-[11px] text-primary font-medium hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              {isNewAccountMode ? (
+                'Choose Existing Account'
+              ) : (
+                <>
+                  <Plus size={12} />
+                  <span>New Account</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {isNewAccountMode ? (
+            <div className="space-y-1">
+              <Input
+                type="text"
+                required
+                value={newAccountName}
+                onChange={(e) => setNewAccountName(e.target.value)}
+                placeholder="e.g. Apex Enterprises Pvt Ltd"
+              />
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block">
+                Will automatically create and associate this new company account.
+              </span>
+            </div>
+          ) : (
+            <Select
+              name="accountId"
+              required={!isNewAccountMode}
+              value={formData.accountId}
+              onChange={handleChange}
+            >
+              <option value="">Select Account...</option>
+              {availableAccounts.map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.accountName || acc.name}
+                </option>
+              ))}
+            </Select>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              First Name *
-            </label>
-            <input
+          <FormField label="First Name" required>
+            <Input
               type="text"
               name="firstName"
               required
               value={formData.firstName}
               onChange={handleChange}
               placeholder="e.g. Priya"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Last Name
-            </label>
-            <input
+          </FormField>
+          <FormField label="Last Name">
+            <Input
               type="text"
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
               placeholder="e.g. Kulkarni"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Designation / Title
-            </label>
-            <input
+          <FormField label="Designation / Title">
+            <Input
               type="text"
               name="designation"
               value={formData.designation}
               onChange={handleChange}
               placeholder="e.g. VP Procurement"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Decision Role
-            </label>
-            <select
+          </FormField>
+          <FormField label="Decision Role">
+            <Select
               name="decisionMakerRole"
               value={formData.decisionMakerRole}
               onChange={handleChange}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             >
               <option value="ECONOMIC_BUYER">Economic Buyer</option>
               <option value="CHAMPION">Champion</option>
               <option value="TECHNICAL_EVALUATOR">Technical Evaluator</option>
               <option value="INFLUENCER">Influencer</option>
               <option value="END_USER">End User</option>
-            </select>
-          </div>
+            </Select>
+          </FormField>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Email Address
-            </label>
-            <input
+          <FormField label="Email Address">
+            <Input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="priya@tata.com"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">
-              Phone Number
-            </label>
-            <input
+          </FormField>
+          <FormField label="Phone Number">
+            <Input
               type="tel"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               placeholder="+91 98220 99887"
-              className="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] focus:ring-1 focus:ring-primary focus:outline-hidden"
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="flex items-center gap-2 pt-1">
@@ -195,28 +256,30 @@ export default function ContactFormModal({
             name="isPrimaryContact"
             checked={formData.isPrimaryContact}
             onChange={handleChange}
-            className="rounded border-zinc-300 text-primary focus:ring-primary"
+            className="rounded border-zinc-300 text-primary focus:ring-primary cursor-pointer"
           />
-          <label htmlFor="isPrimary" className="text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE]">
+          <label htmlFor="isPrimary" className="text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE] cursor-pointer">
             Mark as primary contact for account
           </label>
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="btn-secondary text-xs px-3.5 py-1.5"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="btn-primary text-xs px-4 py-1.5"
+            variant="primary"
+            size="sm"
+            loading={isSaving}
           >
-            {isLoading ? 'Saving...' : 'Create Contact'}
-          </button>
+            {initialData?.id ? 'Update Contact' : 'Create Contact'}
+          </Button>
         </div>
       </form>
     </Modal>
