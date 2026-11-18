@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.erp.crm.common.exception.UnauthorizedException;
 import com.erp.crm.common.exception.BusinessValidationException;
+import com.erp.crm.common.security.authorization.AuthenticatedUser;
 
 public class CurrentUserContext {
 
@@ -143,11 +144,49 @@ public class CurrentUserContext {
                 .anyMatch(authority -> "ROLE_SYSTEM_ADMIN".equals(authority.getAuthority()));
     }
 
+    /**
+     * Checks if the current user has the OWNER role.
+     * Organization owners have full administrative access within their organization.
+     *
+     * @return true if user has OWNER / ROLE_OWNER role, false otherwise
+     */
+    public static boolean isOwner() {
+        // 1. Check ThreadLocal role (set by JwtAuthenticationFilter)
+        String role = userRoleHolder.get();
+        if (role != null && ("OWNER".equalsIgnoreCase(role) || "ROLE_OWNER".equalsIgnoreCase(role))) {
+            return true;
+        }
+        // 2. Check AuthenticatedUser principal
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return false;
+        }
+        if (authentication.getPrincipal() instanceof AuthenticatedUser user && user.hasActiveRole("OWNER")) {
+            return true;
+        }
+        // 3. Check granted authorities
+        if (authentication.getAuthorities() == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_OWNER".equalsIgnoreCase(authority.getAuthority())
+                        || "OWNER".equalsIgnoreCase(authority.getAuthority()));
+    }
+
     public static boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.isAuthenticated() && hasUserId();
     }
 
+    /**
+     * Resolves the company ID for a request based on user role and tenant isolation rules.
+     *
+     * BUSINESS RULES:
+     *   CASE 1 - SYSTEM ADMIN: Must provide companyId or have it in context.
+     *   CASE 2 - OWNER: Can operate across companies; uses requestCompanyId if provided,
+     *            falls back to ThreadLocal companyId (from X-Company-Id header).
+     *   CASE 3 - NORMAL USER: Always uses companyId from ThreadLocal (assigned tenant).
+     */
     public static UUID resolveCompanyId(UUID requestCompanyId) {
         if (isSystemAdmin()) {
             if (requestCompanyId == null) {
@@ -161,6 +200,21 @@ public class CurrentUserContext {
             return requestCompanyId;
         }
 
+        // OWNER: can specify any companyId, falls back to context
+        if (isOwner()) {
+            if (requestCompanyId != null) {
+                return requestCompanyId;
+            }
+            UUID ownerCompanyId = getCompanyId();
+            if (ownerCompanyId != null) {
+                return ownerCompanyId;
+            }
+            throw new BusinessValidationException(
+                    "Company ID is required for organization owner operations. " +
+                    "You must specify which company to operate on.");
+        }
+
+        // NORMAL USER: use assigned company from ThreadLocal
         UUID tenantCompanyId = getCompanyId();
         if (tenantCompanyId == null) {
             throw new UnauthorizedException("Company context not found in user session.");
@@ -171,11 +225,28 @@ public class CurrentUserContext {
         return tenantCompanyId;
     }
 
+    /**
+     * Resolves the company ID for list/query operations where the company
+     * parameter is optional.
+     *
+     *   System admin with null company: returns null (queries across all companies)
+     *   Owner: returns requested company if specified, else default company
+     *   Normal user: always returns their company
+     */
     public static UUID resolveCompanyIdForQuery(UUID requestCompanyId) {
         if (isSystemAdmin()) {
             return requestCompanyId != null ? requestCompanyId : getCompanyId();
         }
 
+        // OWNER: can query across companies within their organization
+        if (isOwner()) {
+            if (requestCompanyId != null) {
+                return requestCompanyId;
+            }
+            return getCompanyId();
+        }
+
+        // NORMAL USER
         UUID tenantCompanyId = getCompanyId();
         if (tenantCompanyId == null) {
             throw new UnauthorizedException("Company context not found in user session.");

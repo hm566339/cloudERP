@@ -109,6 +109,13 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
             return new AuthorizationDecision(true);
         }
 
+        // OWNER has full administrative access within their organization.
+        // They can access all modules/features without explicit per-permission checks.
+        if (CurrentUserContext.isOwner()) {
+            debugDecision(authentication, method, uri, null, null, null, true, "OWNER bypass");
+            return new AuthorizationDecision(true);
+        }
+
         if (isAuthenticatedProfileEndpoint(uri)) {
             debugDecision(authentication, method, uri, null, null, null, true, "authenticated profile endpoint");
             return new AuthorizationDecision(true);

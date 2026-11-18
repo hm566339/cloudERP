@@ -422,7 +422,7 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
           label: 'Quotations',
           path: `${base}/sales-crm/quotations`,
           icon: FileText,
-          featureCode: 'QUOTATIONS',
+          featureCode: 'CRM_QUOTATIONS',
           action: 'READ',
         },
         {
@@ -708,6 +708,10 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
           hasFeature(authContext, 'SALES', moduleName) ||
           hasFeature(authContext, 'SALES_ORDERS', moduleName);
       }
+      if (!hasFeat && (featureCode === 'CRM_QUOTATIONS' || (featureCode === 'QUOTATIONS' && moduleName === CANONICAL_MODULES.CRM))) {
+        hasFeat = hasFeature(authContext, 'CRM_QUOTATIONS', moduleName) ||
+          hasFeature(authContext, 'QUOTATIONS', moduleName);
+      }
       if (!hasFeat && (featureCode === 'PURCHASE_INVOICES' || featureCode === 'PURCHASE_REQUISITIONS')) {
         hasFeat = hasFeature(authContext, 'PURCHASE_INVOICES', moduleName) ||
           hasFeature(authContext, 'PURCHASE_REQUISITIONS', moduleName) ||
@@ -747,6 +751,10 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
           checkHasPermission(authContext, 'QUOTATIONS', action, moduleName) ||
           checkHasPermission(authContext, 'SALES', action, moduleName) ||
           checkHasPermission(authContext, 'SALES_ORDERS', action, moduleName);
+      }
+      if (featureCode === 'CRM_QUOTATIONS' || (featureCode === 'QUOTATIONS' && moduleName === CANONICAL_MODULES.CRM)) {
+        hasPerm = checkHasPermission(authContext, 'CRM_QUOTATIONS', action, moduleName) ||
+          checkHasPermission(authContext, 'QUOTATIONS', action, moduleName);
       } else if (featureCode === 'PURCHASE_INVOICES' || featureCode === 'PURCHASE_REQUISITIONS') {
         hasPerm = checkHasPermission(authContext, 'PURCHASE_INVOICES', action, moduleName) ||
           checkHasPermission(authContext, 'PURCHASE_REQUISITIONS', action, moduleName) ||
@@ -771,6 +779,9 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
         hasPerm = checkHasPermission(authContext, 'CUSTOMERS', action, moduleName) ||
           checkHasPermission(authContext, 'CRM_ACCOUNTS', action, moduleName) ||
           checkHasPermission(authContext, 'CRM', action, moduleName);
+      } else if (featureCode === 'QUOTATIONS' || featureCode === 'CRM_QUOTATIONS') {
+        hasPerm = checkHasPermission(authContext, 'CRM_QUOTATIONS', action, moduleName) ||
+          checkHasPermission(authContext, 'QUOTATIONS', action, moduleName);
       } else if (featureCode === 'SALES_ORDERS') {
         hasPerm = checkHasPermission(authContext, 'ORDERS', action, moduleName);
       } else if (featureCode === 'UNIT_OF_MEASURES') {
