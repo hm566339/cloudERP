@@ -39,17 +39,18 @@ const CustomSelect = React.forwardRef(({
   children,
   ...restProps
 }, ref) => {
-  // Extract options from propOptions or <option> children
+  // Extract options from propOptions and/or <option> children
   const options = useMemo(() => {
+    const raw = [];
     if (children) {
       const extracted = [];
       const traverse = (node) => {
         React.Children.forEach(node, child => {
           if (!child) return;
-          if (child.type === 'option') {
+          if (child.type === 'option' || (typeof child.type === 'string' && child.type.toLowerCase() === 'option')) {
             extracted.push({
               value: child.props.value !== undefined ? child.props.value : child.props.children,
-              label: child.props.children,
+              label: child.props.children !== undefined ? child.props.children : String(child.props.value),
               disabled: Boolean(child.props.disabled),
               subLabel: child.props['data-sublabel'] || child.props.subLabel,
               icon: child.props.icon,
@@ -60,11 +61,13 @@ const CustomSelect = React.forwardRef(({
         });
       };
       traverse(children);
-      if (extracted.length > 0) return extracted;
+      if (extracted.length > 0) {
+        raw.push(...extracted);
+      }
     }
 
-    if (Array.isArray(propOptions)) {
-      return propOptions.map((opt) => {
+    if (Array.isArray(propOptions) && propOptions.length > 0) {
+      const mappedProps = propOptions.map((opt) => {
         if (typeof opt === 'string' || typeof opt === 'number') {
           return { value: opt, label: String(opt) };
         }
@@ -77,9 +80,22 @@ const CustomSelect = React.forwardRef(({
           badge: opt.badge,
         };
       });
+      raw.push(...mappedProps);
     }
 
-    return [];
+    if (!raw.length) return [];
+
+    // Deduplicate options by normalized value so duplicate keys/values never clash
+    const seen = new Set();
+    const uniqueOptions = [];
+    for (const opt of raw) {
+      const key = String(opt.value !== undefined && opt.value !== null ? opt.value : '');
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueOptions.push(opt);
+      }
+    }
+    return uniqueOptions;
   }, [children, propOptions]);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -92,7 +108,7 @@ const CustomSelect = React.forwardRef(({
   const [focusedIndex, setFocusedIndex] = useState(-1);
 
   // Automatically enable search if searchable is true or option count > 7
-  const isSearchable = searchable !== undefined ? searchable : (Boolean(onSearch) || options.length > 7);
+  const isSearchable = searchable !== undefined ? searchable : (Boolean(onSearch) || options.length > 10);
 
   const onSearchRef = useRef(onSearch);
   useEffect(() => {
@@ -239,24 +255,27 @@ const CustomSelect = React.forwardRef(({
   }, [isOpen, updatePosition]);
 
   // Value resolution
-  const isValueSelected = (optVal) => {
+  const isValueSelected = useCallback((optVal) => {
     if (isMulti) {
       if (!Array.isArray(value)) return false;
       return value.some((v) => v === optVal || String(v) === String(optVal));
     }
-    if (value === undefined || value === null || value === '') return false;
+    if (value === undefined || value === null) return false;
+    if (value === '') {
+      return optVal === '' || optVal === null || optVal === undefined;
+    }
     return value === optVal || String(value) === String(optVal);
-  };
+  }, [isMulti, value]);
 
   const selectedOption = useMemo(() => {
     if (isMulti) return null;
     return options.find((opt) => isValueSelected(opt.value !== undefined ? opt.value : opt.id));
-  }, [options, value, isMulti]);
+  }, [options, isValueSelected, isMulti]);
 
   const selectedMultiOptions = useMemo(() => {
     if (!isMulti || !Array.isArray(value)) return [];
     return options.filter((opt) => isValueSelected(opt.value !== undefined ? opt.value : opt.id));
-  }, [options, value, isMulti]);
+  }, [options, isValueSelected, isMulti]);
 
   const displayLabel = useMemo(() => {
     if (isMulti) {
@@ -266,7 +285,10 @@ const CustomSelect = React.forwardRef(({
       }
       return `${value.length} selected`;
     }
-    return selectedOption ? (selectedOption.label || selectedOption.name) : placeholder;
+    if (selectedOption) return selectedOption.label || selectedOption.name;
+    const emptyOpt = options.find((o) => (o.value === '' || o.value === null || o.value === undefined));
+    if (emptyOpt) return emptyOpt.label || emptyOpt.name;
+    return placeholder;
   }, [isMulti, value, selectedOption, selectedMultiOptions, placeholder]);
 
   // Selection handler
@@ -446,7 +468,7 @@ const CustomSelect = React.forwardRef(({
       const hClass = detectedHeight || (isInputField ? 'h-8' : (sizeClasses[size]?.split(' ')[0] || 'h-9'));
       const pClass = controlTokens.find(t => /^px-/.test(t)) || (hClass === 'h-7' ? 'px-2' : hClass === 'h-8' ? 'px-2.5' : 'px-3');
       const tClass = detectedText || (isInputField ? 'text-[10px]' : (sizeClasses[size]?.split(' ')[2] || 'text-xs'));
-      const rClass = detectedRounded || 'rounded-md';
+      const rClass = detectedRounded || 'rounded-lg';
       const otherControl = controlTokens.filter(t => !/^h-|^px-|^text-|^rounded/.test(t)).join(' ');
       
       finalButtonClass = `w-full ${hClass} ${pClass} ${tClass} ${rClass} bg-white dark:bg-[#1D212C] border dark:border-[#2A2F3D] ${otherControl}`.trim();
@@ -458,7 +480,9 @@ const CustomSelect = React.forwardRef(({
     };
   }, [className, buttonClassName, size]);
 
-  const hasSelectedValue = isMulti ? Array.isArray(value) && value.length > 0 : (value !== undefined && value !== null && value !== '');
+  const hasSelectedValue = isMulti
+    ? Array.isArray(value) && value.length > 0
+    : (selectedOption !== null && selectedOption !== undefined && selectedOption.value !== '' && selectedOption.value !== null && selectedOption.value !== undefined);
 
   return (
     <div className={`relative ${wrapperClass}`} ref={containerRef} onKeyDown={handleKeyDown}>
@@ -499,8 +523,8 @@ const CustomSelect = React.forwardRef(({
           <input
             ref={searchInputRef}
             type="text"
-            placeholder={hasSelectedValue ? displayLabel : placeholder}
-            value={isOpen ? searchTerm : (hasSelectedValue ? displayLabel : '')}
+            placeholder={hasSelectedValue || selectedOption ? displayLabel : placeholder}
+            value={isOpen ? searchTerm : (hasSelectedValue || selectedOption ? displayLabel : '')}
             onChange={(e) => {
               setSearchTerm(e.target.value);
               if (onSearch) debouncedSearch(e.target.value);
@@ -595,7 +619,7 @@ const CustomSelect = React.forwardRef(({
             maxWidth: 'calc(100vw - 16px)',
             zIndex: 99999,
           }}
-          className={dropdownClassName || "bg-[#F7F7F0] dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl shadow-xl dark:shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 ring-1 ring-black/5 dark:ring-white/5"}
+          className={dropdownClassName || "bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xl dark:shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 ring-1 ring-black/5 dark:ring-white/5"}
         >
           {/* In-Menu Search Input */}
           {isSearchable && !comboInput && (

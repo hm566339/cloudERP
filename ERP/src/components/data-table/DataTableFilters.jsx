@@ -25,6 +25,11 @@ export default function DataTableFilters({
         };
 
         if (filter.type === 'select') {
+          const hasEmptyOption = (filter.options || []).some(
+            (opt) => opt.value === '' || opt.value === null || opt.value === undefined
+          );
+          const defaultAllLabel = filter.placeholder || `All ${filter.label || 'Options'}`;
+
           return (
             <div key={filterKey} className={filter.className || ''}>
               {filter.label && (
@@ -36,10 +41,11 @@ export default function DataTableFilters({
                 value={value !== null && value !== undefined ? String(value) : ''}
                 onChange={handleChange}
                 searchable={filter.searchable || false}
+                placeholder={defaultAllLabel}
                 buttonClassName="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 outline-none transition-all cursor-pointer"
               >
-                {!filter.hideAllOption && (
-                  <option value="">{filter.placeholder || `All ${filter.label || 'Options'}`}</option>
+                {!filter.hideAllOption && !hasEmptyOption && (
+                  <option value="">{defaultAllLabel}</option>
                 )}
                 {(filter.options || []).map((opt) => (
                   <option key={opt.value} value={opt.value}>

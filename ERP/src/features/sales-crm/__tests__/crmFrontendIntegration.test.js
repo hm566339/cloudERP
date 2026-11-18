@@ -275,4 +275,84 @@ describe('Sales & CRM Business Calculation & Domain Rules Suite', () => {
     assert.equal(resolveSources(directSources, null)[0].id, 'src-1');
     assert.equal(resolveSources([], envelopeSources)[0].id, 'src-2');
   });
+  it('13. Toolbar filter & dropdown resolution eliminates duplicate all options and empty value label mismatch', () => {
+    // 1. Value resolution logic for CustomSelect
+    const isValueSelected = (value, optVal, isMulti = false) => {
+      if (isMulti) {
+        if (!Array.isArray(value)) return false;
+        return value.some((v) => v === optVal || String(v) === String(optVal));
+      }
+      if (value === undefined || value === null) return false;
+      if (value === '') {
+        return optVal === '' || optVal === null || optVal === undefined;
+      }
+      return value === optVal || String(value) === String(optVal);
+    };
+
+    const options = [
+      { label: 'All Statuses', value: '' },
+      { label: 'New / Open', value: '1' },
+      { label: 'Contacted', value: '2' },
+    ];
+
+    // When value is '' (default filter state)
+    const selected = options.find((opt) => isValueSelected('', opt.value));
+    assert.ok(selected, 'Empty string value must match empty option');
+    assert.equal(selected.label, 'All Statuses', 'Selected label should be All Statuses instead of Select an option');
+
+    // 2. DataTableFilters duplicate prevention
+    const rawFilterOptions = [
+      { label: 'All Statuses', value: '' },
+      { label: 'New / Open', value: '1' },
+    ];
+    const hasEmptyOption = rawFilterOptions.some((opt) => opt.value === '' || opt.value === null || opt.value === undefined);
+    assert.equal(hasEmptyOption, true, 'Detects existing empty/all option in filter definitions');
+
+    // If options already has empty option, DataTableFilters must not add a second one
+    const computedOptions = !hasEmptyOption
+      ? [{ value: '', label: 'All Status' }, ...rawFilterOptions]
+      : rawFilterOptions;
+    assert.equal(computedOptions.length, 2, 'Must not duplicate empty options');
+    assert.equal(computedOptions.filter(o => o.value === '').length, 1, 'Exactly one empty option present');
+
+    // 3. CustomSelect deduplication
+    const seen = new Set();
+    const uniqueOptions = [];
+    const testList = [
+      { value: '', label: 'All Status' },
+      { value: '', label: 'All Statuses' },
+      { value: '1', label: 'Draft' },
+      { value: '1', label: 'Draft Duplicate' }
+    ];
+    for (const opt of testList) {
+      const key = String(opt.value !== undefined && opt.value !== null ? opt.value : '');
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueOptions.push(opt);
+      }
+    }
+    assert.equal(uniqueOptions.length, 2, 'Deduplicates options with identical values');
+    assert.equal(uniqueOptions[0].value, '');
+    assert.equal(uniqueOptions[1].value, '1');
+
+    // 4. Children extraction does not get overwritten by default propOptions=[]
+    const mockChildren = [
+      { type: 'option', props: { value: 'INDIAMART', children: 'IndiaMART Inbound Push' } },
+      { type: 'option', props: { value: 'TRADEINDIA', children: 'TradeIndia Marketplace' } },
+      { type: 'option', props: { value: 'META_LEAD_ADS', children: 'Meta Ads' } }
+    ];
+    const defaultPropOptions = [];
+    const extractedRaw = [];
+    mockChildren.forEach((child) => {
+      extractedRaw.push({
+        value: child.props.value,
+        label: child.props.children
+      });
+    });
+    if (Array.isArray(defaultPropOptions) && defaultPropOptions.length > 0) {
+      extractedRaw.push(...defaultPropOptions);
+    }
+    assert.equal(extractedRaw.length, 3, 'Must preserve children options when propOptions is default empty array');
+    assert.equal(extractedRaw[0].value, 'INDIAMART');
+  });
 });

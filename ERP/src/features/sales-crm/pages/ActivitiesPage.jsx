@@ -13,6 +13,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import PageHeader from '../../../components/common/PageHeader';
+import { Select } from '../../../components/common';
 import { useGetCrmActivitiesQuery } from '../../../api/sales-crm/crm.api';
 import ActivityFormModal from '../components/ActivityFormModal';
 
@@ -54,17 +55,17 @@ export default function ActivitiesPage() {
       <div className="px-6 py-2.5 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-2">
           <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Type</label>
-          <select
+          <Select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
+            className="w-48"
           >
             <option value="">All Activity Types</option>
             <option value="CALL">Phone Calls</option>
             <option value="MEETING">Client Meetings</option>
             <option value="EMAIL">Email Threads</option>
             <option value="NOTE">Internal Notes</option>
-          </select>
+          </Select>
         </div>
 
         <button

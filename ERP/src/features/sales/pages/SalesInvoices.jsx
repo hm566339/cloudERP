@@ -475,7 +475,7 @@ export default function SalesInvoices() {
       key: 'statuses',
       label: 'Status',
       type: 'select',
-      placeholder: 'Select an option',
+      placeholder: 'All Statuses',
       options: statusOptions
     },
     {

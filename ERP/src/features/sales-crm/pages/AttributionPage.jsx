@@ -19,6 +19,7 @@ import {
   Legend
 } from 'recharts';
 import PageHeader from '../../../components/common/PageHeader';
+import { Select } from '../../../components/common';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 
 const ATTRIBUTION_MODELS = [
@@ -116,17 +117,17 @@ export default function AttributionPage() {
           <div className="flex items-center gap-2">
             <Layers size={16} className="text-primary" />
             <span className="text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE]">Active Attribution Model:</span>
-            <select
+            <Select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
+              className="w-72"
             >
               {ATTRIBUTION_MODELS.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div className="flex items-center gap-1.5 text-[11px] text-zinc-500">

@@ -87,17 +87,17 @@ export default function TasksPage() {
   const basicFilters = useMemo(() => [
     {
       key: 'status',
-      label: 'STATUS',
+      label: 'Status',
       type: 'select',
       options: [
+        { label: 'All Tasks', value: '' },
         { label: 'Pending Tasks', value: 'PENDING' },
         { label: 'Completed Tasks', value: 'COMPLETED' },
-        { label: 'All Tasks', value: '' },
       ],
     },
     {
       key: 'priority',
-      label: 'PRIORITY',
+      label: 'Priority',
       type: 'select',
       options: [
         { label: 'All Priorities', value: '' },

@@ -82,15 +82,27 @@ export default function FilterBar({
                 </label>
               )}
               {filter.type === 'select' ? (
-                <CustomSelect
-                  value={filter.value || ''}
-                  onChange={(e) => onFilterChange(filter.key, e.target.value)}
-                  options={!filter.hideAllOption ? [{value: '', label: filter.label}, ...(filter.options || [])] : (filter.options || [])}
-                  placeholder={filter.label}
-                  searchable={filter.searchable ?? ((filter.options?.length || 0) > 10)}
-                  className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 dark:text-[#E6E8EE] focus-within:border-zinc-400 dark:focus-within:border-[#4C8DFF] focus-within:ring-1 focus-within:ring-zinc-900/10 dark:focus-within:ring-[#4C8DFF]/20 transition-all cursor-pointer"
-                  dropdownClassName="bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg shadow-lg py-1 max-h-[200px] overflow-y-auto min-w-full z-50 text-[10.4px]"
-                />
+                (() => {
+                  const hasEmptyOption = (filter.options || []).some(
+                    (opt) => opt.value === '' || opt.value === null || opt.value === undefined
+                  );
+                  const defaultAllLabel = filter.placeholder || `All ${filter.label || 'Options'}`;
+                  const selectOptions = !filter.hideAllOption && !hasEmptyOption
+                    ? [{ value: '', label: defaultAllLabel }, ...(filter.options || [])]
+                    : (filter.options || []);
+
+                  return (
+                    <CustomSelect
+                      value={filter.value || ''}
+                      onChange={(e) => onFilterChange(filter.key, e.target.value)}
+                      options={selectOptions}
+                      placeholder={defaultAllLabel}
+                      searchable={filter.searchable ?? ((filter.options?.length || 0) > 10)}
+                      className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 dark:text-[#E6E8EE] focus-within:border-zinc-400 dark:focus-within:border-[#4C8DFF] focus-within:ring-1 focus-within:ring-zinc-900/10 dark:focus-within:ring-[#4C8DFF]/20 transition-all cursor-pointer"
+                      dropdownClassName="bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg shadow-lg py-1 max-h-[200px] overflow-y-auto min-w-full z-50 text-[10.4px]"
+                    />
+                  );
+                })()
               ) : filter.type === 'dateRange' ? (
                 <div className="w-full h-9">
                   <DateRangeFilter

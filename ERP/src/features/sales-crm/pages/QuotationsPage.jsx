@@ -87,7 +87,7 @@ export default function QuotationsPage() {
   const basicFilters = useMemo(() => [
     {
       key: 'status',
-      label: 'STATUS',
+      label: 'Status',
       type: 'select',
       options: [
         { label: 'All Statuses', value: '' },

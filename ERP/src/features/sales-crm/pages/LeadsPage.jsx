@@ -33,6 +33,29 @@ import LeadConvertModal from '../components/LeadConvertModal';
 import LeadAssignModal from '../components/LeadAssignModal';
 import LeadImportModal from '../components/LeadImportModal';
 
+const DEFAULT_SOURCES = [
+  { id: '1', sourceName: 'Direct / Inbound' },
+  { id: '2', sourceName: 'Company Website' },
+  { id: '3', sourceName: 'IndiaMART Marketplace' },
+  { id: '4', sourceName: 'TradeIndia Marketplace' },
+  { id: '5', sourceName: 'JustDial Portal' },
+  { id: '6', sourceName: 'Facebook / Instagram Ads' },
+  { id: '7', sourceName: 'Google Ads' },
+  { id: '8', sourceName: 'Cold Outreach' },
+  { id: '9', sourceName: 'Customer Referral' },
+];
+
+const DEFAULT_STATUSES = [
+  { id: '1', statusName: 'New / Open' },
+  { id: '2', statusName: 'Contacted' },
+  { id: '3', statusName: 'Qualified' },
+  { id: '4', statusName: 'Proposal Sent' },
+  { id: '5', statusName: 'In Negotiation' },
+  { id: '6', statusName: 'Unqualified' },
+  { id: '7', statusName: 'Converted to Deal' },
+  { id: '8', statusName: 'Lost Lead' },
+];
+
 const DEFAULT_COLUMNS = [
   'displayName',
   'contact',
@@ -88,8 +111,10 @@ export default function LeadsPage() {
 
   const leads = toArray(leadsRes);
   const totalElements = leadsRes?.data?.totalElements || leadsRes?.totalElements || leads.length;
-  const sources = toArray(sourcesRes);
-  const statuses = toArray(statusesRes);
+  const rawSources = toArray(sourcesRes);
+  const rawStatuses = toArray(statusesRes);
+  const sources = rawSources.length > 0 ? rawSources : DEFAULT_SOURCES;
+  const statuses = rawStatuses.length > 0 ? rawStatuses : DEFAULT_STATUSES;
 
   const handleReset = () => {
     resetFilters();

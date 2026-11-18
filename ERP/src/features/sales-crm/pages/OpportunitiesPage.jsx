@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import PageHeader from '../../../components/common/PageHeader';
 import ConfirmModal from '../../../components/common/ConfirmModal';
+import { Select } from '../../../components/common';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import CrmKanbanBoard from '../components/CrmKanbanBoard';
 import OpportunityFormModal from '../components/OpportunityFormModal';
@@ -225,17 +226,17 @@ export default function OpportunitiesPage() {
       {/* Top Filter and Mode Switcher Strip */}
       <div className="px-6 py-2.5 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3">
-          <select
+          <Select
             value={currentPipelineId || ''}
             onChange={(e) => setSelectedPipelineId(e.target.value)}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
+            className="w-56"
           >
             {pipelines.map((p) => (
               <option key={p.id} value={p.id}>
                 Pipeline: {p.pipelineName || p.name} {p.isDefault ? '(Default)' : ''}
               </option>
             ))}
-          </select>
+          </Select>
 
           <div className="flex items-center bg-zinc-100 dark:bg-[#1C202B] p-0.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D]">
             <button

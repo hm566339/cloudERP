@@ -547,7 +547,7 @@ export default function DeliveryChallansPage() {
       key: 'status',
       label: 'Status',
       type: 'select',
-      placeholder: 'Select an option',
+      placeholder: 'All Statuses',
       options: [
         { label: 'Draft', value: 'DRAFT' },
         { label: 'Pending Approval', value: 'PENDING_APPROVAL' },

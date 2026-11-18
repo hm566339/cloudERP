@@ -12,6 +12,7 @@ import {
   Paperclip
 } from 'lucide-react';
 import PageHeader from '../../../components/common/PageHeader';
+import { Select } from '../../../components/common';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import {
   useSendCrmMessageMutation,
@@ -169,15 +170,14 @@ export default function CommunicationsPage() {
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1">
                         Channel Gateway
                       </label>
-                      <select
+                      <Select
                         value={channel}
                         onChange={(e) => setChannel(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1C202B] text-zinc-800 dark:text-[#E6E8EE]"
                       >
                         <option value="WHATSAPP">WhatsApp Official API (Meta Cloud)</option>
                         <option value="SMS">SMS Gateway (DLT Approved)</option>
                         <option value="EMAIL">Email (Corporate SMTP / SendGrid)</option>
-                      </select>
+                      </Select>
                     </div>
 
                     <div>
