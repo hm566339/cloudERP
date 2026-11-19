@@ -187,6 +187,26 @@ export function getAccessibleModuleKeys({ userRole, memberType, permissions, com
 
   const combinedBackendKeys = [...new Set([...companyKeys, ...authModuleKeys])];
 
+  // Harmonize module alias pairs so accessing either /sales-crm or /crm matches
+  if (combinedBackendKeys.includes('crm') && !combinedBackendKeys.includes('sales')) {
+    combinedBackendKeys.push('sales');
+  }
+  if (combinedBackendKeys.includes('sales') && !combinedBackendKeys.includes('crm')) {
+    combinedBackendKeys.push('crm');
+  }
+  if (combinedBackendKeys.includes('finance') && !combinedBackendKeys.includes('account')) {
+    combinedBackendKeys.push('account');
+  }
+  if (combinedBackendKeys.includes('account') && !combinedBackendKeys.includes('finance')) {
+    combinedBackendKeys.push('finance');
+  }
+  if (combinedBackendKeys.includes('purchases') && !combinedBackendKeys.includes('purchase')) {
+    combinedBackendKeys.push('purchase');
+  }
+  if (combinedBackendKeys.includes('purchase') && !combinedBackendKeys.includes('purchases')) {
+    combinedBackendKeys.push('purchases');
+  }
+
   const isOwner = memberType === 'OWNER' || String(userRole).toLowerCase() === 'owner';
 
   // If specific company assignments or active session modules exist, enforce company-level boundary

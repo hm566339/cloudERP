@@ -19,11 +19,13 @@ const DEFAULT_PIPELINES = [
   { id: 'STANDARD', pipelineName: 'Standard Sales Pipeline', stages: DEFAULT_STAGES },
 ];
 
+const EMPTY_ARRAY = [];
+
 const toArray = (res) => {
   if (Array.isArray(res)) return res;
   if (Array.isArray(res?.data)) return res.data;
   if (Array.isArray(res?.data?.content)) return res.data.content;
-  return [];
+  return EMPTY_ARRAY;
 };
 
 export default function OpportunityFormModal({
@@ -32,8 +34,8 @@ export default function OpportunityFormModal({
   initialStageId = null,
   initialAccountId = null,
   companyId,
-  pipelines = [],
-  accounts = [],
+  pipelines = EMPTY_ARRAY,
+  accounts = EMPTY_ARRAY,
   onSuccess,
 }) {
   const [formData, setFormData] = useState({
@@ -68,7 +70,7 @@ export default function OpportunityFormModal({
     if (fromProps.length > 0) return fromProps;
     const fromApi = toArray(fetchedAccountsRes);
     if (fromApi.length > 0) return fromApi;
-    return [];
+    return EMPTY_ARRAY;
   }, [accounts, fetchedAccountsRes]);
 
   const [createOpportunity, { isLoading }] = useCreateCrmOpportunityMutation();
@@ -78,16 +80,30 @@ export default function OpportunityFormModal({
   const stages = selectedPipeline?.stages?.length > 0 ? selectedPipeline.stages : DEFAULT_STAGES;
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (availablePipelines.length > 0) {
       const defaultPipeline = availablePipelines[0];
       const defaultStage =
         initialStageId || defaultPipeline.stages?.[0]?.id || DEFAULT_STAGES[0].id;
-      setFormData((p) => ({
-        ...p,
-        pipelineId: p.pipelineId || defaultPipeline.id,
-        currentStageId: p.currentStageId || defaultStage,
-        accountId: p.accountId || initialAccountId || availableAccounts[0]?.id || '',
-      }));
+      setFormData((p) => {
+        const nextPipelineId = p.pipelineId || defaultPipeline.id || '';
+        const nextStageId = p.currentStageId || defaultStage || '';
+        const nextAccountId = p.accountId || initialAccountId || availableAccounts[0]?.id || '';
+        if (
+          p.pipelineId === nextPipelineId &&
+          p.currentStageId === nextStageId &&
+          p.accountId === nextAccountId
+        ) {
+          return p;
+        }
+        return {
+          ...p,
+          pipelineId: nextPipelineId,
+          currentStageId: nextStageId,
+          accountId: nextAccountId,
+        };
+      });
     }
   }, [availablePipelines, initialStageId, initialAccountId, availableAccounts, isOpen]);
 

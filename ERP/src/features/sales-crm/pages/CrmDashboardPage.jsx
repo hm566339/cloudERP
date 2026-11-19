@@ -142,21 +142,21 @@ export default function CrmDashboardPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsLeadModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-300 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1C202B] text-xs font-semibold rounded-lg shadow-sm transition-all active:scale-95"
+            className="btn-secondary flex items-center gap-1.5 text-xs font-semibold"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New Lead</span>
           </button>
           <button
             onClick={() => setIsOppModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-300 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1C202B] text-xs font-semibold rounded-lg shadow-sm transition-all active:scale-95"
+            className="btn-secondary flex items-center gap-1.5 text-xs font-semibold"
           >
             <Target className="w-3.5 h-3.5" />
             <span>New Deal</span>
           </button>
           <button
             onClick={() => setIsQuoteModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
+            className="btn-primary flex items-center gap-2 text-xs font-semibold"
           >
             <FileText className="w-3.5 h-3.5" />
             <span>Create Quote</span>

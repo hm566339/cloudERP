@@ -324,7 +324,16 @@ export function normalizePermissionsList(rawPermissions) {
     const userCtx = data.user || data;
 
     const companiesList = Array.isArray(data.companies) ? data.companies : [];
-    const activeCompId = targetCompanyId || data.activeCompanyId || data.currentCompany?.id || data.companyId || userCtx?.companyId || null;
+    let activeCompId = targetCompanyId || data.activeCompanyId || data.currentCompany?.id || data.companyId || userCtx?.companyId || null;
+
+    if (!activeCompId && typeof localStorage !== 'undefined') {
+      try {
+        const stored = JSON.parse(localStorage.getItem('selected_company') || 'null');
+        if (stored?.id || stored?.code) {
+          activeCompId = stored.id || stored.code;
+        }
+      } catch (_) {}
+    }
 
     // Locate the target company in companiesList if specified
     let targetCompany = data.currentCompany || null;
@@ -340,11 +349,30 @@ export function normalizePermissionsList(rawPermissions) {
       }
     }
 
+    // Fallback: If targetCompany is still null and companiesList has entries
+    if (!targetCompany && companiesList.length > 0) {
+      const ownerComp = companiesList.find((c) => {
+        const r = c?.membership?.role || c?.membership?.roles;
+        const rName = typeof r === 'string' ? r : (Array.isArray(r) ? r[0]?.name : r?.name);
+        return String(rName || '').toUpperCase().includes('OWNER');
+      });
+      if (ownerComp) {
+        targetCompany = ownerComp;
+      } else if (companiesList.length === 1) {
+        targetCompany = companiesList[0];
+      }
+    }
+
     const activeOrgId = data.activeOrganizationId || data.organization?.id || null;
 
     // Extract company-specific role if present
     const compRole = targetCompany?.membership?.role || targetCompany?.membership?.roles;
-    const rawRole = compRole || data.roles || data.role || userCtx?.role || userCtx?.roles;
+    const anyCompOwnerRole = companiesList.some((c) => {
+      const r = c?.membership?.role || c?.membership?.roles;
+      const rName = typeof r === 'string' ? r : (Array.isArray(r) ? r[0]?.name : r?.name);
+      return String(rName || '').toUpperCase().includes('OWNER');
+    });
+    const rawRole = compRole || data.roles || data.role || userCtx?.role || userCtx?.roles || (anyCompOwnerRole ? 'OWNER' : null);
     const role = normalizeRole(rawRole);
     const roles = targetCompany?.membership?.roles || (Array.isArray(data.roles) ? data.roles : (role ? [{ name: role, status: true }] : []));
 
@@ -352,6 +380,12 @@ export function normalizePermissionsList(rawPermissions) {
     let resolvedModules = Array.isArray(data.modules) ? data.modules : [];
     if (targetCompany && Array.isArray(targetCompany.modules) && targetCompany.modules.length > 0) {
       resolvedModules = targetCompany.modules;
+    } else if (resolvedModules.length === 0 && companiesList.length > 0) {
+      // If targetCompany had no modules yet, check if any company in list has modules
+      const firstWithMods = companiesList.find(c => Array.isArray(c?.modules) && c.modules.length > 0);
+      if (firstWithMods) {
+        resolvedModules = firstWithMods.modules;
+      }
     }
 
     // Extract company-specific features and permissions
@@ -400,6 +434,25 @@ export function normalizePermissionsList(rawPermissions) {
                 }
               }
 
+              const rawMembership = data.membership || targetCompany?.membership || (companiesList.find(c => c?.membership)?.membership) || null;
+              const isOwnerRole = role === 'owner' || anyCompOwnerRole || String(compRole?.name || compRole || '').toUpperCase().includes('OWNER');
+              let resolvedMembership = null;
+              if (rawMembership) {
+                const mRoleName = String(rawMembership?.role?.name || rawMembership?.role || rawMembership?.memberType || rawRole || '').toUpperCase();
+                const isOwner = isOwnerRole || mRoleName.includes('OWNER');
+                resolvedMembership = {
+                  ...rawMembership,
+                  memberType: rawMembership.memberType || (isOwner ? 'OWNER' : (mRoleName.includes('ADMIN') ? 'ADMIN' : 'MEMBER')),
+                  role: rawMembership.role || (isOwner ? { name: 'OWNER' } : rawRole),
+                };
+              } else if (isOwnerRole) {
+                resolvedMembership = {
+                  memberType: 'OWNER',
+                  role: { name: 'OWNER' },
+                  status: 'ACTIVE',
+                };
+              }
+
               return {
                 user: {
                   ...userCtx,
@@ -423,13 +476,48 @@ export function normalizePermissionsList(rawPermissions) {
                 activeCompanyId: targetCompany?.id || activeCompId,
                 currentCompany: targetCompany,
                 companies: companiesList,
-                membership: data.membership || null,
+                membership: resolvedMembership,
                 subscription: data.subscription || null,
                 accessMode: data.accessMode || 'FULL',
                 modules: normalizeModulesList(resolvedModules),
                 features: normalizeFeaturesList(resolvedFeatures),
                 permissions: normalizePermissionsList(resolvedPermissions),
               };
+            }
+
+            export function isOwnerUser(authContextOrUser) {
+              if (!authContextOrUser) return false;
+              const ctx = authContextOrUser;
+              const user = ctx?.user || ctx;
+              const roleStr = typeof user?.role === 'string' ? user.role : (user?.role?.name || '');
+              const cleanRole = String(roleStr).trim().toUpperCase().replace(/[\s_-]+/g, '');
+              if (cleanRole === 'OWNER' || cleanRole === 'ROLEOWNER' || cleanRole === 'ORGANIZATIONOWNER') {
+                return true;
+              }
+              const memberType = String(ctx?.membership?.memberType || ctx?.membership?.membershipType || user?.membership?.memberType || '').trim().toUpperCase();
+              if (memberType === 'OWNER' || memberType === 'ORGANIZATION_OWNER') {
+                return true;
+              }
+              const rolesList = ctx?.roles || user?.roles;
+              if (Array.isArray(rolesList)) {
+                for (const r of rolesList) {
+                  const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
+                  const clean = String(name).trim().toUpperCase().replace(/[\s_-]+/g, '');
+                  if (clean === 'OWNER' || clean === 'ROLEOWNER' || clean === 'ORGANIZATIONOWNER') {
+                    return true;
+                  }
+                }
+              }
+              if (Array.isArray(user?.authorities)) {
+                for (const a of user.authorities) {
+                  const authStr = typeof a === 'string' ? a : a?.authority;
+                  const clean = String(authStr).trim().toUpperCase().replace(/[\s_-]+/g, '');
+                  if (clean === 'OWNER' || clean === 'ROLEOWNER' || clean === 'ORGANIZATIONOWNER') {
+                    return true;
+                  }
+                }
+              }
+              return false;
             }
 
             export function isSystemAdminUser(authContextOrUser) {
@@ -607,16 +695,35 @@ export function normalizePermissionsList(rawPermissions) {
 
               if (hasPerm) return true;
 
-              // 3. Organization Owner fallback: only when no explicit granular features or permissions are defined
-              const hasExplicitPermissions = (Array.isArray(authContext?.permissions) && authContext.permissions.length > 0) ||
-                                            (Array.isArray(authContext?.features) && authContext.features.length > 0);
-              if (!hasExplicitPermissions) {
-                const roleStr = String(authContext?.user?.role || authContext?.membership?.memberType || authContext?.membership?.membershipType || '').toUpperCase();
-                if (roleStr.includes('OWNER') || authContext?.membership?.memberType === 'OWNER') {
-                  if (canonicalModule && hasModule(authContext, canonicalModule)) {
-                    return true;
-                  }
+              // 3. Organization Owner fallback: when no explicit granular features or permissions are defined for this feature
+              if (!hasExplicitFeaturePerm && isOwnerUser(authContext)) {
+                if (canonicalModule && hasModule(authContext, canonicalModule)) {
+                  return true;
                 }
+                const CRM_FEATS = [
+                  'LEADS', 'ACCOUNTS', 'CONTACTS', 'OPPORTUNITIES', 'PIPELINES', 'QUOTATIONS', 'TASKS',
+                  'ACTIVITIES', 'CAMPAIGNS', 'ATTRIBUTION', 'COMMUNICATIONS', 'AUTOMATION', 'INTEGRATIONS',
+                  'CRM_SETTINGS', 'SALES_ORDERS', 'SALES_INVOICES', 'ORDERS', 'INVOICES', 'CRM_DASHBOARD',
+                  'CRM_ACTIVITIES', 'CRM_CAMPAIGNS', 'CRM_COMMUNICATION', 'CRM_AUTOMATION', 'CRM_INTEGRATIONS',
+                  'CRM_SETTINGS', 'CRM_OPPORTUNITIES', 'CRM_PIPELINES', 'CRM_TASKS', 'CRM_LEADS', 'CRM_ACCOUNTS',
+                  'CRM_CONTACTS', 'DELIVERY_CHALLANS', 'PROFORMA_INVOICES'
+                ];
+                if (CRM_FEATS.includes(targetFeature)) {
+                  return hasModule(authContext, CANONICAL_MODULES.CRM);
+                }
+                const ACCOUNT_FEATS = [
+                  'CUSTOMERS', 'VENDORS', 'CHART_OF_ACCOUNTS', 'ACCOUNT_GROUPS', 'ACCOUNT_CATEGORIES',
+                  'ACCOUNTING_PERIODS', 'FISCAL_YEARS', 'EXPENSES', 'EXPENSE_CATEGORIES', 'EXPENSE_REQUESTS',
+                  'SALES_INVOICES', 'PURCHASE_INVOICES', 'PAYMENTS', 'PAYMENT_VOUCHERS', 'RECEIPT_VOUCHERS',
+                  'CREDIT_NOTES', 'DEBIT_NOTES', 'GL_JOURNALS', 'GL_JOURNAL_LINES', 'GST_MASTER', 'GST_SLABS',
+                  'BANK_ACCOUNTS', 'BANK_TRANSACTIONS', 'BANK_RECONCILIATION', 'BUDGET_HEADERS', 'BUDGET_LINES',
+                  'AUDIT_LOGS', 'REPORTS', 'ANALYTICS', 'SALES_TAXES', 'HSN_SAC'
+                ];
+                if (ACCOUNT_FEATS.includes(targetFeature)) {
+                  return hasModule(authContext, CANONICAL_MODULES.ACCOUNT);
+                }
+                const entitled = getEntitledModules(authContext);
+                return entitled.length > 0;
               }
 
               return false;
@@ -829,16 +936,35 @@ export function normalizePermissionsList(rawPermissions) {
 
               if (hasPerm) return true;
 
-              // 3. Organization Owner fallback: only when no explicit granular features or permissions are defined
-              const hasExplicitPermissions = (Array.isArray(authContext?.permissions) && authContext.permissions.length > 0) ||
-                                            (Array.isArray(authContext?.features) && authContext.features.length > 0);
-              if (!hasExplicitPermissions) {
-                const roleStr = String(authContext?.user?.role || authContext?.membership?.memberType || authContext?.membership?.membershipType || '').toUpperCase();
-                if (roleStr.includes('OWNER') || authContext?.membership?.memberType === 'OWNER') {
-                  if (canonicalModule && hasModule(authContext, canonicalModule)) {
-                    return true;
-                  }
+              // 3. Organization Owner fallback: when no explicit granular features or permissions are defined for this feature
+              if (!hasExplicitFeaturePerm && isOwnerUser(authContext)) {
+                if (canonicalModule && hasModule(authContext, canonicalModule)) {
+                  return true;
                 }
+                const CRM_FEATS = [
+                  'LEADS', 'ACCOUNTS', 'CONTACTS', 'OPPORTUNITIES', 'PIPELINES', 'QUOTATIONS', 'TASKS',
+                  'ACTIVITIES', 'CAMPAIGNS', 'ATTRIBUTION', 'COMMUNICATIONS', 'AUTOMATION', 'INTEGRATIONS',
+                  'CRM_SETTINGS', 'SALES_ORDERS', 'SALES_INVOICES', 'ORDERS', 'INVOICES', 'CRM_DASHBOARD',
+                  'CRM_ACTIVITIES', 'CRM_CAMPAIGNS', 'CRM_COMMUNICATION', 'CRM_AUTOMATION', 'CRM_INTEGRATIONS',
+                  'CRM_SETTINGS', 'CRM_OPPORTUNITIES', 'CRM_PIPELINES', 'CRM_TASKS', 'CRM_LEADS', 'CRM_ACCOUNTS',
+                  'CRM_CONTACTS', 'DELIVERY_CHALLANS', 'PROFORMA_INVOICES'
+                ];
+                if (CRM_FEATS.includes(targetFeature)) {
+                  return hasModule(authContext, CANONICAL_MODULES.CRM);
+                }
+                const ACCOUNT_FEATS = [
+                  'CUSTOMERS', 'VENDORS', 'CHART_OF_ACCOUNTS', 'ACCOUNT_GROUPS', 'ACCOUNT_CATEGORIES',
+                  'ACCOUNTING_PERIODS', 'FISCAL_YEARS', 'EXPENSES', 'EXPENSE_CATEGORIES', 'EXPENSE_REQUESTS',
+                  'SALES_INVOICES', 'PURCHASE_INVOICES', 'PAYMENTS', 'PAYMENT_VOUCHERS', 'RECEIPT_VOUCHERS',
+                  'CREDIT_NOTES', 'DEBIT_NOTES', 'GL_JOURNALS', 'GL_JOURNAL_LINES', 'GST_MASTER', 'GST_SLABS',
+                  'BANK_ACCOUNTS', 'BANK_TRANSACTIONS', 'BANK_RECONCILIATION', 'BUDGET_HEADERS', 'BUDGET_LINES',
+                  'AUDIT_LOGS', 'REPORTS', 'ANALYTICS', 'SALES_TAXES', 'HSN_SAC'
+                ];
+                if (ACCOUNT_FEATS.includes(targetFeature)) {
+                  return hasModule(authContext, CANONICAL_MODULES.ACCOUNT);
+                }
+                const entitled = getEntitledModules(authContext);
+                return entitled.length > 0;
               }
 
               return false;
@@ -941,6 +1067,76 @@ export function normalizePermissionsList(rawPermissions) {
 
               // 2. Target is a feature (e.g. 'CUSTOMERS', 'PRODUCTS', 'ACCOUNT_GROUPS', etc.)
               if (upper === 'DASHBOARD' || upper.endsWith('_DASHBOARD') || normUpper === 'DASHBOARD') {
+                return entitled.length > 0;
+              }
+
+              // OWNER role handling: Organization/Company owner has access to all features belonging to entitled modules
+              if (isOwnerUser(authContext)) {
+                const CRM_FEATS = [
+                  'LEADS', 'ACCOUNTS', 'CONTACTS', 'OPPORTUNITIES', 'PIPELINES', 'QUOTATIONS', 'TASKS',
+                  'ACTIVITIES', 'CAMPAIGNS', 'ATTRIBUTION', 'COMMUNICATIONS', 'AUTOMATION', 'INTEGRATIONS',
+                  'CRM_SETTINGS', 'SALES_ORDERS', 'SALES_INVOICES', 'ORDERS', 'INVOICES', 'CRM_DASHBOARD',
+                  'CRM_ACTIVITIES', 'CRM_CAMPAIGNS', 'CRM_COMMUNICATION', 'CRM_AUTOMATION', 'CRM_INTEGRATIONS',
+                  'CRM_SETTINGS', 'CRM_OPPORTUNITIES', 'CRM_PIPELINES', 'CRM_TASKS', 'CRM_LEADS', 'CRM_ACCOUNTS',
+                  'CRM_CONTACTS', 'DELIVERY_CHALLANS', 'PROFORMA_INVOICES'
+                ];
+                if (CRM_FEATS.includes(normUpper) || CRM_FEATS.includes(upper)) {
+                  return entitled.includes(CANONICAL_MODULES.CRM);
+                }
+                const ACCOUNT_FEATS = [
+                  'CUSTOMERS', 'VENDORS', 'CHART_OF_ACCOUNTS', 'ACCOUNT_GROUPS', 'ACCOUNT_CATEGORIES',
+                  'ACCOUNTING_PERIODS', 'FISCAL_YEARS', 'EXPENSES', 'EXPENSE_CATEGORIES', 'EXPENSE_REQUESTS',
+                  'SALES_INVOICES', 'PURCHASE_INVOICES', 'PAYMENTS', 'PAYMENT_VOUCHERS', 'RECEIPT_VOUCHERS',
+                  'CREDIT_NOTES', 'DEBIT_NOTES', 'GL_JOURNALS', 'GL_JOURNAL_LINES', 'GST_MASTER', 'GST_SLABS',
+                  'BANK_ACCOUNTS', 'BANK_TRANSACTIONS', 'BANK_RECONCILIATION', 'BUDGET_HEADERS', 'BUDGET_LINES',
+                  'AUDIT_LOGS', 'REPORTS', 'ANALYTICS', 'SALES_TAXES', 'HSN_SAC'
+                ];
+                if (ACCOUNT_FEATS.includes(normUpper) || ACCOUNT_FEATS.includes(upper)) {
+                  return entitled.includes(CANONICAL_MODULES.ACCOUNT) || (normUpper === 'CUSTOMERS' || normUpper === 'AUDIT_LOGS' || normUpper === 'ANALYTICS' ? entitled.includes(CANONICAL_MODULES.CRM) : false);
+                }
+                const INVENTORY_FEATS = [
+                  'PRODUCTS', 'PRODUCT_CATEGORIES', 'PRODUCT_PRICES', 'PRODUCT_BATCHES', 'PRODUCT_SERIALS',
+                  'PRODUCT_UOMS', 'WAREHOUSES', 'WAREHOUSE_LOCATIONS', 'STOCK', 'STOCK_MOVEMENTS',
+                  'STOCK_TRANSFERS', 'STOCK_RESERVATIONS', 'STOCK_ADJUSTMENTS', 'OPENING_STOCK',
+                  'INVENTORY_VALUATION', 'INVENTORY_REPORTS', 'INVENTORY_POSTING', 'INVENTORY_SNAPSHOTS'
+                ];
+                if (INVENTORY_FEATS.includes(normUpper) || INVENTORY_FEATS.includes(upper)) {
+                  return entitled.includes(CANONICAL_MODULES.INVENTORY);
+                }
+                const WORKFLOW_FEATS = [
+                  'WORKFLOW_DEFINITIONS', 'WORKFLOW_TASKS', 'WORKFLOW_TRANSACTIONS', 'WORKFLOW_NOTIFICATIONS',
+                  'WORKFLOW_ATTACHMENTS', 'WORKFLOW_CALLBACKS', 'WORKFLOW_DOCUMENT_FLOWS', 'APPROVAL_REQUESTS',
+                  'APPROVALS'
+                ];
+                if (WORKFLOW_FEATS.includes(normUpper) || WORKFLOW_FEATS.includes(upper)) {
+                  return entitled.includes(CANONICAL_MODULES.WORKFLOW);
+                }
+                const PURCHASES_FEATS = [
+                  'PURCHASE_REQUISITIONS', 'PURCHASE_ORDERS', 'SUPPLIER_QUOTATIONS', 'GOODS_RECEIPTS',
+                  'PURCHASE_RETURNS', 'RFQS'
+                ];
+                if (PURCHASES_FEATS.includes(normUpper) || PURCHASES_FEATS.includes(upper)) {
+                  return entitled.includes(CANONICAL_MODULES.PURCHASES);
+                }
+                const SSO_FEATS = [
+                  'USER', 'ROLE', 'PERMISSION', 'FEATURE', 'MODULE', 'MODULE_ROUTE', 'PORTAL_ACCESS',
+                  'SESSION', 'ORGANIZATION', 'COMPANY', 'SUBSCRIPTION', 'SUBSCRIPTION_PLAN', 'BILLING',
+                  'PLATFORM_ADMIN', 'AUTH', 'SETTINGS', 'PROFILE', 'NOTIFICATIONS', 'USER_MANAGEMENT',
+                  'ROLE_MANAGEMENT', 'COMPANY_SUBSCRIPTION', 'ORGANIZATION_APPEARANCE', 'ORGANIZATION_PERMISSIONS',
+                  'ORGANIZATION_ROLE_TEMPLATES', 'ORGANIZATION_MEMBERS'
+                ];
+                if (SSO_FEATS.includes(normUpper) || SSO_FEATS.includes(upper)) {
+                  return true;
+                }
+                const featuresList = authContext?.features || [];
+                const matchedF = featuresList.find((f) => {
+                  const code = normalizeFeatureCode(String(f?.featureCode || f?.featureName || f?.code || '').trim().toUpperCase());
+                  return code === normUpper || code === upper;
+                });
+                if (matchedF) {
+                  const pMod = normalizeModuleName(matchedF.moduleName);
+                  if (pMod) return entitled.includes(pMod);
+                }
                 return entitled.length > 0;
               }
 

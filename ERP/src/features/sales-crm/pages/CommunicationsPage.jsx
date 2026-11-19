@@ -213,7 +213,7 @@ export default function CommunicationsPage() {
                     <button
                       type="submit"
                       disabled={isSending}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all active:scale-95"
+                      className="btn-primary inline-flex items-center gap-1.5 text-xs font-semibold"
                     >
                       <Send size={13} />
                       {isSending ? 'Sending...' : 'Send Message'}

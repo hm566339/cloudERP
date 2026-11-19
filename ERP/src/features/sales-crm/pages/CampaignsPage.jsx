@@ -149,7 +149,7 @@ export default function CampaignsPage() {
       >
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
+          className="btn-primary flex items-center gap-2 text-xs font-semibold"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>New Campaign</span>

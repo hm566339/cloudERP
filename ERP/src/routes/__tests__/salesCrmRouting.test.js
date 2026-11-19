@@ -4,8 +4,9 @@ import assert from 'node:assert/strict';
 // Import paths and sidebar configurations
 import PATHS from '../paths.js';
 import { CRM_SIDEBAR } from '../../layouts/CrmSidebarConfig.js';
-import { CANONICAL_MODULES } from '../../utils/moduleNormalization.js';
+import { CANONICAL_MODULES, buildAuthContext, canViewModule, hasModule, hasFeature, hasPermission, isOwnerUser } from '../../utils/moduleNormalization.js';
 import { buildDynamicSidebar } from '../../layouts/dynamicSidebarConfig.js';
+import { getAccessibleModuleKeys, normalizeModuleKey } from '../../utils/moduleAccess.js';
 
 describe('Sales & CRM End-to-End Routing & Dynamic Sidebar Test Suite', () => {
   const companyId = 'comp-101';
@@ -122,6 +123,108 @@ describe('Sales & CRM End-to-End Routing & Dynamic Sidebar Test Suite', () => {
     assert.equal(resolveCompanyRedirect('sales-crm/quotations', null), '/sales-crm/quotations');
     assert.equal(resolveCompanyRedirect('sales-crm/orders', null), '/sales-crm/orders');
     assert.equal(resolveCompanyRedirect('accounts/transactions/delivery-challans', null), '/accounts/transactions/delivery-challans');
+  });
+
+  it('4. Verifies OWNER role with currentCompany=null SSO payload resolves role, membership, and CRM module access', () => {
+    const ssoPayload = {
+      data: {
+        user: {
+          id: '07cf72c7-4a9c-44f7-a926-f2b1c0329a9e',
+          username: 'harshomohit4@gmail.com',
+          email: 'harshomohit4@gmail.com',
+          fullName: 'Rahul Sharma',
+        },
+        organization: {
+          id: 'f997d7d6-366b-4af7-a9f6-93e699a3f87c',
+          code: 'apex-global-enterprises',
+          name: 'Apex Global Enterprises',
+        },
+        currentCompany: null,
+        companies: [
+          {
+            id: 'd0efa9db-0672-44d3-9b07-8ccf5f42cc7c',
+            code: 'APEXINDIAP',
+            name: 'Apex India Pvt Ltd',
+            legalName: 'Apex India Private Limited',
+            active: true,
+            membership: {
+              id: 'e0c48076-3633-464e-a071-44df9ba2b70d',
+              status: 'ACTIVE',
+              role: {
+                id: 'a1e01260-5a35-48f1-aa27-e0236ab965ab',
+                name: 'OWNER',
+                status: true,
+              },
+              roles: [
+                {
+                  id: 'a1e01260-5a35-48f1-aa27-e0236ab965ab',
+                  name: 'OWNER',
+                  status: true,
+                },
+              ],
+            },
+            modules: [
+              { id: '1', name: 'ACCOUNT', code: 'account', active: true },
+              { id: '2', name: 'INVENTORY', code: 'inventory', active: true },
+              { id: '3', name: 'WORKFLOW', code: 'workflow', active: true },
+              { id: '4', name: 'CRM', code: 'crm', active: true },
+            ],
+          },
+        ],
+      },
+    };
+
+    const authContext = buildAuthContext(ssoPayload);
+    assert.equal(authContext.user.role, 'owner', 'User role must be normalized to owner');
+    assert.ok(isOwnerUser(authContext), 'isOwnerUser must be true for OWNER authContext');
+    assert.equal(authContext.membership?.memberType, 'OWNER', 'Membership memberType must be OWNER');
+    assert.equal(authContext.currentCompany?.id, 'd0efa9db-0672-44d3-9b07-8ccf5f42cc7c');
+    assert.ok(hasModule(authContext, 'CRM'), 'Must have CRM module');
+
+    // Route authorization checks for CRM routes
+    assert.ok(canViewModule(authContext, 'CRM'), 'Owner can view CRM module');
+    assert.ok(canViewModule(authContext, 'sales-crm'), 'Owner can view sales-crm alias');
+    assert.ok(canViewModule(authContext, 'LEADS'), 'Owner can view Leads route');
+    assert.ok(canViewModule(authContext, 'ACCOUNTS'), 'Owner can view Accounts route');
+    assert.ok(canViewModule(authContext, 'CONTACTS'), 'Owner can view Contacts route');
+    assert.ok(canViewModule(authContext, 'OPPORTUNITIES'), 'Owner can view Opportunities route');
+    assert.ok(canViewModule(authContext, 'PIPELINES'), 'Owner can view Pipelines route');
+    assert.ok(canViewModule(authContext, 'QUOTATIONS'), 'Owner can view Quotations route');
+    assert.ok(canViewModule(authContext, 'SALES_ORDERS'), 'Owner can view Sales Orders route');
+    assert.ok(canViewModule(authContext, 'SALES_INVOICES'), 'Owner can view Sales Invoices route');
+    assert.ok(canViewModule(authContext, 'CUSTOMERS'), 'Owner can view Customers route');
+    assert.ok(canViewModule(authContext, 'AUDIT_LOGS'), 'Owner can view Audit Logs route');
+    assert.ok(canViewModule(authContext, 'ANALYTICS'), 'Owner can view Analytics route');
+  });
+
+  it('5. Verifies accessibleModuleKeys in CompanyLayout harmonizes crm and sales-crm so navigation never triggers 403', () => {
+    const authModules = [
+      { id: '1', name: 'ACCOUNT', code: 'account', active: true },
+      { id: '2', name: 'INVENTORY', code: 'inventory', active: true },
+      { id: '3', name: 'WORKFLOW', code: 'workflow', active: true },
+      { id: '4', name: 'CRM', code: 'crm', active: true },
+    ];
+
+    const accessibleKeys = getAccessibleModuleKeys({
+      userRole: 'owner',
+      memberType: 'OWNER',
+      permissions: [],
+      companyModulesData: null,
+      companyId: 'd0efa9db-0672-44d3-9b07-8ccf5f42cc7c',
+      authModules,
+    });
+
+    assert.ok(accessibleKeys.includes('crm'), 'accessibleKeys must include crm');
+    assert.ok(accessibleKeys.includes('sales'), 'accessibleKeys must include sales (alias for sales-crm)');
+
+    // Simulate CompanyLayout pathname evaluation
+    const currentModuleKey1 = normalizeModuleKey('sales-crm');
+    assert.equal(currentModuleKey1, 'sales');
+    assert.ok(accessibleKeys.includes(currentModuleKey1), 'sales-crm URL segment must be allowed in accessibleKeys');
+
+    const currentModuleKey2 = normalizeModuleKey('crm');
+    assert.equal(currentModuleKey2, 'crm');
+    assert.ok(accessibleKeys.includes(currentModuleKey2), 'crm URL segment must be allowed in accessibleKeys');
   });
 });
 

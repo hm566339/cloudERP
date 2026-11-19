@@ -7,11 +7,13 @@ import {
   useCreateCrmAccountMutation,
 } from '../../../api/sales-crm/crm.api';
 
+const EMPTY_ARRAY = [];
+
 const toArray = (res) => {
   if (Array.isArray(res)) return res;
   if (Array.isArray(res?.data)) return res.data;
   if (Array.isArray(res?.data?.content)) return res.data.content;
-  return [];
+  return EMPTY_ARRAY;
 };
 
 export default function ContactFormModal({
@@ -19,7 +21,7 @@ export default function ContactFormModal({
   onClose,
   initialData = null,
   companyId,
-  accounts = [],
+  accounts = EMPTY_ARRAY,
   onSuccess,
 }) {
   const [formData, setFormData] = useState({
@@ -52,6 +54,8 @@ export default function ContactFormModal({
   const [createAccount, { isLoading: isCreatingAccount }] = useCreateCrmAccountMutation();
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (initialData) {
       setFormData({
         accountId: initialData.accountId || '',

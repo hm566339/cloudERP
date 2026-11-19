@@ -10,6 +10,7 @@ import {
   canWrite as checkCanWrite,
   canDelete as checkCanDelete,
   canViewModule as checkCanViewModule,
+  isOwnerUser,
   CANONICAL_MODULES,
 } from './moduleNormalization.js';
 
@@ -229,6 +230,7 @@ export function useRBAC() {
   }
 
   const isSuperAdmin = roleName === ROLES.SUPER_ADMIN;
+  const isOwner = roleName === ROLES.OWNER || authContext?.membership?.memberType === 'OWNER' || isOwnerUser(authContext);
 
   const accessMode = String(authContext?.accessMode || user?.accessMode || '').toUpperCase();
   const isBlocked = accessMode === 'BLOCKED';
@@ -236,7 +238,7 @@ export function useRBAC() {
 
   const canCreate = (mod = null) => {
     if (isBlocked || isReadOnly) return false;
-    if (isSuperAdmin) return true;
+    if (isSuperAdmin || isOwner) return true;
     if (mod) return checkHasPermission(authContext, mod, 'CREATE');
     const hasAnyWrite = (authContext.permissions || []).some(p => {
       const act = typeof p === 'string' ? p : (p.action || p.permissionCode || '');
@@ -247,7 +249,7 @@ export function useRBAC() {
 
   const canEdit = (mod = null) => {
     if (isBlocked || isReadOnly) return false;
-    if (isSuperAdmin) return true;
+    if (isSuperAdmin || isOwner) return true;
     if (mod) return checkHasPermission(authContext, mod, 'UPDATE');
     const hasAnyUpdate = (authContext.permissions || []).some(p => {
       const act = typeof p === 'string' ? p : (p.action || p.permissionCode || '');
@@ -258,7 +260,7 @@ export function useRBAC() {
 
   const canDelete = (mod = null) => {
     if (isBlocked || isReadOnly) return false;
-    if (isSuperAdmin) return true;
+    if (isSuperAdmin || isOwner) return true;
     if (mod) return checkCanDelete(authContext, mod);
     const hasAnyDelete = (authContext.permissions || []).some(p => {
       const act = typeof p === 'string' ? p : (p.action || p.permissionCode || '');
@@ -269,7 +271,7 @@ export function useRBAC() {
 
   const canApprove = (mod = null) => {
     if (isBlocked || isReadOnly) return false;
-    if (isSuperAdmin) return true;
+    if (isSuperAdmin || isOwner) return true;
     if (mod) return checkHasPermission(authContext, mod, 'APPROVE');
     const hasAnyApprove = (authContext.permissions || []).some(p => {
       const act = typeof p === 'string' ? p : (p.action || p.permissionCode || '');
@@ -318,7 +320,7 @@ export function useRBAC() {
     canDeleteAction: (feat, mod) => checkCanDelete(authContext, feat, mod),
 
     isSuperAdmin,
-    isOwner: roleName === ROLES.OWNER || authContext?.membership?.memberType === 'OWNER',
+    isOwner,
     isCompanyAdmin: roleName === ROLES.COMPANY_ADMIN,
     isFinanceManager: roleName === ROLES.FINANCE_MANAGER,
     isAccountant: roleName === ROLES.ACCOUNTANT,

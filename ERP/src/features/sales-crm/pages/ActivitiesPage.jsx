@@ -44,7 +44,7 @@ export default function ActivitiesPage() {
       >
         <button
           onClick={() => setIsLogOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-primary-500/20 active:scale-95"
+          className="btn-primary flex items-center gap-2 text-xs font-semibold"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Log Activity</span>
@@ -89,7 +89,7 @@ export default function ActivitiesPage() {
               <p className="text-xs text-zinc-500">Record phone calls, in-person meetings, and email threads to establish an audit trail.</p>
               <button
                 onClick={() => setIsLogOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
+                className="btn-primary inline-flex items-center gap-1.5 text-xs font-semibold"
               >
                 <Plus size={13} />
                 <span>Log First Interaction</span>

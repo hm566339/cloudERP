@@ -32,11 +32,13 @@ const DEFAULT_STATUSES = [
   { id: 'LOST', statusName: 'Lost Lead' },
 ];
 
+const EMPTY_ARRAY = [];
+
 const toArray = (res) => {
   if (Array.isArray(res)) return res;
   if (Array.isArray(res?.data)) return res.data;
   if (Array.isArray(res?.data?.content)) return res.data.content;
-  return [];
+  return EMPTY_ARRAY;
 };
 
 export default function LeadFormModal({
@@ -44,8 +46,8 @@ export default function LeadFormModal({
   onClose,
   initialData = null,
   companyId,
-  sources = [],
-  statuses = [],
+  sources = EMPTY_ARRAY,
+  statuses = EMPTY_ARRAY,
   onSuccess,
 }) {
   const [formData, setFormData] = useState({
@@ -85,6 +87,8 @@ export default function LeadFormModal({
   const [updateLead, { isLoading: isUpdating }] = useUpdateLeadMutation();
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (initialData) {
       setFormData({
         firstName: initialData.firstName || '',

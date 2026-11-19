@@ -112,8 +112,14 @@ export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
+      immutableCheck: {
+        warnAfter: 128,
+        ignoredPaths: ['baseApi'],
+      },
       serializableCheck: {
+        warnAfter: 128,
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        ignoredPaths: ['baseApi'],
       },
     }).concat(baseApi.middleware, companyChangeMiddleware, rtkQueryErrorLogger),
 })
