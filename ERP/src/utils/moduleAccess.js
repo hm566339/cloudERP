@@ -12,6 +12,7 @@ import {
   Layers,
   Globe,
 } from 'lucide-react';
+import { isOwnerUser } from './moduleNormalization.js';
 
 export const MODULE_DEFINITIONS = [
   { key: 'finance', label: 'Finance & Accounts', dashboardPath: 'accounts/dashboard' },
@@ -175,7 +176,7 @@ export function getCompanyModuleKeys(companyModulesData, companyId) {
   )]
 }
 
-export function getAccessibleModuleKeys({ userRole, memberType, permissions, companyModulesData, companyId, authModules = [] }) {
+export function getAccessibleModuleKeys({ userRole, memberType, permissions, companyModulesData, companyId, authModules = [], isOwner: isOwnerProp, authContext }) {
   const permissionKeys = getPermissionModuleKeys(permissions, userRole, memberType)
   const companyKeys = getCompanyModuleKeys(companyModulesData, companyId)
 
@@ -207,7 +208,12 @@ export function getAccessibleModuleKeys({ userRole, memberType, permissions, com
     combinedBackendKeys.push('purchases');
   }
 
-  const isOwner = memberType === 'OWNER' || String(userRole).toLowerCase() === 'owner';
+  const isOwner = Boolean(
+    isOwnerProp ||
+    memberType === 'OWNER' ||
+    String(userRole).toLowerCase() === 'owner' ||
+    (authContext && isOwnerUser(authContext))
+  );
 
   // If specific company assignments or active session modules exist, enforce company-level boundary
   if (combinedBackendKeys.length > 0) {

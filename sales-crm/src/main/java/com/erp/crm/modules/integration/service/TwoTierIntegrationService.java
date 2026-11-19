@@ -4,6 +4,7 @@ import com.erp.crm.modules.integration.dto.*;
 import com.erp.crm.modules.integration.enums.IntegrationProviderCode;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface TwoTierIntegrationService {
@@ -29,4 +30,12 @@ public interface TwoTierIntegrationService {
     List<TenantIntegrationDetailResponse> getTenantIntegrations(UUID companyId);
 
     TenantIntegrationDetailResponse getTenantIntegration(UUID id, UUID companyId);
+
+    // --- Facebook / Instagram Lead Ads Specialization ---
+    Map<String, Object> subscribeFacebookPage(String pageId, boolean subscribe, UUID companyId);
+
+    Map<String, Object> updateFacebookPageMapping(String pageId, java.util.Map<String, Object> mappingRequest,
+            UUID companyId);
+
+    OAuthCallbackResponse getFacebookAccountDetails(UUID companyId);
 }

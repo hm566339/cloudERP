@@ -21,6 +21,7 @@ import { persistor, resetStore } from '../app/store'
 import { baseApi } from '../api/common/baseApi'
 import { useGetCompanyModulesQuery } from '../api/sso'
 import { MODULE_DEFINITIONS, getAccessibleModuleKeys, getFirstAccessibleDashboardPath, normalizeModuleKey, getPermissionModuleKeys } from '../utils/moduleAccess'
+import { isOwnerUser as checkIsOwnerUser } from '../utils/moduleNormalization'
 import MarkLogo from '../components/common/MarkLogo'
 import AppFooter from '../components/common/AppFooter'
 
@@ -114,9 +115,18 @@ export default function CompanyLayout() {
 
   const authContext = useAppSelector(selectAuthContext);
   const membership = authContext?.membership;
-  const rawRole = effectiveUser?.role || 'employee';
+  const rawRole = effectiveUser?.role || authContext?.user?.role || 'employee';
   const userRole = String(Array.isArray(rawRole) ? (rawRole[0]?.name || rawRole[0]) : (rawRole?.name || rawRole)).toLowerCase();
-  const isOwnerUser = membership?.memberType === 'OWNER' || userRole === 'owner' || membership?.membershipType === 'OWNER';
+  const { canViewModule, isOwner: rbacIsOwner } = useRBAC()
+  const isOwnerUser = Boolean(
+    rbacIsOwner ||
+    checkIsOwnerUser(authContext) ||
+    checkIsOwnerUser(effectiveUser) ||
+    membership?.memberType === 'OWNER' ||
+    userRole === 'owner' ||
+    membership?.membershipType === 'OWNER' ||
+    (authContext?.companies && authContext.companies.some(c => c?.membership?.memberType === 'OWNER'))
+  );
   const canSwitchTenant =
     isOwnerUser ||
     userRole === 'super_admin' ||
@@ -135,7 +145,6 @@ export default function CompanyLayout() {
     { skip: skipCompanyModules }
   )
   const accessLoading = !skipCompanyModules && !companyModulesData && (companyModulesLoading || companyModulesFetching)
-  const { canViewModule } = useRBAC()
   const { buildPath } = useRoutePath()
 
   const effectiveCompanyId = companyId || selectedCompany?.id || authContext?.activeCompanyId || authContext?.currentCompany?.id || null;
@@ -148,12 +157,14 @@ export default function CompanyLayout() {
     : MODULE_DEFINITIONS.map(m => m.key).filter(k => canViewModule(k))
 
   const accessibleModuleKeys = getAccessibleModuleKeys({
-    userRole,
-    memberType: membership?.memberType,
+    userRole: isOwnerUser ? 'owner' : userRole,
+    memberType: isOwnerUser ? 'OWNER' : membership?.memberType,
     permissions: effectivePermissionKeys,
     companyModulesData,
     companyId: effectiveCompanyId,
     authModules: authContext?.modules,
+    isOwner: isOwnerUser,
+    authContext,
   })
 
   const sidebarLinks = useMemo(() => {
@@ -209,7 +220,7 @@ export default function CompanyLayout() {
       console.warn(`[RBAC] Access Denied for module: ${currentModuleKey}. Allowed:`, accessibleModuleKeys)
       navigate('/403', { replace: true })
     }
-  }, [accessLoading, accessibleModuleKeys, companyId, isSuperAdminGlobal, userRole, location.pathname, navigate])
+  }, [accessLoading, accessibleModuleKeys, companyId, isSuperAdminGlobal, userRole, isOwnerUser, location.pathname, navigate])
 
   const [logoutApi] = useLogoutApiMutation()
 

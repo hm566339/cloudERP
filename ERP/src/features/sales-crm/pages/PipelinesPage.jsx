@@ -29,20 +29,20 @@ export default function PipelinesPage() {
         description="Configure deal progression funnels, probability weights, and stage sequences"
       >
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => navigate(`${crmBase}/opportunities`)}
-            className="btn-secondary flex items-center gap-1.5 text-xs font-semibold"
+            icon={ArrowLeft}
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Opportunities Board</span>
-          </button>
-          <button
+            Opportunities Board
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => setIsCreateOpen(true)}
-            className="btn-primary flex items-center gap-2 text-xs font-semibold"
+            icon={Plus}
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Pipeline</span>
-          </button>
+            New Pipeline
+          </Button>
         </div>
       </PageHeader>
 
@@ -54,13 +54,13 @@ export default function PipelinesPage() {
             <Layers size={36} className="mx-auto text-zinc-400" />
             <p className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">No pipelines configured</p>
             <p className="text-xs text-zinc-500">Create a sales pipeline to structure stages and probabilities for your deals.</p>
-            <button
+            <Button
+              variant="primary"
               onClick={() => setIsCreateOpen(true)}
-              className="btn-primary inline-flex items-center gap-1.5 text-xs font-semibold"
+              icon={Plus}
             >
-              <Plus size={13} />
-              <span>Create First Pipeline</span>
-            </button>
+              Create First Pipeline
+            </Button>
           </div>
         ) : (
           pipelines.map((pipe) => (

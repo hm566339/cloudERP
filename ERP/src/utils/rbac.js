@@ -230,7 +230,7 @@ export function useRBAC() {
   }
 
   const isSuperAdmin = roleName === ROLES.SUPER_ADMIN;
-  const isOwner = roleName === ROLES.OWNER || authContext?.membership?.memberType === 'OWNER' || isOwnerUser(authContext);
+  const isOwner = roleName === ROLES.OWNER || authContext?.membership?.memberType === 'OWNER' || isOwnerUser(authContext) || isOwnerUser(user);
 
   const accessMode = String(authContext?.accessMode || user?.accessMode || '').toUpperCase();
   const isBlocked = accessMode === 'BLOCKED';
@@ -281,22 +281,27 @@ export function useRBAC() {
   };
 
   const canViewModule = (moduleName) => {
+    if (isSuperAdmin || isOwner) return true;
     return checkCanViewModule(authContext, moduleName);
   };
 
   const hasModule = (moduleName) => {
+    if (isSuperAdmin || isOwner) return true;
     return checkHasModule(authContext, moduleName);
   };
 
   const hasFeature = (featureName, moduleName) => {
+    if (isSuperAdmin || isOwner) return true;
     return checkHasFeature(authContext, featureName, moduleName);
   };
 
   const hasPermission = (featureName, action, moduleName) => {
+    if (isSuperAdmin || isOwner) return true;
     return checkHasPermission(authContext, featureName, action, moduleName);
   };
 
   const canRead = (featureName, moduleName) => {
+    if (isSuperAdmin || isOwner) return true;
     return checkCanRead(authContext, featureName, moduleName);
   };
 

@@ -5,6 +5,7 @@ import { selectSelectedCompany, setSelectedCompany } from '../features/company-m
 import { selectIsAuthenticated, selectCurrentUser, selectSessionStatus, selectAuthContext, setCredentials } from '../features/auth/authSlice';
 import { getCookie, clearLegacyAuthCookies } from '../utils/cookieHelper';
 import { parseJwt, extractRoleFromToken, useRBAC, normalizeModuleName, canAccess } from '../utils/rbac';
+import { isOwnerUser as checkIsOwnerUser } from '../utils/moduleNormalization';
 
 export default function ProtectedRoute({
   children,
@@ -30,7 +31,16 @@ export default function ProtectedRoute({
   const rawRole = user?.role || authContext?.user?.role || '';
   const userRole = typeof rawRole === 'object' ? (rawRole.name || '') : String(rawRole);
   const normalizedUserRole = userRole.toLowerCase().replace(/[\s_]/g, '');
-  const isOwnerUser = user?.membership?.memberType === 'OWNER' || authContext?.membership?.memberType === 'OWNER' || normalizedUserRole === 'owner';
+  const effectiveIsOwner = Boolean(
+    isOwner ||
+    checkIsOwnerUser(authContext) ||
+    checkIsOwnerUser(user) ||
+    user?.membership?.memberType === 'OWNER' ||
+    authContext?.membership?.memberType === 'OWNER' ||
+    normalizedUserRole === 'owner' ||
+    (authContext?.companies && authContext.companies.some(c => c?.membership?.memberType === 'OWNER'))
+  );
+  const isOwnerUser = effectiveIsOwner;
   const isSuperAdminUser = isSuperAdmin || normalizedUserRole === 'superadmin' || normalizedUserRole === 'systemadmin';
 
   // Specific routes that bypass company requirements
@@ -205,7 +215,7 @@ export default function ProtectedRoute({
   }
 
   // Required permissions check
-  if (requiredPermissions) {
+  if (requiredPermissions && !isSuperAdminUser && !effectiveIsOwner) {
     const permsToCheck = Array.isArray(requiredPermissions) ? requiredPermissions : [requiredPermissions];
     for (const perm of permsToCheck) {
       if (!canViewModule(perm)) {
@@ -215,7 +225,7 @@ export default function ProtectedRoute({
   }
 
   // Module access check: block access if user lacks the required module or feature
-  if (module && !isSuperAdmin && !isOwner && !canViewModule(module)) {
+  if (module && !isSuperAdmin && !effectiveIsOwner && !canViewModule(module)) {
     const normalizedModule = normalizeModuleName(module);
     const canAccessValue = canAccess(authContext, module);
     console.warn('[ProtectedRoute 403 Redirect]', {

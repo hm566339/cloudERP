@@ -256,5 +256,64 @@ describe('Sales & CRM End-to-End Routing & Dynamic Sidebar Test Suite', () => {
     assert.ok(accessibleKeys.includes('crm'), 'accessibleKeys must include crm for owner');
     assert.ok(accessibleKeys.includes('sales'), 'accessibleKeys must include sales for owner');
   });
+
+  it('7. Verifies OWNER with memberType only in companies array (no role property in payload) resolves role and allows CRM', () => {
+    // Exact payload shape from Request 1
+    const ssoPayloadWithoutRole = {
+      data: {
+        user: {
+          id: '07cf72c7-4a9c-44f7-a926-f2b1c0329a9e',
+          username: 'harshomohit4@gmail.com',
+          email: 'harshomohit4@gmail.com',
+          fullName: 'Rahul Sharma',
+          empId: null,
+          accountStatus: 'ACTIVE',
+          emailStatus: 'VERIFIED',
+        },
+        organization: {
+          id: 'f997d7d6-366b-4af7-a9f6-93e699a3f87c',
+          code: 'apex-global-enterprises',
+          name: 'Apex Global Enterprises',
+          status: 'ACTIVE',
+          accessMode: 'FULL',
+        },
+        currentCompany: null,
+        companies: [
+          {
+            id: 'd0efa9db-0672-44d3-9b07-8ccf5f42cc7c',
+            code: 'APEXINDIAP',
+            name: 'Apex India Pvt Ltd',
+            legalName: 'Apex India Private Limited',
+            active: true,
+            membership: {
+              id: 'e00787fa-2195-46eb-a5bf-ce8ec9be8165',
+              memberType: 'OWNER',
+            },
+          },
+        ],
+      },
+    };
+
+    const authContext = buildAuthContext(ssoPayloadWithoutRole);
+    assert.equal(authContext.user.role, 'owner', 'User role must resolve to owner from company membership');
+    assert.ok(isOwnerUser(authContext), 'isOwnerUser must be true for company memberType=OWNER');
+    assert.equal(authContext.membership?.memberType, 'OWNER');
+    assert.ok(canViewModule(authContext, 'CRM'), 'canViewModule must allow CRM');
+    assert.ok(canViewModule(authContext, 'LEADS'), 'canViewModule must allow LEADS');
+
+    const accessibleKeys = getAccessibleModuleKeys({
+      userRole: authContext.user.role,
+      memberType: authContext.membership?.memberType,
+      permissions: [],
+      companyModulesData: null,
+      companyId: 'd0efa9db-0672-44d3-9b07-8ccf5f42cc7c',
+      authModules: [],
+      isOwner: isOwnerUser(authContext),
+      authContext,
+    });
+
+    assert.ok(accessibleKeys.includes('crm'), 'accessibleKeys must include crm');
+    assert.ok(accessibleKeys.includes('sales'), 'accessibleKeys must include sales');
+  });
 });
 

@@ -349,13 +349,19 @@ export function normalizePermissionsList(rawPermissions) {
       }
     }
 
+    const isCompOwner = (c) => {
+      if (!c) return false;
+      const m = c.membership;
+      const mType = String(m?.memberType || m?.membershipType || '').toUpperCase();
+      if (mType === 'OWNER' || mType === 'ORGANIZATION_OWNER') return true;
+      const r = m?.role || m?.roles;
+      const rName = typeof r === 'string' ? r : (Array.isArray(r) ? r[0]?.name : r?.name);
+      return String(rName || '').toUpperCase().includes('OWNER');
+    };
+
     // Fallback: If targetCompany is still null and companiesList has entries
     if (!targetCompany && companiesList.length > 0) {
-      const ownerComp = companiesList.find((c) => {
-        const r = c?.membership?.role || c?.membership?.roles;
-        const rName = typeof r === 'string' ? r : (Array.isArray(r) ? r[0]?.name : r?.name);
-        return String(rName || '').toUpperCase().includes('OWNER');
-      });
+      const ownerComp = companiesList.find(isCompOwner);
       if (ownerComp) {
         targetCompany = ownerComp;
       } else if (companiesList.length === 1) {
@@ -367,13 +373,11 @@ export function normalizePermissionsList(rawPermissions) {
 
     // Extract company-specific role if present
     const compRole = targetCompany?.membership?.role || targetCompany?.membership?.roles;
-    const anyCompOwnerRole = companiesList.some((c) => {
-      const r = c?.membership?.role || c?.membership?.roles;
-      const rName = typeof r === 'string' ? r : (Array.isArray(r) ? r[0]?.name : r?.name);
-      return String(rName || '').toUpperCase().includes('OWNER');
-    });
-    const rawRole = compRole || data.roles || data.role || userCtx?.role || userCtx?.roles || (anyCompOwnerRole ? 'OWNER' : null);
-    const role = normalizeRole(rawRole);
+    const anyCompOwnerRole = companiesList.some(isCompOwner);
+    const orgIsOwner = String(data.organization?.memberType || data.membership?.memberType || '').toUpperCase() === 'OWNER';
+    const isTargetCompOwner = isCompOwner(targetCompany);
+    const rawRole = compRole || data.roles || data.role || userCtx?.role || userCtx?.roles || ((anyCompOwnerRole || orgIsOwner || isTargetCompOwner) ? 'OWNER' : null);
+    const role = normalizeRole(rawRole) || ((anyCompOwnerRole || orgIsOwner || isTargetCompOwner) ? 'owner' : null);
     const roles = targetCompany?.membership?.roles || (Array.isArray(data.roles) ? data.roles : (role ? [{ name: role, status: true }] : []));
 
     // Extract company-specific modules
@@ -435,7 +439,7 @@ export function normalizePermissionsList(rawPermissions) {
               }
 
               const rawMembership = data.membership || targetCompany?.membership || (companiesList.find(c => c?.membership)?.membership) || null;
-              const isOwnerRole = role === 'owner' || anyCompOwnerRole || String(compRole?.name || compRole || '').toUpperCase().includes('OWNER');
+              const isOwnerRole = role === 'owner' || anyCompOwnerRole || orgIsOwner || isTargetCompOwner || String(compRole?.name || compRole || '').toUpperCase().includes('OWNER');
               let resolvedMembership = null;
               if (rawMembership) {
                 const mRoleName = String(rawMembership?.role?.name || rawMembership?.role || rawMembership?.memberType || rawRole || '').toUpperCase();
@@ -496,6 +500,22 @@ export function normalizePermissionsList(rawPermissions) {
               }
               const memberType = String(ctx?.membership?.memberType || ctx?.membership?.membershipType || user?.membership?.memberType || '').trim().toUpperCase();
               if (memberType === 'OWNER' || memberType === 'ORGANIZATION_OWNER') {
+                return true;
+              }
+              // Check currentCompany or targetCompany membership
+              const curCompMemberType = String(ctx?.currentCompany?.membership?.memberType || ctx?.currentCompany?.membership?.membershipType || '').trim().toUpperCase();
+              if (curCompMemberType === 'OWNER' || curCompMemberType === 'ORGANIZATION_OWNER') {
+                return true;
+              }
+              // Check any company in companies list
+              const compList = Array.isArray(ctx?.companies) ? ctx.companies : (Array.isArray(user?.companies) ? user.companies : []);
+              if (compList.some((c) => {
+                const mType = String(c?.membership?.memberType || c?.membership?.membershipType || '').trim().toUpperCase();
+                if (mType === 'OWNER' || mType === 'ORGANIZATION_OWNER') return true;
+                const r = c?.membership?.role || c?.membership?.roles;
+                const rName = typeof r === 'string' ? r : (Array.isArray(r) ? r[0]?.name : r?.name);
+                return String(rName || '').toUpperCase().includes('OWNER');
+              })) {
                 return true;
               }
               const rolesList = ctx?.roles || user?.roles;

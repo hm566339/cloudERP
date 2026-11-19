@@ -15,6 +15,9 @@ public class OAuthCallbackResponse {
 
     private boolean success;
     private String userAccessToken;
+    private String facebookUserId;
+    private String facebookUserName;
+    private java.util.UUID integrationId;
     private List<FacebookPageDto> pages;
     private String message;
 
@@ -25,7 +28,10 @@ public class OAuthCallbackResponse {
     public static class FacebookPageDto {
         private String pageId;
         private String pageName;
+        private String category;
         private String pageAccessToken;
+        private Boolean isSyncEnabled;
+        private String leadPoolId;
         private List<FacebookFormDto> forms;
     }
 
@@ -37,5 +43,7 @@ public class OAuthCallbackResponse {
         private String formId;
         private String formName;
         private String status;
+        private String leadPoolId;
+        private Boolean autoQualify;
     }
 }

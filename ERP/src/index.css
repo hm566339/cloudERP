@@ -353,8 +353,8 @@
     /* Using specific heights and consistent padding. No exaggerated shadows. */
     .btn-primary {
       @apply inline-flex items-center justify-center gap-2 px-4 h-8 select-none;
-      background-color: var(--color-primary);
-      color: var(--color-primary-text, var(--primary-foreground, white));
+      background-color: var(--color-primary) !important;
+      color: var(--color-primary-text, var(--primary-foreground, #FFFFFF)) !important;
       font-size: var(--text-base);
       /* 13px */
       font-weight: 500;
@@ -364,11 +364,25 @@
     }
 
     .btn-primary:hover:not(:disabled) {
-      background-color: var(--color-primary-hover);
+      background-color: var(--color-primary-hover) !important;
     }
 
     .btn-primary:active:not(:disabled) {
+      background-color: var(--color-primary-active, var(--color-primary-hover)) !important;
       transform: scale(0.98);
+    }
+
+    .dark .btn-primary {
+      background-color: var(--color-primary) !important;
+      color: var(--color-primary-text, #101411) !important;
+    }
+
+    .dark .btn-primary:hover:not(:disabled) {
+      background-color: var(--color-primary-hover) !important;
+    }
+
+    .dark .btn-primary:active:not(:disabled) {
+      background-color: var(--color-primary-active, var(--color-primary-hover)) !important;
     }
 
     .btn-primary:focus-visible {

@@ -207,20 +207,20 @@ export default function OpportunitiesPage() {
         description="Visual deal progression, Kanban pipeline forecasting, and revenue pipeline"
       >
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => navigate(`${crmBase}/pipelines`)}
-            className="btn-secondary flex items-center gap-1.5 text-xs font-semibold"
+            icon={Layers}
           >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Configure Pipelines</span>
-          </button>
-          <button
+            Configure Pipelines
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => setIsCreateOpen(true)}
-            className="btn-primary flex items-center gap-2 text-xs font-semibold"
+            icon={Plus}
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Opportunity</span>
-          </button>
+            New Opportunity
+          </Button>
         </div>
       </PageHeader>
 
