@@ -26,13 +26,13 @@ spring:
         stringtype: unspecified
 
   jpa:
-    show-sql: false
+    show-sql: true
     hibernate:
       ddl-auto: create
     defer-datasource-initialization: true
     properties:
       hibernate:
-        format_sql: false
+        format_sql: true
 
   flyway:
     enabled: ${FLYWAY_ENABLED:true}
