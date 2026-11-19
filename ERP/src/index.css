@@ -354,7 +354,7 @@
     .btn-primary {
       @apply inline-flex items-center justify-center gap-2 px-4 h-8 select-none;
       background-color: var(--color-primary);
-      color: white;
+      color: var(--color-primary-text, var(--primary-foreground, white));
       font-size: var(--text-base);
       /* 13px */
       font-weight: 500;

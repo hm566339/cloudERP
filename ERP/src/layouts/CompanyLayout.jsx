@@ -189,8 +189,8 @@ export default function CompanyLayout() {
     if (isSuperAdminGlobal || !companyId) return
     if (accessLoading) return
 
-    // Super admins at platform level bypass company module guard
-    if (userRole === 'super_admin') return
+    // Super admins and organization/company owners bypass company module guard
+    if (userRole === 'super_admin' || isOwnerUser) return
 
     const pathSegments = location.pathname.split('/').filter(Boolean)
     if (pathSegments.length < 3) return

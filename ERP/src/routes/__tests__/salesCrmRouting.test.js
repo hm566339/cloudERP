@@ -226,5 +226,35 @@ describe('Sales & CRM End-to-End Routing & Dynamic Sidebar Test Suite', () => {
     assert.equal(currentModuleKey2, 'crm');
     assert.ok(accessibleKeys.includes(currentModuleKey2), 'crm URL segment must be allowed in accessibleKeys');
   });
+
+  it('6. Verifies OWNER role with empty modules list is never blocked by canViewModule or getAccessibleModuleKeys', () => {
+    const ownerAuthContext = {
+      user: {
+        id: 'user-owner-1',
+        role: 'owner',
+      },
+      membership: {
+        memberType: 'OWNER',
+        status: 'ACTIVE',
+      },
+      modules: [], // empty list from unprovisioned company
+      permissions: [],
+    };
+
+    assert.ok(canViewModule(ownerAuthContext, 'CRM'), 'canViewModule must allow OWNER even with empty modules list');
+    assert.ok(canViewModule(ownerAuthContext, 'LEADS'), 'canViewModule must allow LEADS for OWNER');
+
+    const accessibleKeys = getAccessibleModuleKeys({
+      userRole: 'owner',
+      memberType: 'OWNER',
+      permissions: [],
+      companyModulesData: null,
+      companyId: 'comp-123',
+      authModules: [],
+    });
+
+    assert.ok(accessibleKeys.includes('crm'), 'accessibleKeys must include crm for owner');
+    assert.ok(accessibleKeys.includes('sales'), 'accessibleKeys must include sales for owner');
+  });
 });
 

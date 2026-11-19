@@ -471,6 +471,8 @@ export function applyLandingSageTheme(overrideMode = 'light') {
   root.style.setProperty('--color-sidebar-hover-bg', palette.sidebarHover);
   root.style.setProperty('--color-sidebar-active-bg', palette.sidebarActiveBg || palette.primary);
   root.style.setProperty('--color-sidebar-active-text', palette.sidebarActiveText || '#FFFFFF');
+  root.style.setProperty('--color-primary-text', isDark ? (palette.sidebarActiveText || '#101411') : '#FFFFFF');
+  root.style.setProperty('--primary-foreground', isDark ? (palette.sidebarActiveText || '#101411') : '#FFFFFF');
   root.style.setProperty('--color-sidebar-text', palette.textSecondary);
   root.style.setProperty('--ring', palette.focusRing || 'rgba(46, 61, 40, 0.18)');
   root.style.setProperty('--color-input-bg', isDark ? palette.surface2 : '#FFFFFF');
@@ -564,6 +566,8 @@ export function applyAppearance(settings, orgId = null) {
       root.style.setProperty('--color-sidebar-hover-bg', palette.sidebarHover || palette.sidebarHoverBg);
       root.style.setProperty('--color-sidebar-active-bg', palette.sidebarActiveBg);
       root.style.setProperty('--color-sidebar-active-text', palette.sidebarActiveText);
+      root.style.setProperty('--color-primary-text', isDark ? (palette.sidebarActiveText || '#101411') : '#FFFFFF');
+      root.style.setProperty('--primary-foreground', isDark ? (palette.sidebarActiveText || '#101411') : '#FFFFFF');
       root.style.setProperty('--color-sidebar-text', palette.textSecondary);
       root.style.setProperty('--ring', palette.focusRing);
       root.style.setProperty('--color-input-bg', isDark ? palette.surface2 : '#FFFFFF');

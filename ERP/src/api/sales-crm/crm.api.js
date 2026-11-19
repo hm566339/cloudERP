@@ -514,8 +514,15 @@ export const crmApiSlice = baseApi.injectEndpoints({
     }),
 
     // -------------------------------------------------------------------------
-    // 8. Integrations (/api/crm/integrations)
+    // 8. Integrations (/api/crm/integrations & /api/admin/integrations)
     // -------------------------------------------------------------------------
+    getCrmAvailableProviders: builder.query({
+      query: () => ({
+        url: '/api/crm/integrations/available',
+      }),
+      providesTags: ['CRM_INTEGRATION_PROVIDERS'],
+    }),
+
     getCrmIntegrationChannels: builder.query({
       query: () => ({
         url: '/api/crm/integrations/channels',
@@ -531,6 +538,16 @@ export const crmApiSlice = baseApi.injectEndpoints({
       providesTags: ['CRM_INTEGRATIONS'],
     }),
 
+    connectCrmTenantIntegration: builder.mutation({
+      query: ({ data, companyId }) => ({
+        url: '/api/crm/integrations/connect',
+        method: 'POST',
+        data: { data },
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_INTEGRATIONS'],
+    }),
+
     createCrmTenantIntegration: builder.mutation({
       query: ({ data, companyId }) => ({
         url: '/api/crm/integrations',
@@ -541,6 +558,38 @@ export const crmApiSlice = baseApi.injectEndpoints({
       invalidatesTags: ['CRM_INTEGRATIONS'],
     }),
 
+    disconnectCrmTenantIntegration: builder.mutation({
+      query: ({ id, companyId }) => ({
+        url: `/api/crm/integrations/${id}`,
+        method: 'DELETE',
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_INTEGRATIONS'],
+    }),
+
+    testCrmIntegrationConnection: builder.mutation({
+      query: (data) => ({
+        url: '/api/crm/integrations/test-connection',
+        method: 'POST',
+        data: { data },
+      }),
+    }),
+
+    getFacebookOAuthAuthorizeUrl: builder.query({
+      query: (params) => ({
+        url: '/api/crm/integrations/oauth/FACEBOOK/authorize',
+        params,
+      }),
+    }),
+
+    handleFacebookOAuthCallback: builder.mutation({
+      query: (data) => ({
+        url: '/api/crm/integrations/oauth/FACEBOOK/callback',
+        method: 'POST',
+        data: { data },
+      }),
+    }),
+
     triggerCrmIntegrationSync: builder.mutation({
       query: ({ id, companyId }) => ({
         url: `/api/crm/integrations/${id}/sync`,
@@ -548,6 +597,22 @@ export const crmApiSlice = baseApi.injectEndpoints({
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       invalidatesTags: ['CRM_INTEGRATIONS'],
+    }),
+
+    getAdminIntegrationProviders: builder.query({
+      query: () => ({
+        url: '/api/admin/integrations/providers',
+      }),
+      providesTags: ['ADMIN_INTEGRATION_PROVIDERS'],
+    }),
+
+    updateAdminIntegrationProvider: builder.mutation({
+      query: ({ code, data }) => ({
+        url: `/api/admin/integrations/providers/${code}`,
+        method: 'PUT',
+        data: { data },
+      }),
+      invalidatesTags: ['ADMIN_INTEGRATION_PROVIDERS', 'CRM_INTEGRATION_PROVIDERS'],
     }),
 
     // -------------------------------------------------------------------------
@@ -705,10 +770,19 @@ export const {
   useGetCrmCampaignAttributionQuery,
 
   // Integrations
+  useGetCrmAvailableProvidersQuery,
   useGetCrmIntegrationChannelsQuery,
   useGetCrmTenantIntegrationsQuery,
+  useConnectCrmTenantIntegrationMutation,
   useCreateCrmTenantIntegrationMutation,
+  useDisconnectCrmTenantIntegrationMutation,
+  useTestCrmIntegrationConnectionMutation,
+  useGetFacebookOAuthAuthorizeUrlQuery,
+  useLazyGetFacebookOAuthAuthorizeUrlQuery,
+  useHandleFacebookOAuthCallbackMutation,
   useTriggerCrmIntegrationSyncMutation,
+  useGetAdminIntegrationProvidersQuery,
+  useUpdateAdminIntegrationProviderMutation,
 
   // Dashboard & Settings
   useGetCrmDashboardQuery,

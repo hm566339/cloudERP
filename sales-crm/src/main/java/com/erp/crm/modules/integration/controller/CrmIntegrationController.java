@@ -2,11 +2,12 @@ package com.erp.crm.modules.integration.controller;
 
 import com.erp.crm.common.dto.request.ApiRequest;
 import com.erp.crm.common.dto.response.ApiResponse;
-import com.erp.crm.modules.integration.dto.TenantIntegrationRequest;
-import com.erp.crm.modules.integration.dto.TenantIntegrationResponse;
-import com.erp.crm.modules.integration.dto.WebhookAckResponse;
+import com.erp.crm.modules.integration.dto.*;
 import com.erp.crm.modules.integration.entity.CrmIntegrationChannel;
+import com.erp.crm.modules.integration.enums.IntegrationProviderCode;
+import com.erp.crm.modules.integration.enums.TenantIntegrationStatus;
 import com.erp.crm.modules.integration.service.CrmIntegrationService;
+import com.erp.crm.modules.integration.service.TwoTierIntegrationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,10 +21,112 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/crm/integrations")
 @RequiredArgsConstructor
-@Tag(name = "Integration & Ingestion", description = "Endpoints for Marketplace Connectors (IndiaMART, TradeIndia, Meta Ads) & Inbound Webhooks")
+@Tag(name = "Integration & Ingestion", description = "2-Tier Multi-Tenant Marketplace Connectors (Facebook, IndiaMART, TradeIndia, Custom Webhook)")
 public class CrmIntegrationController {
 
     private final CrmIntegrationService integrationService;
+    private final TwoTierIntegrationService twoTierIntegrationService;
+
+    // =========================================================================
+    // LAYER 2: AUTHORIZED TENANT USER ENDPOINTS
+    // =========================================================================
+
+    @GetMapping("/available")
+    @Operation(summary = "Authorized User: List Enabled Integration Providers (NEVER exposes secrets)")
+    public ResponseEntity<ApiResponse<List<AvailableProviderResponse>>> getAvailableProviders() {
+        List<AvailableProviderResponse> list = twoTierIntegrationService.listAvailableProviders();
+        return ResponseEntity.ok(ApiResponse.success(list));
+    }
+
+    @GetMapping("/oauth/{providerCode}/authorize")
+    @Operation(summary = "Authorized User: Get OAuth2 Authorization URL for Provider (e.g. Facebook)")
+    public ResponseEntity<ApiResponse<Map<String, String>>> getOAuthAuthorizeUrl(
+            @PathVariable IntegrationProviderCode providerCode,
+            @RequestParam(required = false) String redirectUri) {
+        String url = twoTierIntegrationService.getOAuthAuthorizeUrl(providerCode, redirectUri);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("authorizeUrl", url)));
+    }
+
+    @PostMapping("/oauth/{providerCode}/callback")
+    @Operation(summary = "Authorized User: Handle OAuth2 Callback and Retrieve Facebook Pages/Lead Forms")
+    public ResponseEntity<ApiResponse<OAuthCallbackResponse>> handleOAuthCallback(
+            @PathVariable IntegrationProviderCode providerCode,
+            @RequestBody @Valid ApiRequest<OAuthCallbackRequest> request) {
+        OAuthCallbackRequest data = request != null && request.getData() != null
+                ? request.getData()
+                : new OAuthCallbackRequest();
+        OAuthCallbackResponse response = twoTierIntegrationService.handleOAuthCallback(providerCode, data);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/test-connection")
+    @Operation(summary = "Authorized User: Validate Provider Credentials (e.g. IndiaMART CRM key) Before Saving")
+    public ResponseEntity<ApiResponse<ConnectionTestResponse>> testConnection(
+            @RequestBody @Valid ApiRequest<ConnectionTestRequest> request) {
+        ConnectionTestRequest data = request != null && request.getData() != null
+                ? request.getData()
+                : new ConnectionTestRequest();
+        ConnectionTestResponse response = twoTierIntegrationService.testConnection(data);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/connect")
+    @Operation(summary = "Authorized User: Connect Tenant Integration Channel with Encrypted Credentials & Routing")
+    public ResponseEntity<ApiResponse<TenantIntegrationDetailResponse>> connectIntegration(
+            @RequestBody @Valid ApiRequest<TenantIntegrationConnectRequest> request,
+            @RequestParam(required = false) UUID companyId) {
+        TenantIntegrationConnectRequest data = request != null && request.getData() != null
+                ? request.getData()
+                : new TenantIntegrationConnectRequest();
+        TenantIntegrationDetailResponse response = twoTierIntegrationService.connect(data, companyId);
+        return ResponseEntity.ok(ApiResponse.success(response, "Integration connected successfully"));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Authorized User: Disconnect / Deactivate Tenant Integration")
+    public ResponseEntity<ApiResponse<Void>> disconnectIntegration(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId) {
+        twoTierIntegrationService.disconnect(id, companyId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Integration disconnected successfully"));
+    }
+
+    @GetMapping
+    @Operation(summary = "List Tenant Active Integrations")
+    public ResponseEntity<ApiResponse<List<TenantIntegrationDetailResponse>>> getTenantIntegrations(
+            @RequestParam(required = false) UUID companyId) {
+        List<TenantIntegrationDetailResponse> list = twoTierIntegrationService.getTenantIntegrations(companyId);
+        if (list.isEmpty()) {
+            List<TenantIntegrationResponse> legacy = integrationService.getTenantIntegrations(companyId);
+            if (!legacy.isEmpty()) {
+                List<TenantIntegrationDetailResponse> converted = legacy.stream().map(l -> TenantIntegrationDetailResponse.builder()
+                        .id(l.getId())
+                        .tenantId(l.getCompanyId())
+                        .integrationName(l.getConnectionName())
+                        .status(TenantIntegrationStatus.CONNECTED)
+                        .webhookSlug(l.getWebhookSlug())
+                        .webhookUrl(l.getWebhookUrl())
+                        .lastSyncedAt(l.getLastSyncAt())
+                        .createdAt(l.getCreatedAt())
+                        .build()).toList();
+                return ResponseEntity.ok(ApiResponse.success(converted));
+            }
+        }
+        return ResponseEntity.ok(ApiResponse.success(list));
+    }
+
+    @PostMapping
+    @Operation(summary = "Create / Connect Tenant Integration (Legacy Endpoint)")
+    public ResponseEntity<ApiResponse<TenantIntegrationResponse>> createTenantIntegration(
+            @RequestBody @Valid ApiRequest<TenantIntegrationRequest> apiRequest,
+            @RequestParam(required = false) UUID companyId) {
+        TenantIntegrationResponse response = integrationService.createTenantIntegration(apiRequest.getData(), companyId);
+        return ResponseEntity.ok(ApiResponse.success(response, "Integration created successfully"));
+    }
+
+    // =========================================================================
+    // PUBLIC INBOUND WEBHOOK LISTENERS & SYNC TRIGGER
+    // =========================================================================
 
     @GetMapping(value = "/webhook/{slug}", produces = org.springframework.http.MediaType.TEXT_PLAIN_VALUE)
     @Operation(summary = "Meta Ads / Webhook Verification Handshake (hub.challenge)")
@@ -67,23 +170,6 @@ public class CrmIntegrationController {
         return ResponseEntity.ok(ApiResponse.success(list));
     }
 
-    @GetMapping
-    @Operation(summary = "List Tenant Active Integrations")
-    public ResponseEntity<ApiResponse<List<TenantIntegrationResponse>>> getTenantIntegrations(
-            @RequestParam(required = false) UUID companyId) {
-        List<TenantIntegrationResponse> list = integrationService.getTenantIntegrations(companyId);
-        return ResponseEntity.ok(ApiResponse.success(list));
-    }
-
-    @PostMapping
-    @Operation(summary = "Create / Connect Tenant Integration")
-    public ResponseEntity<ApiResponse<TenantIntegrationResponse>> createTenantIntegration(
-            @RequestBody @Valid ApiRequest<TenantIntegrationRequest> apiRequest,
-            @RequestParam(required = false) UUID companyId) {
-        TenantIntegrationResponse response = integrationService.createTenantIntegration(apiRequest.getData(), companyId);
-        return ResponseEntity.ok(ApiResponse.success(response, "Integration created successfully"));
-    }
-
     @PostMapping("/{id}/sync")
     @Operation(summary = "Trigger Manual Pull Sync for Polling Channels")
     public ResponseEntity<ApiResponse<com.erp.crm.modules.integration.dto.SyncTriggerResponse>> triggerSync(
@@ -93,4 +179,3 @@ public class CrmIntegrationController {
         return ResponseEntity.ok(ApiResponse.success(response, "Sync triggered successfully"));
     }
 }
-

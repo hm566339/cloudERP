@@ -61,6 +61,9 @@ public class SecurityConfig {
                                 "/api/inventory/auth/**")
                         .permitAll()
 
+                        // SystemAdmin APIs (Global Providers & Settings)
+                        .requestMatchers("/api/admin/**").hasRole("SYSTEM_ADMIN")
+
                         // Dynamic SSO-only authorization (features + active+allowed permissions)
                         .requestMatchers("/api/crm/**").access(ssoAuthorizationManager)
 

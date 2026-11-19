@@ -22,7 +22,7 @@ export default function ProtectedRoute({
   const location = useLocation();
   const { companyId } = useParams();
   const dispatch = useAppDispatch();
-  const { canViewModule, isSuperAdmin } = useRBAC();
+  const { canViewModule, isSuperAdmin, isOwner } = useRBAC();
 
   const isTenantLocked = !!user?.companyCode || !!user?.companyId;
   const lockedCompanyId = user?.companyCode || user?.companyId;
@@ -215,7 +215,7 @@ export default function ProtectedRoute({
   }
 
   // Module access check: block access if user lacks the required module or feature
-  if (module && !isSuperAdmin && !canViewModule(module)) {
+  if (module && !isSuperAdmin && !isOwner && !canViewModule(module)) {
     const normalizedModule = normalizeModuleName(module);
     const canAccessValue = canAccess(authContext, module);
     console.warn('[ProtectedRoute 403 Redirect]', {

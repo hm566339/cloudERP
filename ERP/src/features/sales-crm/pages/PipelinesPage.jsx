@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Layers, Plus, CheckCircle2, ChevronRight, ArrowLeft } from 'lucide-react';
 import PageHeader from '../../../components/common/PageHeader';
+import Button from '../../../components/common/Button';
 import { useGetCrmPipelinesQuery } from '../../../api/sales-crm/crm.api';
 import PipelineFormModal from '../components/PipelineFormModal';
 

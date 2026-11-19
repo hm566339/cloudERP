@@ -558,8 +558,8 @@ export function normalizePermissionsList(rawPermissions) {
             export function getEntitledModules(authContextOrModules) {
               if (!authContextOrModules) return [];
 
-              // Super admin preserves platform-wide canonical modules
-              if (isSystemAdminUser(authContextOrModules)) {
+              // Super admin and Owner preserve platform-wide canonical modules
+              if (isSystemAdminUser(authContextOrModules) || isOwnerUser(authContextOrModules)) {
                 return Object.values(CANONICAL_MODULES);
               }
 
@@ -1005,7 +1005,7 @@ export function normalizePermissionsList(rawPermissions) {
              */
             export function canViewModule(authContext, moduleOrFeature) {
               if (!moduleOrFeature) return false;
-              if (isSystemAdminUser(authContext)) return true;
+              if (isSystemAdminUser(authContext) || isOwnerUser(authContext)) return true;
 
               const str = String(moduleOrFeature).trim();
               const lower = str.toLowerCase();

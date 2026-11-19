@@ -211,7 +211,10 @@ export function getAccessibleModuleKeys({ userRole, memberType, permissions, com
 
   // If specific company assignments or active session modules exist, enforce company-level boundary
   if (combinedBackendKeys.length > 0) {
-    if (isOwner || userRole === 'super_admin' || userRole === 'company_admin') {
+    if (isOwner || userRole === 'super_admin') {
+      return [...new Set([...MODULE_DEFINITIONS.map((m) => m.key), ...combinedBackendKeys, ...permissionKeys])];
+    }
+    if (userRole === 'company_admin') {
       return combinedBackendKeys;
     }
     return combinedBackendKeys.filter((key) => permissionKeys.includes(key));
