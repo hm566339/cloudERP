@@ -94,6 +94,21 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         }
     }
 
+    private int httpDelete(String urlString, int timeoutSeconds) {
+        try {
+            java.net.URL url = java.net.URI.create(urlString).toURL();
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("DELETE");
+            conn.setConnectTimeout(timeoutSeconds * 1000);
+            conn.setReadTimeout(timeoutSeconds * 1000);
+            conn.connect();
+            return conn.getResponseCode();
+        } catch (Exception e) {
+            log.warn("HTTP DELETE [{}] failed: {}", urlString, e.getMessage());
+            return 500;
+        }
+    }
+
     // =========================================================================
     // RBAC PERMISSION GUARDS
     // =========================================================================
@@ -269,7 +284,7 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                 : String.valueOf(config.getOrDefault("redirectUri", publicBaseUrl + "/erp/sales-crm/integrations"));
 
         String state = UUID.randomUUID().toString();
-        String scope = "pages_show_list,leads_retrieval,pages_read_engagement,pages_manage_ads";
+        String scope = "leads_retrieval,pages_show_list,pages_read_engagement,pages_manage_metadata,business_management";
 
         return String.format(
                 "https://www.facebook.com/v19.0/dialog/oauth?client_id=%s&redirect_uri=%s&scope=%s&response_type=code&state=%s",
@@ -731,5 +746,186 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         if (input == null) return "wh-" + UUID.randomUUID().toString().substring(0, 8);
         String s = input.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
         return s.isBlank() ? "wh-" + UUID.randomUUID().toString().substring(0, 8) : s;
+    }
+
+    // =========================================================================
+    // FACEBOOK / INSTAGRAM LEAD ADS SPECIALIZED MANAGEMENT
+    // =========================================================================
+
+    @Override
+    @Transactional
+    public Map<String, Object> subscribeFacebookPage(String pageId, boolean subscribe, UUID companyId) {
+        validateTenantIntegrationManage();
+        UUID tenantId = CurrentUserContext.resolveCompanyId(companyId);
+
+        TenantIntegrationEntity entity = tenantIntegrationRepository.findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(tenantId)
+                .stream()
+                .filter(e -> e.getProviderCode() == IntegrationProviderCode.FACEBOOK)
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Facebook integration not found for company: " + tenantId));
+
+        Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
+        Object pagesObj = creds.get("pages");
+        String pageAccessToken = null;
+        List<Map<String, Object>> pagesList = new ArrayList<>();
+
+        if (pagesObj instanceof List<?> list) {
+            for (Object item : list) {
+                if (item instanceof Map<?, ?> mapItem) {
+                    Map<String, Object> m = new HashMap<>();
+                    mapItem.forEach((k, v) -> m.put(String.valueOf(k), v));
+                    if (pageId != null && pageId.equals(String.valueOf(m.get("pageId")))) {
+                        m.put("isSyncEnabled", subscribe);
+                        pageAccessToken = String.valueOf(m.get("pageAccessToken"));
+                    }
+                    pagesList.add(m);
+                }
+            }
+        }
+
+        if (pageAccessToken != null && !pageAccessToken.startsWith("mock_") && !pageAccessToken.isBlank()) {
+            try {
+                String subUrl = String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps?subscribed_fields=leadgen&access_token=%s",
+                        pageId, URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
+                if (subscribe) {
+                    httpPost(subUrl, 8);
+                } else {
+                    httpDelete(String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps?access_token=%s",
+                            pageId, URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8)), 8);
+                }
+            } catch (Exception e) {
+                log.warn("Meta Webhook Subscription API call for page {} returned warning: {}", pageId, e.getMessage());
+            }
+        }
+
+        creds.put("pages", pagesList);
+        try {
+            entity.setCredentialsJson(objectMapper.writeValueAsString(creds));
+        } catch (Exception e) {
+            log.error("Failed to serialize credentials: {}", e.getMessage());
+        }
+        tenantIntegrationRepository.save(entity);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("pageId", pageId);
+        result.put("subscribed", subscribe);
+        result.put("success", true);
+        result.put("message", subscribe ? "Subscribed page to leadgen webhooks" : "Unsubscribed page from leadgen webhooks");
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> updateFacebookPageMapping(String pageId, Map<String, Object> mappingRequest, UUID companyId) {
+        validateTenantIntegrationManage();
+        UUID tenantId = CurrentUserContext.resolveCompanyId(companyId);
+
+        TenantIntegrationEntity entity = tenantIntegrationRepository.findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(tenantId)
+                .stream()
+                .filter(e -> e.getProviderCode() == IntegrationProviderCode.FACEBOOK)
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Facebook integration not found for company: " + tenantId));
+
+        Map<String, Object> routing = parseJsonToMap(entity.getRoutingConfigJson());
+        if (mappingRequest != null) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> pageMappings = (Map<String, Object>) routing.computeIfAbsent("pageMappings", k -> new HashMap<String, Object>());
+            pageMappings.put(pageId, mappingRequest);
+            if (mappingRequest.containsKey("leadPoolId")) {
+                routing.put("defaultLeadPoolId", mappingRequest.get("leadPoolId"));
+            }
+        }
+        try {
+            entity.setRoutingConfigJson(objectMapper.writeValueAsString(routing));
+        } catch (Exception e) {
+            log.error("Failed to serialize routing config: {}", e.getMessage());
+        }
+        tenantIntegrationRepository.save(entity);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("pageId", pageId);
+        result.put("updated", true);
+        result.put("routingConfig", routing);
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OAuthCallbackResponse getFacebookAccountDetails(UUID companyId) {
+        validateTenantIntegrationManage();
+        UUID tenantId = CurrentUserContext.resolveCompanyId(companyId);
+
+        Optional<TenantIntegrationEntity> fbOpt = tenantIntegrationRepository.findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(tenantId)
+                .stream()
+                .filter(e -> e.getProviderCode() == IntegrationProviderCode.FACEBOOK)
+                .findFirst();
+
+        if (fbOpt.isEmpty()) {
+            return OAuthCallbackResponse.builder()
+                    .success(false)
+                    .message("No Facebook integration found for current company.")
+                    .pages(Collections.emptyList())
+                    .build();
+        }
+
+        TenantIntegrationEntity entity = fbOpt.get();
+        Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
+
+        String rawToken = String.valueOf(creds.getOrDefault("userAccessToken", ""));
+        String maskedToken = rawToken.length() > 6 ? "••••••••" + rawToken.substring(rawToken.length() - 4) : "••••••••";
+        String fbUserId = String.valueOf(creds.getOrDefault("facebookUserId", ""));
+        String fbUserName = String.valueOf(creds.getOrDefault("facebookUserName", ""));
+
+        List<OAuthCallbackResponse.FacebookPageDto> pageDtos = new ArrayList<>();
+        Object pagesObj = creds.get("pages");
+        if (pagesObj instanceof List<?> list) {
+            for (Object item : list) {
+                if (item instanceof Map<?, ?> m) {
+                    String pId = m.get("pageId") != null ? String.valueOf(m.get("pageId")) : null;
+                    String pName = m.get("pageName") != null ? String.valueOf(m.get("pageName")) : null;
+                    String category = m.get("category") != null ? String.valueOf(m.get("category")) : "General";
+                    String rawPageToken = m.get("pageAccessToken") != null ? String.valueOf(m.get("pageAccessToken")) : "";
+                    String maskedPageToken = rawPageToken.length() > 6 ? "••••••••" + rawPageToken.substring(rawPageToken.length() - 4) : "••••••••";
+                    Boolean isSync = m.get("isSyncEnabled") != null ? Boolean.valueOf(String.valueOf(m.get("isSyncEnabled"))) : Boolean.TRUE;
+                    String leadPoolId = m.get("leadPoolId") != null ? String.valueOf(m.get("leadPoolId")) : "";
+
+                    List<OAuthCallbackResponse.FacebookFormDto> formDtos = new ArrayList<>();
+                    Object formsObj = m.get("forms");
+                    if (formsObj instanceof List<?> formList) {
+                        for (Object f : formList) {
+                            if (f instanceof Map<?, ?> fm) {
+                                formDtos.add(OAuthCallbackResponse.FacebookFormDto.builder()
+                                        .formId(fm.get("formId") != null ? String.valueOf(fm.get("formId")) : null)
+                                        .formName(fm.get("formName") != null ? String.valueOf(fm.get("formName")) : null)
+                                        .status(fm.get("status") != null ? String.valueOf(fm.get("status")) : "ACTIVE")
+                                        .leadPoolId(fm.get("leadPoolId") != null ? String.valueOf(fm.get("leadPoolId")) : "")
+                                        .autoQualify(fm.get("autoQualify") != null && Boolean.parseBoolean(String.valueOf(fm.get("autoQualify"))))
+                                        .build());
+                            }
+                        }
+                    }
+
+                    pageDtos.add(OAuthCallbackResponse.FacebookPageDto.builder()
+                            .pageId(pId)
+                            .pageName(pName)
+                            .category(category)
+                            .pageAccessToken(maskedPageToken)
+                            .isSyncEnabled(isSync)
+                            .leadPoolId(leadPoolId)
+                            .forms(formDtos)
+                            .build());
+                }
+            }
+        }
+
+        return OAuthCallbackResponse.builder()
+                .success(true)
+                .integrationId(entity.getId())
+                .userAccessToken(maskedToken)
+                .facebookUserId(fbUserId)
+                .facebookUserName(fbUserName)
+                .pages(pageDtos)
+                .message("Facebook integration active")
+                .build();
     }
 }

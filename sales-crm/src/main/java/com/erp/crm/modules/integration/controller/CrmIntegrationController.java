@@ -59,6 +59,37 @@ public class CrmIntegrationController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @PostMapping("/facebook/pages/{pageId}/subscribe")
+    @Operation(summary = "Authorized User: Toggle Meta Webhook Leadgen Subscription for Facebook Page")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> subscribeFacebookPage(
+            @PathVariable String pageId,
+            @RequestParam(defaultValue = "true") boolean subscribe,
+            @RequestParam(required = false) UUID companyId) {
+        Map<String, Object> response = twoTierIntegrationService.subscribeFacebookPage(pageId, subscribe, companyId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/facebook/pages/{pageId}/mapping")
+    @Operation(summary = "Authorized User: Update Page and Lead Form Routing Mapping")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updateFacebookPageMapping(
+            @PathVariable String pageId,
+            @RequestBody @Valid ApiRequest<Map<String, Object>> request,
+            @RequestParam(required = false) UUID companyId) {
+        Map<String, Object> data = request != null && request.getData() != null
+                ? request.getData()
+                : new HashMap<>();
+        Map<String, Object> response = twoTierIntegrationService.updateFacebookPageMapping(pageId, data, companyId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/facebook/account")
+    @Operation(summary = "Authorized User: Get Connected Facebook Account Details and Managed Pages")
+    public ResponseEntity<ApiResponse<OAuthCallbackResponse>> getFacebookAccountDetails(
+            @RequestParam(required = false) UUID companyId) {
+        OAuthCallbackResponse response = twoTierIntegrationService.getFacebookAccountDetails(companyId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @PostMapping("/test-connection")
     @Operation(summary = "Authorized User: Validate Provider Credentials (e.g. IndiaMART CRM key) Before Saving")
     public ResponseEntity<ApiResponse<ConnectionTestResponse>> testConnection(
