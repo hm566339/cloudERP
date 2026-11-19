@@ -24,11 +24,15 @@ import PageHeader from '../../../components/common/PageHeader';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import ConfirmModal from '../../../components/common/ConfirmModal';
 import { useRBAC } from '../../../utils/rbac';
+import { useAppDispatch } from '../../../app/hooks';
+import { addAlert } from '../../../features/notifications/notificationSlice';
 import {
   useGetCrmTenantIntegrationsQuery,
   useGetCrmAvailableProvidersQuery,
   useTriggerCrmIntegrationSyncMutation,
+  useDeleteCrmTenantIntegrationMutation,
   useDisconnectCrmTenantIntegrationMutation,
+  useBatchDeleteCrmTenantIntegrationsMutation,
   useGetCrmRoundRobinPoolsQuery,
 } from '../../../api/sales-crm/crm.api';
 import IntegrationFormModal from '../components/IntegrationFormModal';
@@ -85,12 +89,14 @@ export default function IntegrationsPage() {
     );
   }, [isSuperAdmin, isOwner, hasPermission]);
 
+  const dispatch = useAppDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [modalChannel, setModalChannel] = useState('INDIAMART');
   const [copiedId, setCopiedId] = useState(null);
   const [syncingId, setSyncingId] = useState(null);
-  const [disconnectItem, setDisconnectItem] = useState(null);
+  const [deleteItem, setDeleteItem] = useState(null);
+  const [isBatchDeleteOpen, setIsBatchDeleteOpen] = useState(false);
   const [searchKey, setSearchKey] = useState('');
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -99,7 +105,8 @@ export default function IntegrationsPage() {
   const { data: poolsRes } = useGetCrmRoundRobinPoolsQuery(companyId);
 
   const [triggerSync] = useTriggerCrmIntegrationSyncMutation();
-  const [disconnectIntegration, { isLoading: isDisconnecting }] = useDisconnectCrmTenantIntegrationMutation();
+  const [deleteIntegration, { isLoading: isDeleting }] = useDeleteCrmTenantIntegrationMutation();
+  const [batchDeleteIntegrations, { isLoading: isBatchDeleting }] = useBatchDeleteCrmTenantIntegrationsMutation();
 
   const rawIntegrations = useMemo(() => {
     if (Array.isArray(integrationsRes)) return integrationsRes;
@@ -145,22 +152,52 @@ export default function IntegrationsPage() {
     try {
       setSyncingId(integrationId);
       await triggerSync({ id: integrationId, companyId }).unwrap();
+      dispatch(addAlert({ type: 'success', message: 'Manual sync triggered successfully.' }));
       refetch();
     } catch (err) {
       console.error('Manual sync failed', err);
+      dispatch(addAlert({ type: 'error', message: err?.data?.message || err?.message || 'Manual sync failed.' }));
     } finally {
       setSyncingId(null);
     }
   };
 
-  const handleConfirmDisconnect = async () => {
-    if (!disconnectItem) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteItem) return;
     try {
-      await disconnectIntegration({ id: disconnectItem.id, companyId }).unwrap();
-      setDisconnectItem(null);
+      await deleteIntegration({ id: deleteItem.id, companyId }).unwrap();
+      dispatch(addAlert({
+        type: 'success',
+        message: `Integration "${deleteItem.integrationName || deleteItem.connectionName}" deleted successfully.`
+      }));
+      setDeleteItem(null);
       refetch();
     } catch (err) {
-      console.error('Disconnect failed', err);
+      console.error('Delete integration failed', err);
+      dispatch(addAlert({
+        type: 'error',
+        message: err?.data?.message || err?.message || 'Failed to delete integration.'
+      }));
+    }
+  };
+
+  const handleConfirmBatchDelete = async () => {
+    if (!selectedRows || selectedRows.length === 0) return;
+    try {
+      await batchDeleteIntegrations({ ids: selectedRows, companyId }).unwrap();
+      dispatch(addAlert({
+        type: 'success',
+        message: `${selectedRows.length} integration(s) deleted successfully.`
+      }));
+      setSelectedRows([]);
+      setIsBatchDeleteOpen(false);
+      refetch();
+    } catch (err) {
+      console.error('Batch delete failed', err);
+      dispatch(addAlert({
+        type: 'error',
+        message: err?.data?.message || err?.message || 'Failed to delete selected integrations.'
+      }));
     }
   };
 
@@ -294,12 +331,26 @@ export default function IntegrationsPage() {
     ...(canManageIntegrations
       ? [
           {
-            key: 'disconnect',
-            label: 'Disconnect',
+            key: 'delete',
+            label: 'Delete Integration',
             icon: Trash2,
-            tooltip: 'Deactivate Channel',
+            tooltip: 'Delete Channel',
             danger: true,
-            onClick: (row) => setDisconnectItem(row),
+            onClick: (row) => setDeleteItem(row),
+          },
+        ]
+      : []),
+  ], [canManageIntegrations]);
+
+  const bulkActions = useMemo(() => [
+    ...(canManageIntegrations
+      ? [
+          {
+            key: 'delete-selected',
+            label: 'Delete Selected',
+            icon: <Trash2 size={13} className="text-rose-500" />,
+            className: 'text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/30',
+            onClick: () => setIsBatchDeleteOpen(true),
           },
         ]
       : []),
@@ -405,6 +456,7 @@ export default function IntegrationsPage() {
               selectable
               selectedRows={selectedRows}
               onSelectionChange={setSelectedRows}
+              bulkActions={bulkActions}
               columns={columns}
               data={filteredIntegrations}
               rowKey="id"
@@ -436,14 +488,25 @@ export default function IntegrationsPage() {
         onClose={() => setIsAdminModalOpen(false)}
       />
 
-      {/* Disconnect Confirmation Modal */}
+      {/* Delete Single Integration Confirmation Modal */}
       <ConfirmModal
-        isOpen={Boolean(disconnectItem)}
-        onClose={() => setDisconnectItem(null)}
-        onConfirm={handleConfirmDisconnect}
-        title="Disconnect Integration"
-        message={`Are you sure you want to disconnect "${disconnectItem?.integrationName || disconnectItem?.connectionName}"? Real-time syncing and automated lead ingestion for this channel will be paused.`}
-        confirmText={isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+        isOpen={Boolean(deleteItem)}
+        onClose={() => setDeleteItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Integration"
+        message={`Are you sure you want to delete "${deleteItem?.integrationName || deleteItem?.connectionName}"? Real-time syncing and automated lead ingestion for this channel will be permanently removed.`}
+        confirmText={isDeleting ? 'Deleting...' : 'Delete Integration'}
+        type="danger"
+      />
+
+      {/* Batch Delete Integrations Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isBatchDeleteOpen}
+        onClose={() => setIsBatchDeleteOpen(false)}
+        onConfirm={handleConfirmBatchDelete}
+        title="Delete Selected Integrations"
+        message={`Are you sure you want to delete ${selectedRows.length} selected integration channel(s)? Real-time syncing and automated lead ingestion for these channels will be permanently removed.`}
+        confirmText={isBatchDeleting ? 'Deleting...' : `Delete (${selectedRows.length})`}
         type="danger"
       />
     </div>

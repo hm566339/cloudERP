@@ -557,24 +557,52 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         UUID tenantId = CurrentUserContext.resolveCompanyId(companyId);
 
         TenantIntegrationEntity entity = tenantIntegrationRepository.findByIdAndTenantIdAndIsDeletedFalse(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tenant integration not found: " + id));
+                .or(() -> tenantIntegrationRepository.findById(id).filter(e -> !Boolean.TRUE.equals(e.getIsDeleted())))
+                .orElse(null);
 
-        entity.setStatus(TenantIntegrationStatus.DISCONNECTED);
-        entity.setIsDeleted(true);
-        tenantIntegrationRepository.save(entity);
+        if (entity != null) {
+            // Attempt Facebook webhook unsubscription if connected
+            if (entity.getProviderCode() == IntegrationProviderCode.FACEBOOK && entity.getCredentialsJson() != null) {
+                try {
+                    Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
+                    String pageId = String.valueOf(creds.getOrDefault("pageId", ""));
+                    String pageAccessToken = String.valueOf(creds.getOrDefault("pageAccessToken", ""));
+                    if (!pageId.isBlank() && !pageAccessToken.isBlank() && !pageAccessToken.startsWith("mock_")) {
+                        String unsubscribeUrl = String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps?access_token=%s",
+                                URLEncoder.encode(pageId, StandardCharsets.UTF_8),
+                                URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
+                        httpDelete(unsubscribeUrl, 5);
+                    }
+                } catch (Exception ex) {
+                    log.warn("Could not unsubscribe Meta webhook for integration [{}]: {}", id, ex.getMessage());
+                }
+            }
 
-        // Also deactivate in legacy table if present
-        if (entity.getWebhookSlug() != null) {
-            legacyTenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse(entity.getWebhookSlug())
-                    .ifPresent(legacy -> {
-                        legacy.setIsEnabled(false);
-                        legacy.setSyncStatus(IntegrationSyncStatus.PAUSED);
-                        legacy.setIsDeleted(true);
-                        legacyTenantIntegrationRepository.save(legacy);
-                    });
+            entity.setStatus(TenantIntegrationStatus.DISCONNECTED);
+            entity.setIsDeleted(true);
+            tenantIntegrationRepository.save(entity);
+
+            // Also deactivate in legacy table if present
+            if (entity.getWebhookSlug() != null) {
+                legacyTenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse(entity.getWebhookSlug())
+                        .ifPresent(legacy -> {
+                            legacy.setIsEnabled(false);
+                            legacy.setSyncStatus(IntegrationSyncStatus.PAUSED);
+                            legacy.setIsDeleted(true);
+                            legacyTenantIntegrationRepository.save(legacy);
+                        });
+            }
+        } else {
+            // Fallback: check legacy repository directly
+            var legacy = legacyTenantIntegrationRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Tenant integration not found: " + id));
+            legacy.setIsEnabled(false);
+            legacy.setSyncStatus(IntegrationSyncStatus.PAUSED);
+            legacy.setIsDeleted(true);
+            legacyTenantIntegrationRepository.save(legacy);
         }
 
-        log.info("Tenant [{}] disconnected integration [{}]", tenantId, id);
+        log.info("Tenant [{}] deleted/disconnected integration [{}]", tenantId, id);
     }
 
     @Override

@@ -114,12 +114,39 @@ public class CrmIntegrationController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Authorized User: Disconnect / Deactivate Tenant Integration")
-    public ResponseEntity<ApiResponse<Void>> disconnectIntegration(
+    @Operation(summary = "Authorized User: Disconnect / Delete Tenant Integration")
+    public ResponseEntity<ApiResponse<Void>> deleteIntegration(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId) {
+        twoTierIntegrationService.disconnect(id, companyId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Integration deleted successfully"));
+    }
+
+    @PostMapping("/{id}/disconnect")
+    @Operation(summary = "Authorized User: Disconnect / Deactivate Tenant Integration (POST alternative)")
+    public ResponseEntity<ApiResponse<Void>> disconnectIntegrationPost(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
         twoTierIntegrationService.disconnect(id, companyId);
         return ResponseEntity.ok(ApiResponse.success(null, "Integration disconnected successfully"));
+    }
+
+    @PostMapping("/batch-delete")
+    @Operation(summary = "Authorized User: Batch Delete / Disconnect Tenant Integrations")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> batchDeleteIntegrations(
+            @RequestBody @Valid ApiRequest<List<UUID>> request,
+            @RequestParam(required = false) UUID companyId) {
+        List<UUID> ids = request != null && request.getData() != null ? request.getData() : Collections.emptyList();
+        int count = 0;
+        for (UUID id : ids) {
+            try {
+                twoTierIntegrationService.disconnect(id, companyId);
+                count++;
+            } catch (Exception e) {
+                // Ignore individual deletion errors in batch
+            }
+        }
+        return ResponseEntity.ok(ApiResponse.success(Map.of("deletedCount", count), "Integrations deleted successfully"));
     }
 
     @GetMapping

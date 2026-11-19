@@ -558,10 +558,32 @@ export const crmApiSlice = baseApi.injectEndpoints({
       invalidatesTags: ['CRM_INTEGRATIONS'],
     }),
 
+    deleteCrmTenantIntegration: builder.mutation({
+      query: ({ id, companyId }) => ({
+        url: `/api/crm/integrations/${id}`,
+        method: 'DELETE',
+        params: companyId ? { companyId } : undefined,
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_INTEGRATIONS'],
+    }),
+
     disconnectCrmTenantIntegration: builder.mutation({
       query: ({ id, companyId }) => ({
         url: `/api/crm/integrations/${id}`,
         method: 'DELETE',
+        params: companyId ? { companyId } : undefined,
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_INTEGRATIONS'],
+    }),
+
+    batchDeleteCrmTenantIntegrations: builder.mutation({
+      query: ({ ids, companyId }) => ({
+        url: '/api/crm/integrations/batch-delete',
+        method: 'POST',
+        data: { data: ids },
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       invalidatesTags: ['CRM_INTEGRATIONS'],
@@ -775,7 +797,9 @@ export const {
   useGetCrmTenantIntegrationsQuery,
   useConnectCrmTenantIntegrationMutation,
   useCreateCrmTenantIntegrationMutation,
+  useDeleteCrmTenantIntegrationMutation,
   useDisconnectCrmTenantIntegrationMutation,
+  useBatchDeleteCrmTenantIntegrationsMutation,
   useTestCrmIntegrationConnectionMutation,
   useGetFacebookOAuthAuthorizeUrlQuery,
   useLazyGetFacebookOAuthAuthorizeUrlQuery,

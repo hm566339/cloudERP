@@ -35,7 +35,7 @@ const Button = React.forwardRef(function Button(
 
   const variantClasses = {
     primary:
-      'bg-[var(--color-primary)] text-[var(--color-primary-text,#FFFFFF)] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-active)] dark:bg-[var(--color-primary)] dark:text-[var(--color-primary-text,#101411)] dark:hover:bg-[var(--color-primary-hover)] dark:active:bg-[var(--color-primary-active)] border border-transparent shadow-xs',
+      'bg-primary hover:bg-primary-hover active:bg-primary text-white dark:text-zinc-900 border border-transparent shadow-xs',
     secondary:
       'bg-[var(--color-surface)] text-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] dark:bg-[var(--color-surface)] dark:text-[var(--color-text-primary)] dark:hover:bg-[var(--color-surface-2)] dark:hover:text-white border border-[var(--color-border)] dark:border-[var(--color-border)] hover:border-[var(--color-border-hover)] dark:hover:border-[var(--color-border-hover)] shadow-2xs',
     danger:

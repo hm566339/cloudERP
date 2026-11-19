@@ -79,33 +79,32 @@ export default function OpportunityFormModal({
     availablePipelines.find((p) => p.id === formData.pipelineId) || availablePipelines[0];
   const stages = selectedPipeline?.stages?.length > 0 ? selectedPipeline.stages : DEFAULT_STAGES;
 
+  const firstPipelineId = availablePipelines[0]?.id;
+  const firstStageId = initialStageId || availablePipelines[0]?.stages?.[0]?.id || DEFAULT_STAGES[0].id;
+  const firstAccountId = initialAccountId || availableAccounts[0]?.id || '';
+
   useEffect(() => {
     if (!isOpen) return;
 
-    if (availablePipelines.length > 0) {
-      const defaultPipeline = availablePipelines[0];
-      const defaultStage =
-        initialStageId || defaultPipeline.stages?.[0]?.id || DEFAULT_STAGES[0].id;
-      setFormData((p) => {
-        const nextPipelineId = p.pipelineId || defaultPipeline.id || '';
-        const nextStageId = p.currentStageId || defaultStage || '';
-        const nextAccountId = p.accountId || initialAccountId || availableAccounts[0]?.id || '';
-        if (
-          p.pipelineId === nextPipelineId &&
-          p.currentStageId === nextStageId &&
-          p.accountId === nextAccountId
-        ) {
-          return p;
-        }
-        return {
-          ...p,
-          pipelineId: nextPipelineId,
-          currentStageId: nextStageId,
-          accountId: nextAccountId,
-        };
-      });
-    }
-  }, [availablePipelines, initialStageId, initialAccountId, availableAccounts, isOpen]);
+    setFormData((p) => {
+      const nextPipelineId = p.pipelineId || firstPipelineId || '';
+      const nextStageId = p.currentStageId || firstStageId || '';
+      const nextAccountId = p.accountId || firstAccountId || '';
+      if (
+        p.pipelineId === nextPipelineId &&
+        p.currentStageId === nextStageId &&
+        p.accountId === nextAccountId
+      ) {
+        return p;
+      }
+      return {
+        ...p,
+        pipelineId: nextPipelineId,
+        currentStageId: nextStageId,
+        accountId: nextAccountId,
+      };
+    });
+  }, [isOpen, firstPipelineId, firstStageId, firstAccountId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
