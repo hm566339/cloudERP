@@ -99,16 +99,18 @@ public class CrmIntegrationController {
         if (list.isEmpty()) {
             List<TenantIntegrationResponse> legacy = integrationService.getTenantIntegrations(companyId);
             if (!legacy.isEmpty()) {
-                List<TenantIntegrationDetailResponse> converted = legacy.stream().map(l -> TenantIntegrationDetailResponse.builder()
-                        .id(l.getId())
-                        .tenantId(l.getCompanyId())
-                        .integrationName(l.getConnectionName())
-                        .status(TenantIntegrationStatus.CONNECTED)
-                        .webhookSlug(l.getWebhookSlug())
-                        .webhookUrl(l.getWebhookUrl())
-                        .lastSyncedAt(l.getLastSyncAt())
-                        .createdAt(l.getCreatedAt())
-                        .build()).toList();
+                List<TenantIntegrationDetailResponse> converted = legacy.stream()
+                        .map(l -> TenantIntegrationDetailResponse.builder()
+                                .id(l.getId())
+                                .tenantId(l.getCompanyId())
+                                .integrationName(l.getConnectionName())
+                                .status(TenantIntegrationStatus.CONNECTED)
+                                .webhookSlug(l.getWebhookSlug())
+                                .webhookUrl(l.getWebhookUrl())
+                                .lastSyncedAt(l.getLastSyncAt())
+                                .createdAt(l.getCreatedAt())
+                                .build())
+                        .toList();
                 return ResponseEntity.ok(ApiResponse.success(converted));
             }
         }
@@ -120,7 +122,8 @@ public class CrmIntegrationController {
     public ResponseEntity<ApiResponse<TenantIntegrationResponse>> createTenantIntegration(
             @RequestBody @Valid ApiRequest<TenantIntegrationRequest> apiRequest,
             @RequestParam(required = false) UUID companyId) {
-        TenantIntegrationResponse response = integrationService.createTenantIntegration(apiRequest.getData(), companyId);
+        TenantIntegrationResponse response = integrationService.createTenantIntegration(apiRequest.getData(),
+                companyId);
         return ResponseEntity.ok(ApiResponse.success(response, "Integration created successfully"));
     }
 
@@ -175,7 +178,8 @@ public class CrmIntegrationController {
     public ResponseEntity<ApiResponse<com.erp.crm.modules.integration.dto.SyncTriggerResponse>> triggerSync(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
-        com.erp.crm.modules.integration.dto.SyncTriggerResponse response = integrationService.triggerSync(id, companyId);
+        com.erp.crm.modules.integration.dto.SyncTriggerResponse response = integrationService.triggerSync(id,
+                companyId);
         return ResponseEntity.ok(ApiResponse.success(response, "Sync triggered successfully"));
     }
 }
