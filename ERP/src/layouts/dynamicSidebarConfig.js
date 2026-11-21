@@ -6,7 +6,7 @@ import {
   Tag, User, Target, Warehouse, ScanLine, Factory, PackageOpen, ClipboardList, Boxes,
   ArrowDownCircle, ArrowUpCircle, Calculator, BarChart3, Shield, Database, Box,
   Receipt, FileSpreadsheet, Landmark, Download, Scale3d, ArrowRightLeft, BoxSelect, Lock,
-  UserCog, Workflow, FolderTree, MessageSquare
+  UserCog, Workflow, FolderTree, MessageSquare, Cable
 } from 'lucide-react';
 
 import {
@@ -148,6 +148,12 @@ export function getSystemAdminNavigation() {
           label: 'Workflow Templates',
           path: '/super-admin/workflow-templates',
           icon: Workflow,
+        },
+        {
+          id: 'sa-plat-integrations',
+          label: 'CRM Providers',
+          path: '/super-admin/crm-integrations',
+          icon: Cable,
         },
       ],
     },
@@ -442,22 +448,6 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
           action: 'READ',
         },
         {
-          id: 'crm-campaigns',
-          label: 'Campaigns',
-          path: `${base}/sales-crm/campaigns`,
-          icon: Target,
-          featureCode: 'CRM_CAMPAIGNS',
-          action: 'READ',
-        },
-        {
-          id: 'crm-attribution',
-          label: 'Attribution',
-          path: `${base}/sales-crm/attribution`,
-          icon: PieChart,
-          featureCode: 'CRM_CAMPAIGNS',
-          action: 'READ',
-        },
-        {
           id: 'crm-comms',
           label: 'Customer Communication',
           path: `${base}/sales-crm/communications`,
@@ -474,8 +464,8 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
           action: 'READ',
         },
         {
-          id: 'crm-integrations',
-          label: 'Integrations',
+          id: 'crm-integrations-campaigns',
+          label: 'Integrations & Campaigns',
           path: `${base}/sales-crm/integrations`,
           icon: Globe,
           featureCode: 'CRM_INTEGRATIONS',

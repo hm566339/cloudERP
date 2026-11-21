@@ -2,6 +2,7 @@ package com.erp.crm.modules.integration.repository;
 
 import com.erp.crm.modules.integration.entity.TenantIntegrationEntity;
 import com.erp.crm.modules.integration.enums.IntegrationProviderCode;
+import com.erp.crm.modules.integration.enums.TenantIntegrationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,4 +20,6 @@ public interface TenantIntegrationEntityRepository extends JpaRepository<TenantI
     Optional<TenantIntegrationEntity> findByWebhookSlugAndIsDeletedFalse(String webhookSlug);
 
     List<TenantIntegrationEntity> findByTenantIdAndProviderCodeAndIsDeletedFalse(UUID tenantId, IntegrationProviderCode providerCode);
+
+    List<TenantIntegrationEntity> findByProviderCodeAndStatusAndIsDeletedFalse(IntegrationProviderCode providerCode, TenantIntegrationStatus status);
 }

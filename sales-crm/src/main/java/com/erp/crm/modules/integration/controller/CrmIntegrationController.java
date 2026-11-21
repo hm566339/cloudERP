@@ -2,6 +2,7 @@ package com.erp.crm.modules.integration.controller;
 
 import com.erp.crm.common.dto.request.ApiRequest;
 import com.erp.crm.common.dto.response.ApiResponse;
+import com.erp.crm.common.exception.ResourceNotFoundException;
 import com.erp.crm.modules.integration.dto.*;
 import com.erp.crm.modules.integration.entity.CrmIntegrationChannel;
 import com.erp.crm.modules.integration.enums.IntegrationProviderCode;
@@ -11,13 +12,19 @@ import com.erp.crm.modules.integration.service.TwoTierIntegrationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/crm/integrations")
 @RequiredArgsConstructor
@@ -26,6 +33,52 @@ public class CrmIntegrationController {
 
     private final CrmIntegrationService integrationService;
     private final TwoTierIntegrationService twoTierIntegrationService;
+
+    // =========================================================================
+    // LAYER 1: SYSTEM ADMIN GLOBAL PROVIDER CONFIGURATION
+    // =========================================================================
+
+    @GetMapping("/providers")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'SYSTEMADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'PLATFORM_ADMIN', 'ADMIN')")
+    @Operation(summary = "SystemAdmin: List Global Integration Providers & Configs")
+    public ResponseEntity<ApiResponse<List<AdminProviderResponse>>> listAllProvidersForAdmin() {
+        List<AdminProviderResponse> providers = twoTierIntegrationService.listAllProvidersForAdmin();
+        return ResponseEntity.ok(ApiResponse.success(providers));
+    }
+
+    @GetMapping("/providers/{code}")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'SYSTEMADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'PLATFORM_ADMIN', 'ADMIN')")
+    @Operation(summary = "SystemAdmin: Get Single Global Provider Configuration")
+    public ResponseEntity<ApiResponse<AdminProviderResponse>> getProviderForAdmin(
+            @PathVariable IntegrationProviderCode code) {
+        AdminProviderResponse provider = twoTierIntegrationService.getProviderForAdmin(code);
+        return ResponseEntity.ok(ApiResponse.success(provider));
+    }
+
+    @PostMapping("/providers")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'SYSTEMADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'PLATFORM_ADMIN', 'ADMIN')")
+    @Operation(summary = "SystemAdmin: Create New Global Provider Configuration")
+    public ResponseEntity<ApiResponse<AdminProviderResponse>> createProviderForAdmin(
+            @RequestBody @Valid ApiRequest<AdminProviderCreateRequest> request) {
+        AdminProviderCreateRequest data = request != null && request.getData() != null
+                ? request.getData()
+                : new AdminProviderCreateRequest();
+        AdminProviderResponse response = twoTierIntegrationService.createProvider(data);
+        return ResponseEntity.ok(ApiResponse.success(response, "Provider created successfully"));
+    }
+
+    @PutMapping("/providers/{code}")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'SYSTEMADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'PLATFORM_ADMIN', 'ADMIN')")
+    @Operation(summary = "SystemAdmin: Update Global Provider Configuration (OAuth keys, base URLs, mappings)")
+    public ResponseEntity<ApiResponse<AdminProviderResponse>> updateProviderForAdmin(
+            @PathVariable IntegrationProviderCode code,
+            @RequestBody @Valid ApiRequest<AdminProviderUpdateRequest> request) {
+        AdminProviderUpdateRequest data = request != null && request.getData() != null
+                ? request.getData()
+                : new AdminProviderUpdateRequest();
+        AdminProviderResponse response = twoTierIntegrationService.updateProvider(code, data);
+        return ResponseEntity.ok(ApiResponse.success(response, "Provider updated successfully"));
+    }
 
     // =========================================================================
     // LAYER 2: AUTHORIZED TENANT USER ENDPOINTS
@@ -42,9 +95,29 @@ public class CrmIntegrationController {
     @Operation(summary = "Authorized User: Get OAuth2 Authorization URL for Provider (e.g. Facebook)")
     public ResponseEntity<ApiResponse<Map<String, String>>> getOAuthAuthorizeUrl(
             @PathVariable IntegrationProviderCode providerCode,
-            @RequestParam(required = false) String redirectUri) {
-        String url = twoTierIntegrationService.getOAuthAuthorizeUrl(providerCode, redirectUri);
+            @RequestParam(required = false) String redirectUri,
+            @RequestParam(required = false) String returnUrl,
+            @RequestParam(required = false) UUID companyId) {
+        String url = twoTierIntegrationService.getOAuthAuthorizeUrl(providerCode, redirectUri, returnUrl, companyId);
         return ResponseEntity.ok(ApiResponse.success(Map.of("authorizeUrl", url)));
+    }
+
+    @GetMapping("/oauth/{providerCode}/callback")
+    @Operation(summary = "Public Meta OAuth2 Redirect Callback Handler")
+    public void handleOAuthCallbackGet(
+            @PathVariable IntegrationProviderCode providerCode,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String error,
+            @RequestParam(name = "error_description", required = false) String errorDescription,
+            HttpServletResponse response) throws IOException {
+        log.info(
+                "[OAuth Callback] Received GET callback for provider [{}]: code={}, state={}, error={}, errorDescription={}",
+                providerCode, (code != null && !code.isBlank() ? "PRESENT" : "NULL"), state, error, errorDescription);
+        String redirectUrl = twoTierIntegrationService.handleOAuthCallbackRedirect(providerCode, code, state, error,
+                errorDescription);
+        log.info("[OAuth Callback] Redirecting browser to resolved frontend URL: [{}]", redirectUrl);
+        response.sendRedirect(redirectUrl);
     }
 
     @PostMapping("/oauth/{providerCode}/callback")
@@ -146,7 +219,8 @@ public class CrmIntegrationController {
                 // Ignore individual deletion errors in batch
             }
         }
-        return ResponseEntity.ok(ApiResponse.success(Map.of("deletedCount", count), "Integrations deleted successfully"));
+        return ResponseEntity
+                .ok(ApiResponse.success(Map.of("deletedCount", count), "Integrations deleted successfully"));
     }
 
     @GetMapping
@@ -233,11 +307,20 @@ public class CrmIntegrationController {
 
     @PostMapping("/{id}/sync")
     @Operation(summary = "Trigger Manual Pull Sync for Polling Channels")
-    public ResponseEntity<ApiResponse<com.erp.crm.modules.integration.dto.SyncTriggerResponse>> triggerSync(
+
+    public ResponseEntity<ApiResponse<SyncTriggerResponse>> triggerSync(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
-        com.erp.crm.modules.integration.dto.SyncTriggerResponse response = integrationService.triggerSync(id,
-                companyId);
+        log.info("[Integration Controller] Triggering manual sync for integration [{}] (companyId: {})", id, companyId);
+        SyncTriggerResponse response;
+        try {
+            response = twoTierIntegrationService.triggerSync(id, companyId);
+        } catch (ResourceNotFoundException ex) {
+            log.info(
+                    "[Integration Controller] Integration [{}] not found in 2-tier integrations; falling back to legacy integrationService.triggerSync",
+                    id);
+            response = integrationService.triggerSync(id, companyId);
+        }
         return ResponseEntity.ok(ApiResponse.success(response, "Sync triggered successfully"));
     }
 }

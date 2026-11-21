@@ -91,6 +91,13 @@ public class JwtAuthenticationFilter
                         "/api/billing/webhook/**",
                         "/api/sso/billing/webhook/**",
 
+                        // CRM Integrations public endpoints (OAuth callback & webhooks)
+                        "/api/crm/integrations/oauth/*/callback",
+                        "/api/crm/integrations/oauth/*/callback/**",
+                        "/api/crm/integrations/oauth/**",
+                        "/api/crm/integrations/webhook/**",
+                        "/api/crm/integrations/webhook",
+
                         // Swagger / OpenAPI
                         "/swagger-ui/**",
                         "/swagger-ui",
@@ -190,6 +197,14 @@ public class JwtAuthenticationFilter
                         if (RESERVED_ORGANIZATION_PATHS.contains(sub.toLowerCase(java.util.Locale.ROOT))) {
                                 return false;
                         }
+                        return true;
+                }
+
+                // CRM Integrations public endpoints (OAuth callbacks from Meta/Google & inbound webhooks)
+                if (normalizedPath.contains("/api/crm/integrations/oauth/") && normalizedPath.contains("/callback")) {
+                        return true;
+                }
+                if (normalizedPath.startsWith("/api/crm/integrations/webhook")) {
                         return true;
                 }
 

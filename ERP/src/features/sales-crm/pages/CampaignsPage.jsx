@@ -11,6 +11,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import PageHeader from '../../../components/common/PageHeader';
+import IntegrationsCampaignsHeader from '../components/IntegrationsCampaignsHeader';
 import StatCard from '../../../components/common/StatCard';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import useUrlFilters from '../../../hooks/useUrlFilters';
@@ -143,18 +144,20 @@ export default function CampaignsPage() {
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
-      <PageHeader
+      <IntegrationsCampaignsHeader
+        activeTab="campaigns"
         title="Marketing Campaigns & Spend"
         description="Monitoring campaigns across digital, search, and marketplace channels"
-      >
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="btn-primary flex items-center gap-2 text-xs font-semibold"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>New Campaign</span>
-        </button>
-      </PageHeader>
+        actions={
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="btn-primary flex items-center gap-2 text-xs font-semibold"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Campaign</span>
+          </button>
+        }
+      />
 
       <div className="flex-1 p-6 overflow-hidden flex flex-col space-y-4">
         {/* KPI Summary Strip */}

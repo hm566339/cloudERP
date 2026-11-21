@@ -86,6 +86,9 @@ const ProvisionOrganization = lazy(
 const PlatformWorkflowTemplatesPage = lazy(
   () => import("../features/super-admin/pages/PlatformWorkflowTemplatesPage"),
 );
+const GlobalIntegrationProvidersPage = lazy(
+  () => import("../features/sales-crm/pages/GlobalIntegrationProvidersPage"),
+);
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 const Dashboard = lazy(() => import("../features/dashboard/pages/Dashboard"));
@@ -1063,6 +1066,9 @@ export default function AppRoutes() {
             <Route path="modules" element={<ModuleList />} />
             <Route path="modules/:id" element={<ModuleDetails />} />
             <Route path="module-routes" element={<ModuleRoutesList />} />
+            <Route path="crm-integrations" element={<GlobalIntegrationProvidersPage />} />
+            <Route path="integrations" element={<GlobalIntegrationProvidersPage />} />
+            <Route path="integrations/providers" element={<GlobalIntegrationProvidersPage />} />
 
             <Route path="reports" element={<FinancialReports />} />
             <Route path="audit-logs" element={<AuditLogsPage />} />

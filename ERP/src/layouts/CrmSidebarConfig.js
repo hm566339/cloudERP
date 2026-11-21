@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, UserPlus, Building2, Target, GitBranch,
   FileText, CheckSquare, Calendar, Megaphone, PieChart,
-  MessageSquare, Zap, Cable, Settings, TrendingUp
+  MessageSquare, Zap, Cable, Settings, TrendingUp, Globe
 } from 'lucide-react';
 
 export const CRM_SIDEBAR = [
@@ -14,11 +14,9 @@ export const CRM_SIDEBAR = [
   { id: 'crm-quotations', label: 'Quotations', path: '/sales-crm/quotations', icon: FileText, module: 'CRM_QUOTATIONS' },
   { id: 'crm-tasks', label: 'Tasks', path: '/sales-crm/tasks', icon: CheckSquare, module: 'CRM_ACTIVITIES' },
   { id: 'crm-activities', label: 'Activities', path: '/sales-crm/activities', icon: Calendar, module: 'CRM_ACTIVITIES' },
-  { id: 'crm-campaigns', label: 'Campaigns', path: '/sales-crm/campaigns', icon: Megaphone, module: 'CRM_CAMPAIGNS' },
-  { id: 'crm-attribution', label: 'Attribution', path: '/sales-crm/attribution', icon: PieChart, module: 'CRM_CAMPAIGNS' },
   { id: 'crm-communications', label: 'Communications', path: '/sales-crm/communications', icon: MessageSquare, module: 'CRM_COMMUNICATION' },
   { id: 'crm-automation', label: 'Automation', path: '/sales-crm/automation', icon: Zap, module: 'CRM_AUTOMATION' },
-  { id: 'crm-integrations', label: 'Integrations', path: '/sales-crm/integrations', icon: Cable, module: 'CRM_INTEGRATIONS' },
+  { id: 'crm-integrations-campaigns', label: 'Integrations & Campaigns', path: '/sales-crm/integrations', icon: Globe, module: 'CRM_INTEGRATIONS' },
   { id: 'crm-settings', label: 'Settings', path: '/sales-crm/settings', icon: Settings, module: 'CRM_SETTINGS' },
 ];
 

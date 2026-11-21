@@ -9,15 +9,19 @@ import com.erp.crm.modules.integration.dto.WebhookAckResponse;
 import com.erp.crm.modules.integration.entity.CrmIntegrationChannel;
 import com.erp.crm.modules.integration.entity.CrmIntegrationWebhookLog;
 import com.erp.crm.modules.integration.entity.CrmTenantIntegration;
+import com.erp.crm.modules.integration.entity.TenantIntegrationEntity;
 import com.erp.crm.modules.integration.enums.IntegrationProvider;
 import com.erp.crm.modules.integration.enums.IntegrationSyncStatus;
+import com.erp.crm.modules.integration.enums.TenantIntegrationStatus;
 import com.erp.crm.modules.integration.enums.WebhookProcessingStatus;
 import com.erp.crm.modules.integration.repository.CrmIntegrationChannelRepository;
 import com.erp.crm.modules.integration.repository.CrmIntegrationWebhookLogRepository;
 import com.erp.crm.modules.integration.repository.CrmTenantIntegrationRepository;
+import com.erp.crm.modules.integration.repository.TenantIntegrationEntityRepository;
 import com.erp.crm.modules.integration.service.CrmIntegrationService;
 import com.erp.crm.modules.lead.dto.request.LeadCreateRequest;
 import com.erp.crm.modules.lead.dto.response.LeadResponse;
+import com.erp.crm.modules.lead.repository.CrmLeadRepository;
 import com.erp.crm.modules.lead.service.CrmLeadService;
 import com.erp.crm.modules.setting.entity.CrmLeadSource;
 import com.erp.crm.modules.setting.repository.CrmLeadSourceRepository;
@@ -40,6 +44,8 @@ import java.util.*;
 public class CrmIntegrationServiceImpl implements CrmIntegrationService {
 
     private final CrmTenantIntegrationRepository tenantIntegrationRepository;
+    private final TenantIntegrationEntityRepository tenantIntegrationEntityRepository;
+    private final CrmLeadRepository leadRepository;
     private final CrmIntegrationWebhookLogRepository webhookLogRepository;
     private final CrmIntegrationChannelRepository channelRepository;
     private final CrmLeadSourceRepository leadSourceRepository;
@@ -51,7 +57,18 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     public String verifyWebhook(String slug, String mode, String challenge, String verifyToken) {
         log.info("Webhook verification challenge received for slug: {}, mode: {}", slug, mode);
         CrmTenantIntegration integration = tenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("No active integration found for webhook slug: " + slug));
+                .orElseGet(() -> tenantIntegrationEntityRepository.findByWebhookSlugAndIsDeletedFalse(slug)
+                        .map(twoTier -> {
+                            CrmTenantIntegration bridged = CrmTenantIntegration.builder()
+                                    .webhookSlug(twoTier.getWebhookSlug())
+                                    .connectionName(twoTier.getIntegrationName())
+                                    .settingsJson(twoTier.getCredentialsJson())
+                                    .build();
+                            bridged.setId(twoTier.getId());
+                            bridged.setCompanyId(twoTier.getTenantId());
+                            return bridged;
+                        })
+                        .orElseThrow(() -> new ResourceNotFoundException("No active integration found for webhook slug: " + slug)));
 
         if (mode != null && !"subscribe".equalsIgnoreCase(mode)) {
             log.warn("Invalid webhook subscription mode: {}", mode);
@@ -75,7 +92,29 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         log.info("Inbound webhook received on slug: {}", slug);
 
         CrmTenantIntegration integration = tenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("No active integration found for webhook slug: " + slug));
+                .orElseGet(() -> tenantIntegrationEntityRepository.findByWebhookSlugAndIsDeletedFalse(slug)
+                        .map(twoTier -> {
+                            IntegrationProvider legacyProvider = switch (twoTier.getProviderCode()) {
+                                case FACEBOOK -> IntegrationProvider.META_LEAD_ADS;
+                                case INDIAMART -> IntegrationProvider.INDIAMART;
+                                case TRADEINDIA -> IntegrationProvider.TRADEINDIA;
+                                case CUSTOM_WEBHOOK -> IntegrationProvider.WEBHOOK;
+                                default -> IntegrationProvider.WEBHOOK;
+                            };
+                            CrmIntegrationChannel ch = channelRepository.findByProviderCode(legacyProvider).orElse(null);
+                            CrmTenantIntegration bridged = CrmTenantIntegration.builder()
+                                    .integrationChannelId(ch != null ? ch.getId() : null)
+                                    .webhookSlug(twoTier.getWebhookSlug())
+                                    .connectionName(twoTier.getIntegrationName())
+                                    .isEnabled(twoTier.getStatus() == TenantIntegrationStatus.CONNECTED)
+                                    .syncStatus(IntegrationSyncStatus.ACTIVE)
+                                    .settingsJson(twoTier.getCredentialsJson())
+                                    .build();
+                            bridged.setId(twoTier.getId());
+                            bridged.setCompanyId(twoTier.getTenantId());
+                            return bridged;
+                        })
+                        .orElseThrow(() -> new ResourceNotFoundException("No active integration found for webhook slug: " + slug)));
 
         UUID companyId = integration.getCompanyId();
         String idempotencyHash = computeSha256(companyId + ":" + slug + ":" + payload);
@@ -138,6 +177,14 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
             }
 
             for (LeadCreateRequest leadReq : leadRequests) {
+                // Deduplicate external leads by externalLeadId (e.g. TradeIndia rfi_id, IndiaMART queryId)
+                if (leadReq.getExternalLeadId() != null && !leadReq.getExternalLeadId().isBlank()
+                        && leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId, leadReq.getExternalLeadId())) {
+                    log.info("Skipping already ingested external lead [externalLeadId: {}] for company [{}]",
+                            leadReq.getExternalLeadId(), companyId);
+                    continue;
+                }
+
                 leadReq.setTenantIntegrationId(integration.getId());
                 if (leadReq.getLeadSourceId() == null) {
                     leadReq.setLeadSourceId(leadSourceId);
@@ -155,7 +202,15 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
 
             integration.setLastSyncAt(LocalDateTime.now());
             integration.setSyncStatus(IntegrationSyncStatus.ACTIVE);
-            tenantIntegrationRepository.save(integration);
+            if (tenantIntegrationRepository.existsById(integration.getId())) {
+                tenantIntegrationRepository.save(integration);
+            }
+
+            tenantIntegrationEntityRepository.findByWebhookSlugAndIsDeletedFalse(slug).ifPresent(entity -> {
+                entity.setLastSyncedAt(LocalDateTime.now());
+                entity.setStatus(TenantIntegrationStatus.CONNECTED);
+                tenantIntegrationEntityRepository.save(entity);
+            });
 
             log.info("Successfully ingested {} leads from webhook slug [{}] provider [{}]",
                     createdLeadIds.size(), slug, providerCode);
@@ -223,15 +278,21 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
             slug = sanitizeSlug(slug);
         }
 
-        // Build settings JSON to preserve apiKey, webhookSecret, autoQualify, roundRobinPoolId
+        // Build settings JSON to preserve apiKey, webhookSecret, autoQualify,
+        // roundRobinPoolId
         String settingsJson = request.getSettingsJson();
         if (settingsJson == null || settingsJson.isBlank()) {
             Map<String, Object> settings = new HashMap<>();
-            if (request.getApiKey() != null) settings.put("apiKey", request.getApiKey());
-            if (request.getWebhookSecret() != null) settings.put("webhookSecret", request.getWebhookSecret());
-            if (request.getAutoQualify() != null) settings.put("autoQualify", request.getAutoQualify());
-            if (request.getRoundRobinPoolId() != null) settings.put("roundRobinPoolId", request.getRoundRobinPoolId().toString());
-            if (request.getChannelCode() != null) settings.put("channelCode", request.getChannelCode());
+            if (request.getApiKey() != null)
+                settings.put("apiKey", request.getApiKey());
+            if (request.getWebhookSecret() != null)
+                settings.put("webhookSecret", request.getWebhookSecret());
+            if (request.getAutoQualify() != null)
+                settings.put("autoQualify", request.getAutoQualify());
+            if (request.getRoundRobinPoolId() != null)
+                settings.put("roundRobinPoolId", request.getRoundRobinPoolId().toString());
+            if (request.getChannelCode() != null)
+                settings.put("channelCode", request.getChannelCode());
             try {
                 settingsJson = objectMapper.writeValueAsString(settings);
             } catch (Exception e) {
@@ -246,7 +307,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                 .credentialVaultRef(request.getCredentialVaultRef())
                 .webhookSecretHash(request.getWebhookSecret())
                 .webhookSlug(slug)
-                .syncFrequencyMinutes(request.getSyncFrequencyMinutes() != null ? request.getSyncFrequencyMinutes() : 15)
+                .syncFrequencyMinutes(
+                        request.getSyncFrequencyMinutes() != null ? request.getSyncFrequencyMinutes() : 15)
                 .syncStatus(IntegrationSyncStatus.ACTIVE)
                 .settingsJson(settingsJson)
                 .isEnabled(true)
@@ -266,7 +328,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         Map<UUID, CrmIntegrationChannel> channelMap = new HashMap<>();
         for (CrmTenantIntegration item : list) {
             if (item.getIntegrationChannelId() != null && !channelMap.containsKey(item.getIntegrationChannelId())) {
-                channelRepository.findById(item.getIntegrationChannelId()).ifPresent(ch -> channelMap.put(ch.getId(), ch));
+                channelRepository.findById(item.getIntegrationChannelId())
+                        .ifPresent(ch -> channelMap.put(ch.getId(), ch));
             }
         }
 
@@ -283,7 +346,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     @Transactional
     public SyncTriggerResponse triggerSync(UUID integrationId, UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
-        CrmTenantIntegration integration = tenantIntegrationRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, integrationId)
+        CrmTenantIntegration integration = tenantIntegrationRepository
+                .findByCompanyIdAndIdAndIsDeletedFalse(companyId, integrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Integration not found with id: " + integrationId));
 
         integration.setLastSyncAt(LocalDateTime.now());
@@ -303,7 +367,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     // Multi-Provider Payload Extraction Logic
     // =========================================================================
 
-    public List<LeadCreateRequest> extractLeadsFromPayload(String payload, IntegrationProvider provider, CrmTenantIntegration integration) {
+    public List<LeadCreateRequest> extractLeadsFromPayload(String payload, IntegrationProvider provider,
+            CrmTenantIntegration integration) {
         List<LeadCreateRequest> leads = new ArrayList<>();
         if (payload == null || payload.isBlank()) {
             return leads;
@@ -367,7 +432,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
 
     private LeadCreateRequest parseSingleIndiaMartLead(JsonNode node) {
         String fullName = getFieldIgnoreCase(node, "SENDER_NAME", "SENDERNAME", "sender_name", "name", "contact_name");
-        String phone = getFieldIgnoreCase(node, "SENDER_MOBILE", "SENDERMOBILE", "sender_mobile", "mobile", "phone", "SENDER_MOBILE_ALT");
+        String phone = getFieldIgnoreCase(node, "SENDER_MOBILE", "SENDERMOBILE", "sender_mobile", "mobile", "phone",
+                "SENDER_MOBILE_ALT");
         String email = getFieldIgnoreCase(node, "SENDER_EMAIL", "SENDEREMAIL", "sender_email", "email");
         String company = getFieldIgnoreCase(node, "SENDER_COMPANY", "SENDERCOMPANY", "sender_company", "company");
         String city = getFieldIgnoreCase(node, "SENDER_CITY", "SENDER_CITY_NAME", "city");
@@ -376,7 +442,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         String address = getFieldIgnoreCase(node, "SENDER_ADDRESS", "address");
         String queryId = getFieldIgnoreCase(node, "UNIQUEQUERYID", "QUERY_ID", "QID", "query_id");
         String productName = getFieldIgnoreCase(node, "QUERY_PRODUCT_NAME", "PRODUCT_NAME", "subject", "product");
-        String message = getFieldIgnoreCase(node, "QUERY_MESSAGE", "QUERY_DETAILS", "ENQUIRY_MESSAGE", "message", "query");
+        String message = getFieldIgnoreCase(node, "QUERY_MESSAGE", "QUERY_DETAILS", "ENQUIRY_MESSAGE", "message",
+                "query");
 
         String[] names = splitFullName(fullName, "IndiaMART Buyer");
 
@@ -431,7 +498,7 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private LeadCreateRequest parseSingleTradeIndiaLead(JsonNode node) {
-        String fullName = getFieldIgnoreCase(node, "sender_name", "senderName", "name");
+        String fullName = getFieldIgnoreCase(node, "sender_name", "senderName", "name", "contact_person");
         String phone = getFieldIgnoreCase(node, "sender_mobile", "senderMobile", "mobile_no", "mobile", "phone");
         String email = getFieldIgnoreCase(node, "sender_email", "senderEmail", "email");
         String company = getFieldIgnoreCase(node, "sender_co", "sender_company", "company_name", "company");
@@ -439,9 +506,9 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         String state = getFieldIgnoreCase(node, "sender_state", "state");
         String country = getFieldIgnoreCase(node, "sender_country", "country");
         String address = getFieldIgnoreCase(node, "sender_address", "address");
-        String refId = getFieldIgnoreCase(node, "r_id", "inquiry_id", "id");
-        String subject = getFieldIgnoreCase(node, "subject", "product_name", "product");
-        String message = getFieldIgnoreCase(node, "message", "query", "description");
+        String refId = getFieldIgnoreCase(node, "rfi_id", "r_id", "inquiry_id", "id", "rfq_id");
+        String subject = getFieldIgnoreCase(node, "product_name", "subject", "product", "item_name");
+        String message = getFieldIgnoreCase(node, "message", "query", "description", "details");
 
         String[] names = splitFullName(fullName, "TradeIndia Buyer");
 
@@ -487,7 +554,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                     }
                 }
             }
-            if (!leads.isEmpty()) return leads;
+            if (!leads.isEmpty())
+                return leads;
         }
 
         // Case B: Direct Lead Ad object (Zapier / Webhook Partner format)
@@ -527,7 +595,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                     fVal = f.get("value").asText();
                 }
 
-                if (fVal == null || fVal.isBlank()) continue;
+                if (fVal == null || fVal.isBlank())
+                    continue;
 
                 if (fName.contains("full_name") || fName.equals("name")) {
                     fullName = fVal;
@@ -552,7 +621,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                 } else if (fName.contains("street") || fName.equals("address")) {
                     address = fVal;
                 } else {
-                    if (notes.length() > 0) notes.append("; ");
+                    if (notes.length() > 0)
+                        notes.append("; ");
                     notes.append(f.path("name").asText()).append(": ").append(fVal);
                 }
             }
@@ -564,11 +634,16 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
             firstName = getFieldIgnoreCase(node, "first_name");
             lastName = getFieldIgnoreCase(node, "last_name");
         }
-        if (email == null) email = getFieldIgnoreCase(node, "email");
-        if (phone == null) phone = getFieldIgnoreCase(node, "phone_number", "phone", "mobile");
-        if (company == null) company = getFieldIgnoreCase(node, "company_name", "company");
-        if (city == null) city = getFieldIgnoreCase(node, "city");
-        if (state == null) state = getFieldIgnoreCase(node, "state");
+        if (email == null)
+            email = getFieldIgnoreCase(node, "email");
+        if (phone == null)
+            phone = getFieldIgnoreCase(node, "phone_number", "phone", "mobile");
+        if (company == null)
+            company = getFieldIgnoreCase(node, "company_name", "company");
+        if (city == null)
+            city = getFieldIgnoreCase(node, "city");
+        if (state == null)
+            state = getFieldIgnoreCase(node, "state");
 
         if (firstName == null) {
             String[] split = splitFullName(fullName, "Meta Ad Lead " + (leadgenId != null ? leadgenId : ""));
@@ -626,18 +701,22 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private LeadCreateRequest parseGenericSingleLead(JsonNode node) {
-        String fullName = getFieldIgnoreCase(node, "name", "full_name", "fullName", "customer_name", "customerName", "contact_name", "contactName");
+        String fullName = getFieldIgnoreCase(node, "name", "full_name", "fullName", "customer_name", "customerName",
+                "contact_name", "contactName");
         String firstName = getFieldIgnoreCase(node, "first_name", "firstName");
         String lastName = getFieldIgnoreCase(node, "last_name", "lastName");
-        String phone = getFieldIgnoreCase(node, "phone", "phone_number", "phoneNumber", "mobile", "mobile_number", "mobileNumber", "contact_number");
+        String phone = getFieldIgnoreCase(node, "phone", "phone_number", "phoneNumber", "mobile", "mobile_number",
+                "mobileNumber", "contact_number");
         String email = getFieldIgnoreCase(node, "email", "email_address", "emailAddress", "work_email");
-        String company = getFieldIgnoreCase(node, "company", "company_name", "companyName", "organization", "organization_name", "organizationName", "business_name");
+        String company = getFieldIgnoreCase(node, "company", "company_name", "companyName", "organization",
+                "organization_name", "organizationName", "business_name");
         String city = getFieldIgnoreCase(node, "city", "town");
         String state = getFieldIgnoreCase(node, "state", "province");
         String country = getFieldIgnoreCase(node, "country");
         String postalCode = getFieldIgnoreCase(node, "postal_code", "postalCode", "zip", "zipcode", "pincode");
         String address = getFieldIgnoreCase(node, "address", "address_line_1", "addressLine1", "street");
-        String message = getFieldIgnoreCase(node, "message", "query", "inquiry", "notes", "comments", "description", "requirements");
+        String message = getFieldIgnoreCase(node, "message", "query", "inquiry", "notes", "comments", "description",
+                "requirements");
         String product = getFieldIgnoreCase(node, "product", "product_name", "productName", "subject", "service");
         String extId = getFieldIgnoreCase(node, "id", "lead_id", "leadId", "external_id", "reference_id");
 
@@ -687,7 +766,7 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private boolean isTradeIndiaFormat(JsonNode node) {
-        return node.has("inquiries") || node.has("r_id") || node.has("sender_co")
+        return node.has("inquiries") || node.has("rfi_id") || node.has("r_id") || node.has("sender_co")
                 || (node.has("sender_name") && node.has("sender_mobile"));
     }
 
@@ -696,7 +775,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private String getFieldIgnoreCase(JsonNode node, String... candidateKeys) {
-        if (node == null || candidateKeys == null) return null;
+        if (node == null || candidateKeys == null)
+            return null;
         for (String key : candidateKeys) {
             if (node.hasNonNull(key)) {
                 return node.get(key).asText().trim();
@@ -716,31 +796,38 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private String cleanSubjectToProductName(String subject) {
-        if (subject == null) return "Product Inquiry";
+        if (subject == null)
+            return "Product Inquiry";
         String s = subject.trim();
         String lower = s.toLowerCase();
-        if (lower.startsWith("inquiry for ")) s = s.substring(12).trim();
-        else if (lower.startsWith("enquiry for ")) s = s.substring(12).trim();
-        else if (lower.startsWith("requirement for ")) s = s.substring(16).trim();
-        else if (lower.startsWith("requirement of ")) s = s.substring(15).trim();
-        else if (lower.startsWith("looking for ")) s = s.substring(12).trim();
+        if (lower.startsWith("inquiry for "))
+            s = s.substring(12).trim();
+        else if (lower.startsWith("enquiry for "))
+            s = s.substring(12).trim();
+        else if (lower.startsWith("requirement for "))
+            s = s.substring(16).trim();
+        else if (lower.startsWith("requirement of "))
+            s = s.substring(15).trim();
+        else if (lower.startsWith("looking for "))
+            s = s.substring(12).trim();
         return s.isBlank() ? "Product Inquiry" : s;
     }
 
     private String[] splitFullName(String fullName, String fallback) {
         if (fullName == null || fullName.isBlank()) {
-            return new String[]{fallback, null};
+            return new String[] { fallback, null };
         }
         String clean = fullName.trim();
         int idx = clean.indexOf(' ');
         if (idx > 0) {
-            return new String[]{clean.substring(0, idx).trim(), clean.substring(idx + 1).trim()};
+            return new String[] { clean.substring(0, idx).trim(), clean.substring(idx + 1).trim() };
         }
-        return new String[]{clean, null};
+        return new String[] { clean, null };
     }
 
     private UUID getOrCreateLeadSourceId(UUID companyId, IntegrationProvider provider) {
-        if (leadSourceRepository == null) return null;
+        if (leadSourceRepository == null)
+            return null;
         String sourceCode = provider != null ? provider.name() : "WEBHOOK";
         return leadSourceRepository.findByCompanyIdAndSourceCodeAndIsDeletedFalse(companyId, sourceCode)
                 .map(CrmLeadSource::getId)
@@ -771,10 +858,14 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         if (integration.getSettingsJson() != null) {
             try {
                 JsonNode n = objectMapper.readTree(integration.getSettingsJson());
-                if (n.hasNonNull("webhookSecret")) return n.get("webhookSecret").asText();
-                if (n.hasNonNull("secret")) return n.get("secret").asText();
-                if (n.hasNonNull("verifyToken")) return n.get("verifyToken").asText();
-            } catch (Exception ignored) {}
+                if (n.hasNonNull("webhookSecret"))
+                    return n.get("webhookSecret").asText();
+                if (n.hasNonNull("secret"))
+                    return n.get("secret").asText();
+                if (n.hasNonNull("verifyToken"))
+                    return n.get("verifyToken").asText();
+            } catch (Exception ignored) {
+            }
         }
         return null;
     }
@@ -786,15 +877,18 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                 if (n.hasNonNull("channelCode")) {
                     return parseProviderCode(n.get("channelCode").asText());
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         return IntegrationProvider.WEBHOOK;
     }
 
     private IntegrationProvider parseProviderCode(String code) {
-        if (code == null || code.isBlank()) return IntegrationProvider.WEBHOOK;
+        if (code == null || code.isBlank())
+            return IntegrationProvider.WEBHOOK;
         String normalized = code.trim().toUpperCase().replace("-", "_").replace(" ", "_");
-        if (normalized.equals("CUSTOM_WEBHOOK")) return IntegrationProvider.WEBHOOK;
+        if (normalized.equals("CUSTOM_WEBHOOK"))
+            return IntegrationProvider.WEBHOOK;
         try {
             return IntegrationProvider.valueOf(normalized);
         } catch (IllegalArgumentException e) {
@@ -803,7 +897,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private String formatProviderTitle(IntegrationProvider p) {
-        if (p == null) return "Webhook";
+        if (p == null)
+            return "Webhook";
         return switch (p) {
             case INDIAMART -> "IndiaMART B2B";
             case TRADEINDIA -> "TradeIndia";
@@ -816,7 +911,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private String sanitizeSlug(String input) {
-        if (input == null) return "wh-" + UUID.randomUUID().toString().substring(0, 8);
+        if (input == null)
+            return "wh-" + UUID.randomUUID().toString().substring(0, 8);
         String s = input.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
         return s.isBlank() ? "wh-" + UUID.randomUUID().toString().substring(0, 8) : s;
     }
@@ -841,9 +937,12 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         if (t.getSettingsJson() != null) {
             try {
                 JsonNode n = objectMapper.readTree(t.getSettingsJson());
-                if (n.hasNonNull("autoQualify")) autoQualify = n.get("autoQualify").asBoolean();
-                if (n.hasNonNull("roundRobinPoolId")) roundRobinPoolId = UUID.fromString(n.get("roundRobinPoolId").asText());
-            } catch (Exception ignored) {}
+                if (n.hasNonNull("autoQualify"))
+                    autoQualify = n.get("autoQualify").asBoolean();
+                if (n.hasNonNull("roundRobinPoolId"))
+                    roundRobinPoolId = UUID.fromString(n.get("roundRobinPoolId").asText());
+            } catch (Exception ignored) {
+            }
         }
 
         return TenantIntegrationResponse.builder()

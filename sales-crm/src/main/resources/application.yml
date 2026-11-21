@@ -10,10 +10,14 @@ spring:
       - optional:file:.env[.properties]
       - optional:classpath:application-sso-auth.yml
 
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
   datasource:
-    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:crm_db}?stringtype=unspecified}
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:crm_db}?stringtype=unspecified}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD:mohit}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -28,10 +32,12 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: ${JPA_HIBERNATE_DDL_AUTO:update}
     defer-datasource-initialization: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
   flyway:
@@ -54,7 +60,7 @@ frontend:
 
 sso:
   frontend: ${SSO_FRONTEND:${FRONTEND_URL:${PUBLIC_BASE_URL:https://www.mark2.in}/erp/sales-crm}}
-  backend: ${SSO_BACKEND:http://auth-service:8090}
+  backend: ${SSO_BACKEND:${SSO_INTERNAL_URL:http://localhost:8090}}
   cookie: ${COOKIE_PATH:/}
   base-url: ${BASE_URL:${PUBLIC_BASE_URL:https://www.mark2.in}/api/crm}
   login-url: ${SSO_LOGIN_URL:${PUBLIC_BASE_URL:https://www.mark2.in}/erp/login}
@@ -71,14 +77,14 @@ sso:
 
 services:
   workflow:
-    url: ${WORKFLOW_SERVICE_URL:http://workflow-service:8083}
+    url: ${WORKFLOW_SERVICE_URL:http://localhost:8083}
     callback-secret: ${WORKFLOW_CALLBACK_SECRET:crm-workflow-callback-secret}
   inventory:
-    url: ${INVENTORY_SERVICE_URL:http://inventory-service:8082}
+    url: ${INVENTORY_SERVICE_URL:http://localhost:8082}
   account:
-    url: ${ACCOUNT_SERVICE_URL:http://account-service:8081}
+    url: ${ACCOUNT_SERVICE_URL:http://localhost:8081}
   communication:
-    url: ${COMMUNICATION_SERVICE_URL:http://communication-service:8084}
+    url: ${COMMUNICATION_SERVICE_URL:http://localhost:8084}
 
 jwt:
   secret: ${JWT_SECRET:defaultSecretKeyWithAtLeast32CharactersForHmacSha256}

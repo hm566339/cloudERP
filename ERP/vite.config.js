@@ -7,9 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
-  const rawProxyTarget = env.VITE_SSO_BASE_URL || env.VITE_API_BASE_URL || "https://www.mark2.in";
-  const proxyTarget = rawProxyTarget.trim().replace(/\/+$/, '').replace(/\/api$/, '') || "https://www.mark2.in";
+  const env = loadEnv(mode, __dirname, "");
+  const rawProxyTarget = env.VITE_SSO_BASE_URL || env.VITE_API_BASE_URL || "http://localhost:8080";
+  const cleanedTarget = rawProxyTarget.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+  const proxyTarget = (cleanedTarget && cleanedTarget !== '') ? cleanedTarget : "http://localhost:8080";
 
   return {
     base: env.VITE_BASE_PATH || "/erp/",

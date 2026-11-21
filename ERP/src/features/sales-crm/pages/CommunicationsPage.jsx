@@ -12,6 +12,7 @@ import {
   Paperclip
 } from 'lucide-react';
 import PageHeader from '../../../components/common/PageHeader';
+import ModuleTabs from '../../../components/module-tabs';
 import { Select } from '../../../components/common';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import {
@@ -26,15 +27,41 @@ export default function CommunicationsPage() {
   const [channel, setChannel] = useState('WHATSAPP');
   const [messageText, setMessageText] = useState('');
   const [statusMsg, setStatusMsg] = useState(null);
-  const [selectedRows, setSelectedRows] = useState([]);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const [sendMessage, { isLoading: isSending }] = useSendCrmMessageMutation();
-  const { data: callsRes, isLoading: isCallsLoading, refetch } = useGetCrmCallsQuery({ companyId });
+  const { data: callsRes, isLoading: isCallsLoading, refetch, isFetching: isCallsFetching } = useGetCrmCallsQuery({ companyId });
 
-  const calls = callsRes?.data || [
-    { id: 'call-1', callerNumber: '+919820012345', receiverNumber: '+919876543210', durationSeconds: 245, callStatus: 'ANSWERED', createdAt: new Date(Date.now() - 3600000).toISOString() },
-    { id: 'call-2', callerNumber: '+919820012345', receiverNumber: '+919911223344', durationSeconds: 0, callStatus: 'NO_ANSWER', createdAt: new Date(Date.now() - 7200000).toISOString() },
-  ];
+  const rawCalls = useMemo(() => {
+    if (Array.isArray(callsRes?.data)) return callsRes.data;
+    if (Array.isArray(callsRes?.content)) return callsRes.content;
+    if (Array.isArray(callsRes)) return callsRes;
+    return [
+      { id: 'call-1', callerNumber: '+919820012345', receiverNumber: '+919876543210', durationSeconds: 245, callStatus: 'ANSWERED', createdAt: new Date(Date.now() - 3600000).toISOString() },
+      { id: 'call-2', callerNumber: '+919820012345', receiverNumber: '+919911223344', durationSeconds: 0, callStatus: 'NO_ANSWER', createdAt: new Date(Date.now() - 7200000).toISOString() },
+    ];
+  }, [callsRes]);
+
+  const communicationTabs = useMemo(() => [
+    {
+      key: 'threads',
+      label: 'Message Dispatch',
+      icon: MessageSquare,
+    },
+    {
+      key: 'calls',
+      label: `Call Logs & CDR (${rawCalls.length})`,
+      icon: Phone,
+    },
+  ], [rawCalls.length]);
+
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    setSearch('');
+    setPage(0);
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -58,11 +85,36 @@ export default function CommunicationsPage() {
     }
   };
 
+  const filteredCalls = useMemo(() => {
+    if (!search.trim()) return rawCalls;
+    const q = search.trim().toLowerCase();
+    return rawCalls.filter(
+      (c) =>
+        (c?.receiverNumber && c.receiverNumber.toLowerCase().includes(q)) ||
+        (c?.callerNumber && c.callerNumber.toLowerCase().includes(q)) ||
+        (c?.callStatus && c.callStatus.toLowerCase().includes(q))
+    );
+  }, [rawCalls, search]);
+
+  const totalElements = filteredCalls.length;
+  const totalPages = Math.max(1, Math.ceil(totalElements / (pageSize || 10)));
+  const paginatedCalls = useMemo(() => {
+    const start = page * pageSize;
+    return filteredCalls.slice(start, start + pageSize);
+  }, [filteredCalls, page, pageSize]);
+
+  const handleReset = () => {
+    setSearch('');
+    setPage(0);
+  };
+
   const callColumns = useMemo(() => [
     {
       id: 'receiverNumber',
-      label: 'Phone / Direction',
+      label: 'PHONE / DIRECTION',
       sortable: true,
+      headerClassName: 'min-w-[220px]',
+      className: 'min-w-[220px]',
       render: (val, row) => (
         <div className="space-y-0.5 text-xs">
           <span className="font-mono font-semibold text-zinc-900 dark:text-white block">
@@ -74,8 +126,10 @@ export default function CommunicationsPage() {
     },
     {
       id: 'callStatus',
-      label: 'Call Status',
+      label: 'CALL STATUS',
       sortable: true,
+      headerClassName: 'w-44',
+      className: 'w-44 whitespace-nowrap',
       render: (val, row) => {
         const s = row?.callStatus || val;
         const isAnswered = s === 'ANSWERED';
@@ -89,8 +143,10 @@ export default function CommunicationsPage() {
     },
     {
       id: 'durationSeconds',
-      label: 'Duration',
+      label: 'DURATION',
       sortable: true,
+      headerClassName: 'w-36',
+      className: 'w-36 whitespace-nowrap',
       render: (val, row) => {
         const sec = row?.durationSeconds ?? val ?? 0;
         const mins = Math.floor(sec / 60);
@@ -104,10 +160,12 @@ export default function CommunicationsPage() {
     },
     {
       id: 'createdAt',
-      label: 'Timestamp',
+      label: 'TIMESTAMP',
       sortable: true,
+      headerClassName: 'w-48',
+      className: 'w-48 whitespace-nowrap',
       render: (val, row) => (
-        <span className="text-xs text-zinc-500">
+        <span className="text-xs text-zinc-500 font-mono">
           {row?.createdAt || val ? new Date(row?.createdAt || val).toLocaleString() : '-'}
         </span>
       ),
@@ -116,36 +174,22 @@ export default function CommunicationsPage() {
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+      {/* 1. Page Header (Matches Trial Balance specs) */}
       <PageHeader
         title="Customer Communication Hub"
         description="Omnichannel messaging via WhatsApp Cloud API, SMS gateways, and telephony PBX"
+        icon={MessageSquare}
       />
 
-      {/* Tabs bar */}
-      <div className="px-6 py-2.5 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center gap-2 shrink-0">
-        <button
-          onClick={() => setActiveTab('threads')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-            activeTab === 'threads'
-              ? 'bg-primary text-white shadow-sm'
-              : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]'
-          }`}
-        >
-          <MessageSquare size={13} /> Message Dispatch
-        </button>
-        <button
-          onClick={() => setActiveTab('calls')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-            activeTab === 'calls'
-              ? 'bg-primary text-white shadow-sm'
-              : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]'
-          }`}
-        >
-          <Phone size={13} /> Call Logs & CDR
-        </button>
-      </div>
+      {/* 2. Common Enterprise Module Tabs */}
+      <ModuleTabs
+        tabs={communicationTabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
 
-      <div className="flex-1 p-6 overflow-hidden flex flex-col">
+      {/* 3. Main Content Area (Matches Trial Balance layout & height) */}
+      <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 min-h-0">
         {activeTab === 'threads' ? (
           <div className="flex-1 overflow-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -213,7 +257,7 @@ export default function CommunicationsPage() {
                     <button
                       type="submit"
                       disabled={isSending}
-                      className="btn-primary inline-flex items-center gap-1.5 text-xs font-semibold"
+                      className="btn-primary inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
                     >
                       <Send size={13} />
                       {isSending ? 'Sending...' : 'Send Message'}
@@ -254,20 +298,44 @@ export default function CommunicationsPage() {
             </div>
           </div>
         ) : (
-          <DataTable
-            permissionFeature="CRM"
-            selectable
-            selectedRows={selectedRows}
-            onSelectionChange={setSelectedRows}
-            columns={callColumns}
-            data={calls}
-            rowKey="id"
-            loading={isCallsLoading}
-            onRefresh={refetch}
-            itemName="calls"
-            emptyMessage="No call logs found"
-            emptyDescription="Telephony CDR records will show here once calls are initiated."
-          />
+          <div className="flex-1 flex flex-col min-h-[300px]">
+            <div className="flex-1 min-h-[300px]">
+              <DataTable
+                permissionFeature="CRM"
+                selectable={false}
+                showIndex={true}
+                searchable={true}
+                searchValue={search}
+                onSearchChange={(val) => {
+                  setSearch(val);
+                  setPage(0);
+                }}
+                searchPlaceholder="Search phone numbers or call status..."
+                onReset={handleReset}
+                columns={callColumns}
+                data={paginatedCalls}
+                rowKey="id"
+                loading={isCallsLoading}
+                isRefreshing={isCallsFetching}
+                onRefresh={refetch}
+                pagination={{
+                  page,
+                  pageSize,
+                  totalPages,
+                  totalElements,
+                }}
+                pageIndexBase={0}
+                onPageChange={setPage}
+                onPageSizeChange={(s) => {
+                  setPageSize(s);
+                  setPage(0);
+                }}
+                itemName="calls"
+                emptyMessage="No call logs found"
+                emptyDescription="Telephony CDR records will show here once calls are initiated."
+              />
+            </div>
+          </div>
         )}
       </div>
     </div>

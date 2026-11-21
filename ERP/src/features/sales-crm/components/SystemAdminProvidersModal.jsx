@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, FormField, Input, Select, Button } from '../../../components/common';
-import { Shield, Key, Globe, Check, AlertCircle, RefreshCw, Sliders, Lock } from 'lucide-react';
+import { Shield, Key, Globe, Check, AlertCircle, RefreshCw, Sliders, Lock, Image } from 'lucide-react';
+import IntegrationProviderLogo from './IntegrationProviderLogo';
 import {
   useGetAdminIntegrationProvidersQuery,
   useUpdateAdminIntegrationProviderMutation,
@@ -31,6 +32,7 @@ export default function SystemAdminProvidersModal({ isOpen, onClose }) {
     displayName: '',
     authType: 'OAUTH2',
     isEnabled: true,
+    logoUrl: '',
     clientId: '',
     clientSecret: '',
     apiBaseUrl: '',
@@ -44,6 +46,7 @@ export default function SystemAdminProvidersModal({ isOpen, onClose }) {
         displayName: currentProvider.displayName || '',
         authType: currentProvider.authType || 'API_KEY',
         isEnabled: currentProvider.isEnabled ?? true,
+        logoUrl: currentProvider.logoUrl || currentConfig.logoUrl || '',
         clientId: currentConfig.clientId || '',
         clientSecret: currentConfig.clientSecret || '',
         apiBaseUrl: currentConfig.apiBaseUrl || '',
@@ -63,8 +66,11 @@ export default function SystemAdminProvidersModal({ isOpen, onClose }) {
       const payload = {
         displayName: formData.displayName,
         authType: formData.authType,
+        logoUrl: formData.logoUrl.trim() || null,
         isEnabled: Boolean(formData.isEnabled),
         globalConfig: {
+          ...currentConfig,
+          logoUrl: formData.logoUrl.trim() || null,
           clientId: formData.clientId.trim(),
           clientSecret: formData.clientSecret.trim(),
           apiBaseUrl: formData.apiBaseUrl.trim(),
@@ -117,21 +123,26 @@ export default function SystemAdminProvidersModal({ isOpen, onClose }) {
         )}
 
         {/* Provider Tabs */}
-        <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-[#2A2F3D] pb-2">
-          {['FACEBOOK', 'INDIAMART', 'TRADEINDIA', 'CUSTOM_WEBHOOK'].map((code) => (
-            <button
-              key={code}
-              type="button"
-              onClick={() => setSelectedCode(code)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                selectedCode === code
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]'
-              }`}
-            >
-              {code}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-[#2A2F3D] pb-2 overflow-x-auto">
+          {Array.from(new Set(['FACEBOOK', 'INDIAMART', 'TRADEINDIA', 'CUSTOM_WEBHOOK', ...providers.map((p) => p.code).filter(Boolean)])).map((code) => {
+            const p = providers.find((item) => item.code === code);
+            const tabLogo = p?.logoUrl || p?.globalConfig?.logoUrl;
+            return (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setSelectedCode(code)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                  selectedCode === code
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]'
+                }`}
+              >
+                <IntegrationProviderLogo code={code} logoUrl={tabLogo} size="xs" />
+                <span>{code}</span>
+              </button>
+            );
+          })}
         </div>
 
         {isLoading ? (
@@ -161,6 +172,37 @@ export default function SystemAdminProvidersModal({ isOpen, onClose }) {
               </FormField>
             </div>
 
+            {/* Provider Brand Logo */}
+            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922] space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                  <Image className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Provider Brand Logo URL (Optional)</span>
+                </label>
+                <span className="text-[10px] text-zinc-400">Live Preview</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <IntegrationProviderLogo
+                  code={selectedCode}
+                  logoUrl={formData.logoUrl}
+                  size="md"
+                  className="shadow-xs shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <Input
+                    type="url"
+                    value={formData.logoUrl}
+                    onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                    placeholder="https://example.com/logo.png or SVG/WebP URL"
+                    className="w-full text-xs font-mono"
+                  />
+                  <p className="text-[10px] text-zinc-400 mt-1">
+                    Direct image URL (PNG, SVG, JPG, WebP). Saved in database to render custom brand logo across catalog cards and forms.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {selectedCode === 'FACEBOOK' && (
               <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922] space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-white">
@@ -171,6 +213,8 @@ export default function SystemAdminProvidersModal({ isOpen, onClose }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <FormField label="OAuth App ID (Client ID)" required>
                     <Input
+                      name="metaAppId"
+                      autoComplete="off"
                       value={formData.clientId}
                       onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
                       placeholder="e.g. 192837492817293"
@@ -181,6 +225,8 @@ export default function SystemAdminProvidersModal({ isOpen, onClose }) {
                   <FormField label="OAuth App Secret (Client Secret)" required>
                     <Input
                       type="password"
+                      name="metaAppSecret"
+                      autoComplete="new-password"
                       value={formData.clientSecret}
                       onChange={(e) => setFormData({ ...formData, clientSecret: e.target.value })}
                       placeholder="e.g. a8f9e0b1c2d3..."

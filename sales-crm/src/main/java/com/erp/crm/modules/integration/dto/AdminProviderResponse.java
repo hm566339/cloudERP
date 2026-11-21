@@ -21,9 +21,17 @@ public class AdminProviderResponse {
     private IntegrationProviderCode code;
     private String displayName;
     private IntegrationAuthType authType;
+    private String logoUrl;
     private Map<String, Object> globalConfig;
     private String globalConfigJson;
     private Boolean isEnabled;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // Backward-compatible 9-argument constructor
+    public AdminProviderResponse(UUID id, IntegrationProviderCode code, String displayName,
+            IntegrationAuthType authType, Map<String, Object> globalConfig,
+            String globalConfigJson, Boolean isEnabled, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, code, displayName, authType, null, globalConfig, globalConfigJson, isEnabled, createdAt, updatedAt);
+    }
 }

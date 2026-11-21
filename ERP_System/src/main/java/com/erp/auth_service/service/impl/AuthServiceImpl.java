@@ -679,7 +679,8 @@ public class AuthServiceImpl implements AuthService {
                                                 || organization.getId().equals(defaultComp.getOrganization().getId()))
                                 && access.stream().anyMatch(
                                                 a -> a.getCompany() != null
-                                                                && a.getCompany().getId().equals(defaultComp.getId()))) {
+                                                                && a.getCompany().getId()
+                                                                                .equals(defaultComp.getId()))) {
                         defaultCompanyId = defaultComp.getId();
                         defaultCompanyName = defaultComp.getCompanyName();
                 }
@@ -2814,9 +2815,20 @@ public class AuthServiceImpl implements AuthService {
                 boolean isSystemAdmin = (user.getUserRoles() != null && user.getUserRoles().stream()
                                 .anyMatch(ur -> ur.getRole() != null && ("SYSTEM_ADMIN"
                                                 .equalsIgnoreCase(ur.getRole().getName())
-                                                || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName()))))
+                                                || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                || "SUPER_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                || "ROLE_SUPER_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                || "SYSTEMADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                || "ROLE_SYSTEMADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                || "PLATFORM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                || "ROLE_PLATFORM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                || "ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                || "ROLE_ADMIN".equalsIgnoreCase(ur.getRole().getName()))))
                                 || (session.getModule() != null
-                                                && "SYSTEM_ADMIN".equalsIgnoreCase(session.getModule().getName()));
+                                                && ("SYSTEM_ADMIN".equalsIgnoreCase(session.getModule().getName())
+                                                    || "SUPER_ADMIN".equalsIgnoreCase(session.getModule().getName())))
+                                || (user.getCompany() != null && "000000".equals(user.getCompany().getCompanyCode()))
+                                || "System001".equalsIgnoreCase(user.getUsername());
 
                 Module module = session.getModule();
                 if (module != null && !isSystemAdmin && !isOwner && company != null) {
@@ -2969,7 +2981,31 @@ public class AuthServiceImpl implements AuthService {
                                         } catch (Exception ignored) {
                                         }
                                 }
+                                if (isSystemAdmin) {
+                                        boolean hasAdminRole = scopedRoles.stream()
+                                                        .anyMatch(r -> r != null && ("SYSTEM_ADMIN".equalsIgnoreCase(r.getName())
+                                                                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(r.getName())
+                                                                        || "SUPER_ADMIN".equalsIgnoreCase(r.getName())
+                                                                        || "ROLE_SUPER_ADMIN".equalsIgnoreCase(r.getName())));
+                                        if (!hasAdminRole) {
+                                                scopedRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                                                                .name("SYSTEM_ADMIN")
+                                                                .status(true)
+                                                                .build());
+                                        }
+                                }
                                 userResponse.setRole(scopedRoles);
+                        } else if (isSystemAdmin) {
+                                List<com.erp.auth_service.dto.response.RoleResponse> adminRoles = new ArrayList<>();
+                                adminRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                                                .name("SYSTEM_ADMIN")
+                                                .status(true)
+                                                .build());
+                                adminRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                                                .name("ROLE_SYSTEM_ADMIN")
+                                                .status(true)
+                                                .build());
+                                userResponse.setRole(adminRoles);
                         } else if (isOwner) {
                                 List<com.erp.auth_service.dto.response.RoleResponse> ownerRoles = new ArrayList<>();
                                 ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("OWNER")

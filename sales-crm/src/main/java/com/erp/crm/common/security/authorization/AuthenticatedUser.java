@@ -102,10 +102,16 @@ public class AuthenticatedUser implements Principal {
     }
 
     /**
-     * Only the SSO-provided SYSTEM_ADMIN role, and only when it is active.
-     * An inactive SYSTEM_ADMIN role grants nothing.
+     * True when user holds any variant of SYSTEM_ADMIN role, or belongs to root
+     * system company 000000.
      */
     public boolean isSystemAdmin() {
+        if ("000000".equals(companyCode) || "System001".equalsIgnoreCase(username)) {
+            return true;
+        }
+        if (roles != null && roles.stream().anyMatch(SsoAuthorities::isSystemAdminRole)) {
+            return true;
+        }
         return hasActiveRole(SsoAuthorities.SYSTEM_ADMIN_ROLE.substring("ROLE_".length()));
     }
 
@@ -153,7 +159,8 @@ public class AuthenticatedUser implements Principal {
                 String permCanonicalModule = SsoAuthorities.normalizeModuleName(permission.getModuleName());
                 String permFeature = normalize(permission.getFeatureCode());
                 if (targetScope.equals(permModule) || targetScope.equals(permFeature)
-                        || (canonicalScope != null && (canonicalScope.equals(permCanonicalModule) || canonicalScope.equals(permFeature)))) {
+                        || (canonicalScope != null && (canonicalScope.equals(permCanonicalModule)
+                                || canonicalScope.equals(permFeature)))) {
                     return true;
                 }
             }

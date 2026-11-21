@@ -60,6 +60,7 @@ public class GatewayConfig {
 
         AtomicInteger registeredRoutes = new AtomicInteger();
         Set<String> registeredRouteIds = new HashSet<>();
+        java.util.concurrent.atomic.AtomicBoolean hasCrmRoute = new java.util.concurrent.atomic.AtomicBoolean(false);
 
         fetchedRoutes.stream()
                 .peek(route -> log.debug("Evaluating route candidate: {}", route))
@@ -127,6 +128,18 @@ public class GatewayConfig {
                             serviceUrl = internalTarget;
                         }
 
+                        // Map CRM route to correct service URL & resolve docker hostname for local development
+                        if (pattern.startsWith("/api/crm")) {
+                            hasCrmRoute.set(true);
+                            if (authServiceBaseUrl.contains("localhost") && serviceUrl.contains("sales-crm:8086")) {
+                                log.info("Mapping docker hostname 'sales-crm:8086' to 'localhost:8086' for local gateway");
+                                serviceUrl = serviceUrl.replace("sales-crm:8086", "localhost:8086");
+                            } else if (serviceUrl.contains(":8083")) {
+                                log.warn("Overriding erroneous port 8083 with 8086 for CRM serviceUrl: {}", serviceUrl);
+                                serviceUrl = serviceUrl.replace(":8083", ":8086");
+                            }
+                        }
+
                         log.info("Registering route: id={}, apiPattern={}, serviceUrl={}, order={}",
                                 route.getId(), pattern, serviceUrl, route.getRouteOrder());
 
@@ -144,6 +157,13 @@ public class GatewayConfig {
                         log.error("Error while registering route id={}: {}", route.getId(), ex.getMessage(), ex);
                     }
                 });
+
+        if (!hasCrmRoute.get()) {
+            String crmTarget = authServiceBaseUrl.contains("localhost") ? "http://localhost:8086" : "http://sales-crm:8086";
+            log.info("No dynamic CRM route found in module_route; registering default CRM route: /api/crm/** -> {}", crmTarget);
+            routes.route("default-crm-route", r -> r.path("/api/crm/**").uri(crmTarget));
+            registeredRoutes.incrementAndGet();
+        }
 
         log.info("Built RouteLocator with {} registered route(s)", registeredRoutes.get());
         return routes.build();

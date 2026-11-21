@@ -40,6 +40,9 @@ public class IntegrationProviderEntity {
     @Column(name = "auth_type", nullable = false, length = 30)
     private IntegrationAuthType authType;
 
+    @Column(name = "logo_url", length = 500)
+    private String logoUrl;
+
     /**
      * Encrypted JSON storing global defaults:
      * clientId, clientSecret, apiBaseUrl, redirectUri, defaultFieldMapping

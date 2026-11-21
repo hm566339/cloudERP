@@ -12,12 +12,34 @@ public interface TwoTierIntegrationService {
     // --- Layer 1: SystemAdmin Global Configuration ---
     List<AdminProviderResponse> listAllProvidersForAdmin();
 
+    AdminProviderResponse getProviderForAdmin(IntegrationProviderCode code);
+
+    default AdminProviderResponse getProviderForAdmin(String code) {
+        return getProviderForAdmin(IntegrationProviderCode.fromString(code));
+    }
+
     AdminProviderResponse updateProvider(IntegrationProviderCode code, AdminProviderUpdateRequest request);
+
+    default AdminProviderResponse updateProvider(String code, AdminProviderUpdateRequest request) {
+        return updateProvider(IntegrationProviderCode.fromString(code), request);
+    }
+
+    AdminProviderResponse createProvider(AdminProviderCreateRequest request);
 
     // --- Layer 2: Authorized Tenant User Operations ---
     List<AvailableProviderResponse> listAvailableProviders();
 
-    String getOAuthAuthorizeUrl(IntegrationProviderCode code, String customRedirectUri);
+    default String getOAuthAuthorizeUrl(IntegrationProviderCode code, String customRedirectUri) {
+        return getOAuthAuthorizeUrl(code, customRedirectUri, null, null);
+    }
+
+    default String getOAuthAuthorizeUrl(IntegrationProviderCode code, String customRedirectUri, String returnUrl) {
+        return getOAuthAuthorizeUrl(code, customRedirectUri, returnUrl, null);
+    }
+
+    String getOAuthAuthorizeUrl(IntegrationProviderCode code, String customRedirectUri, String returnUrl, UUID companyId);
+
+    String handleOAuthCallbackRedirect(IntegrationProviderCode code, String authCode, String state, String error, String errorDescription);
 
     OAuthCallbackResponse handleOAuthCallback(IntegrationProviderCode code, OAuthCallbackRequest request);
 
@@ -30,6 +52,12 @@ public interface TwoTierIntegrationService {
     List<TenantIntegrationDetailResponse> getTenantIntegrations(UUID companyId);
 
     TenantIntegrationDetailResponse getTenantIntegration(UUID id, UUID companyId);
+
+    default SyncTriggerResponse triggerSync(UUID id) {
+        return triggerSync(id, null);
+    }
+
+    SyncTriggerResponse triggerSync(UUID id, UUID companyId);
 
     // --- Facebook / Instagram Lead Ads Specialization ---
     Map<String, Object> subscribeFacebookPage(String pageId, boolean subscribe, UUID companyId);

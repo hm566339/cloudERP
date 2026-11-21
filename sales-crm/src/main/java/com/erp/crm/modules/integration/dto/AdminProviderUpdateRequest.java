@@ -19,6 +19,8 @@ public class AdminProviderUpdateRequest {
 
     private IntegrationAuthType authType;
 
+    private String logoUrl;
+
     /**
      * Accepts either a raw JSON string or structured map of config:
      * clientId, clientSecret, apiBaseUrl, redirectUri, defaultFieldMapping

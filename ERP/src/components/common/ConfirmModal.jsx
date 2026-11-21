@@ -4,44 +4,58 @@ import { Trash2, AlertTriangle, X, Loader2 } from 'lucide-react';
 
 export default function ConfirmModal({ 
   open, 
+  isOpen,
   title, 
   message, 
   details, 
   info, 
   confirmLabel = 'Confirm', 
+  confirmText,
   cancelLabel = 'Cancel', 
+  cancelText,
   onConfirm, 
   onCancel, 
+  onClose,
   loading = false, 
   loadingText,
-  isDestructive = true, 
+  isDestructive, 
+  type,
+  variant,
   zIndex = 9999 
 }) {
+  const isModalOpen = Boolean(open ?? isOpen);
+  const handleClose = onCancel || onClose;
+  const finalConfirmLabel = confirmText || confirmLabel;
+  const finalCancelLabel = cancelText || cancelLabel;
+  const destructive = isDestructive !== undefined 
+    ? isDestructive 
+    : (type === 'danger' || variant === 'danger' || type === 'destructive' || variant === 'destructive' || true);
+
   // Lock body scroll when modal is open
   useEffect(() => {
-    if (open) {
+    if (isModalOpen) {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       return () => {
         document.body.style.overflow = originalOverflow;
       };
     }
-  }, [open]);
+  }, [isModalOpen]);
 
   // Close on Escape key press
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && open && !loading) {
-        onCancel?.();
+      if (e.key === 'Escape' && isModalOpen && !loading) {
+        handleClose?.();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, loading, onCancel]);
+  }, [isModalOpen, loading, handleClose]);
 
-  if (!open) return null;
+  if (!isModalOpen) return null;
 
-  const Icon = isDestructive ? Trash2 : AlertTriangle;
+  const Icon = destructive ? Trash2 : AlertTriangle;
 
   // Clean up 'info' object if raw database record
   let displayInfo = info;
@@ -59,7 +73,7 @@ export default function ConfirmModal({
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget && !loading) {
-      onCancel?.();
+      handleClose?.();
     }
   };
 
@@ -80,19 +94,19 @@ export default function ConfirmModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/60 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-2xs ${
-              isDestructive 
+              destructive 
                 ? 'bg-rose-50 dark:bg-[#F0616D]/15 border border-rose-100 dark:border-[#F0616D]/30 text-rose-600 dark:text-[#F0616D]' 
                 : 'bg-amber-50 dark:bg-[#F5B544]/15 border border-amber-100 dark:border-[#F5B544]/30 text-amber-600 dark:text-[#F5B544]'
             }`}>
               <Icon size={16} />
             </div>
             <h3 id="confirm-dialog-title" className="text-sm sm:text-base font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight truncate">
-              {title || (isDestructive ? 'Delete Confirmation' : 'Confirm Action')}
+              {title || (destructive ? 'Delete Confirmation' : 'Confirm Action')}
             </h3>
           </div>
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleClose}
             disabled={loading}
             className="p-1 text-zinc-400 hover:text-zinc-700 dark:text-[#6B7184] dark:hover:text-[#E6E8EE] hover:bg-zinc-200/60 dark:hover:bg-[#222736] rounded-lg transition-colors active:scale-95 disabled:opacity-50 cursor-pointer"
             aria-label="Close dialog"
@@ -107,7 +121,7 @@ export default function ConfirmModal({
           <div id="confirm-dialog-desc" className="text-[#2E3D28] dark:text-[#E6E8EE] text-xs sm:text-sm font-medium leading-relaxed">
             {message}
           </div>
-          
+
           {details && (
             <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-2 leading-relaxed">
               {details}
@@ -135,18 +149,18 @@ export default function ConfirmModal({
         <div className="px-5 py-3.5 border-t border-[#D5D8CA] dark:border-[#2A2F3D] bg-[#EDEEE4]/40 dark:bg-[#161922] flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 shrink-0">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleClose}
             disabled={loading}
             className="h-[36px] px-4 text-xs font-semibold text-[#485942] dark:text-[#E6E8EE] hover:text-[#2E3D28] bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-lg hover:bg-[#EDEEE4] dark:hover:bg-[#222736] transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
           >
-            {cancelLabel}
+            {finalCancelLabel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             disabled={loading}
             className={`h-[36px] px-4 text-xs font-semibold text-white rounded-lg shadow-xs transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer ${
-              isDestructive 
+              destructive 
                 ? 'bg-rose-600 hover:bg-rose-700 dark:bg-[#F0616D] dark:hover:bg-[#d94854]' 
                 : 'bg-[#2E3D28] hover:bg-[#3C4E34] active:bg-[#243320] dark:bg-[#4C8DFF] text-white dark:hover:bg-[#6AA1FF]'
             }`}
@@ -154,12 +168,12 @@ export default function ConfirmModal({
             {loading ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                <span>{loadingText || (isDestructive ? 'Deleting...' : 'Processing...')}</span>
+                <span>{loadingText || (destructive ? 'Deleting...' : 'Processing...')}</span>
               </>
             ) : (
               <>
                 <Icon size={14} />
-                <span>{confirmLabel}</span>
+                <span>{finalConfirmLabel}</span>
               </>
             )}
           </button>

@@ -19,6 +19,7 @@ import {
   Legend
 } from 'recharts';
 import PageHeader from '../../../components/common/PageHeader';
+import IntegrationsCampaignsHeader from '../components/IntegrationsCampaignsHeader';
 import { Select } from '../../../components/common';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 
@@ -106,7 +107,8 @@ export default function AttributionPage() {
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
-      <PageHeader
+      <IntegrationsCampaignsHeader
+        activeTab="attribution"
         title="Multi-Touch Revenue Attribution"
         description="Algorithmic credit distribution across customer acquisition and sales touchpoints"
       />

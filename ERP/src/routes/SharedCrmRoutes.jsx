@@ -1,5 +1,5 @@
 import React, { lazy } from 'react';
-import { Route } from 'react-router-dom';
+import { Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 
 // ─── Sales & CRM Feature Pages ───────────────────────────────────────────────
@@ -21,6 +21,7 @@ const CommunicationsPage = lazy(() => import('../features/sales-crm/pages/Commun
 const AutomationPage = lazy(() => import('../features/sales-crm/pages/AutomationPage'));
 const IntegrationsPage = lazy(() => import('../features/sales-crm/pages/IntegrationsPage'));
 const CrmSettingsPage = lazy(() => import('../features/sales-crm/pages/CrmSettingsPage'));
+const GlobalIntegrationProvidersPage = lazy(() => import('../features/sales-crm/pages/GlobalIntegrationProvidersPage'));
 
 // ─── Receivables, Orders, Invoices & Audit (Legacy & Unified) ────────────────
 const SalesOrders = lazy(() => import('../features/sales/pages/SalesOrdersPage'));
@@ -218,6 +219,10 @@ export function SharedCrmRoutes({ prefix = "" }) {
           </ProtectedRoute>
         }
       />
+      <Route
+        path={`${prefix}integrations-campaigns`}
+        element={<Navigate to={`${prefix}integrations`} replace />}
+      />
 
       {/* 15. Settings */}
       <Route
@@ -225,6 +230,14 @@ export function SharedCrmRoutes({ prefix = "" }) {
         element={
           <ProtectedRoute module="CRM">
             <CrmSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}settings/providers`}
+        element={
+          <ProtectedRoute module="CRM">
+            <GlobalIntegrationProvidersPage />
           </ProtectedRoute>
         }
       />

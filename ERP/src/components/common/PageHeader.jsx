@@ -21,6 +21,7 @@ function PageHeader({
   icon: Icon,
   action,
   actions,
+  actionButtons,
   children,
   className = '',
   titleClassName = '',
@@ -28,13 +29,14 @@ function PageHeader({
   actionsClassName = '',
   border = true,
 }) {
-  // Normalize actions: supports either single `action` object or `actions` array
+  // Normalize actions: supports single `action` object, `actions` array, or `actionButtons` array
   const actionList = React.useMemo(() => {
-    if (actions && Array.isArray(actions)) return actions;
-    if (actions && React.isValidElement(actions)) return [actions];
+    const raw = actions || actionButtons;
+    if (raw && Array.isArray(raw)) return raw;
+    if (raw && React.isValidElement(raw)) return [raw];
     if (action) return [action];
     return [];
-  }, [action, actions]);
+  }, [action, actions, actionButtons]);
 
   return (
     <div

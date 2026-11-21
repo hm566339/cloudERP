@@ -9,8 +9,10 @@ import com.erp.crm.modules.integration.enums.WebhookProcessingStatus;
 import com.erp.crm.modules.integration.repository.CrmIntegrationChannelRepository;
 import com.erp.crm.modules.integration.repository.CrmIntegrationWebhookLogRepository;
 import com.erp.crm.modules.integration.repository.CrmTenantIntegrationRepository;
+import com.erp.crm.modules.integration.repository.TenantIntegrationEntityRepository;
 import com.erp.crm.modules.lead.dto.request.LeadCreateRequest;
 import com.erp.crm.modules.lead.dto.response.LeadResponse;
+import com.erp.crm.modules.lead.repository.CrmLeadRepository;
 import com.erp.crm.modules.lead.service.CrmLeadService;
 import com.erp.crm.modules.setting.entity.CrmLeadSource;
 import com.erp.crm.modules.setting.repository.CrmLeadSourceRepository;
@@ -39,6 +41,10 @@ class CrmIntegrationServiceImplTest {
 
     @Mock
     private CrmTenantIntegrationRepository tenantIntegrationRepository;
+    @Mock
+    private TenantIntegrationEntityRepository tenantIntegrationEntityRepository;
+    @Mock
+    private CrmLeadRepository leadRepository;
     @Mock
     private CrmIntegrationWebhookLogRepository webhookLogRepository;
     @Mock
@@ -279,6 +285,73 @@ class CrmIntegrationServiceImplTest {
         assertEquals("TI-12345", captured.getExternalLeadId());
         assertEquals("TradeIndia", captured.getUtmSource());
         assertEquals("High Tensile Fasteners", captured.getInquiredProducts().get(0).getProductName());
+    }
+
+    @Test
+    @DisplayName("Should parse TradeIndia standard payload with rfi_id, product_name, and deduplicate by rfi_id")
+    void testHandleWebhook_TradeIndia_StandardRfiIdAndDeduplication() {
+        CrmTenantIntegration integration = CrmTenantIntegration.builder()
+                .id(integrationId)
+                .webhookSlug("tradeindia-rfi-slug")
+                .integrationChannelId(UUID.randomUUID())
+                .build();
+        integration.setCompanyId(companyId);
+
+        when(tenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse("tradeindia-rfi-slug"))
+                .thenReturn(Optional.of(integration));
+        when(webhookLogRepository.existsByCompanyIdAndIdempotencyHash(eq(companyId), anyString()))
+                .thenReturn(false);
+
+        CrmIntegrationChannel channel = CrmIntegrationChannel.builder()
+                .providerCode(IntegrationProvider.TRADEINDIA)
+                .build();
+        when(channelRepository.findById(any())).thenReturn(Optional.of(channel));
+        when(webhookLogRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // 1st request: new inquiry with rfi_id
+        when(leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId, "RFI-998877"))
+                .thenReturn(false);
+        UUID createdLeadId = UUID.randomUUID();
+        when(leadService.createLead(any(LeadCreateRequest.class), eq(companyId)))
+                .thenReturn(LeadResponse.builder().id(createdLeadId).build());
+
+        String payload = """
+                {
+                    "rfi_id": "RFI-998877",
+                    "sender_name": "Pooja Sharma",
+                    "sender_mobile": "9876500000",
+                    "sender_email": "pooja@industrialtools.in",
+                    "sender_co": "Sharma Industrial Tools",
+                    "sender_city": "Pune",
+                    "sender_state": "Maharashtra",
+                    "product_name": "Carbide Cutting Inserts",
+                    "subject": "Inquiry for Carbide Tools",
+                    "message": "Requirement of 200 boxes CNC carbide tips"
+                }
+                """;
+
+        WebhookAckResponse ack1 = integrationService.handleWebhook("tradeindia-rfi-slug", payload, "10.0.0.1", Collections.emptyMap());
+        assertNotNull(ack1);
+        assertEquals(1, ack1.getLeadsCount());
+
+        ArgumentCaptor<LeadCreateRequest> captor = ArgumentCaptor.forClass(LeadCreateRequest.class);
+        verify(leadService).createLead(captor.capture(), eq(companyId));
+        LeadCreateRequest captured = captor.getValue();
+        assertEquals("Pooja", captured.getFirstName());
+        assertEquals("Sharma", captured.getLastName());
+        assertEquals("Sharma Industrial Tools", captured.getOrganizationName());
+        assertEquals("RFI-998877", captured.getExternalLeadId());
+        assertEquals("Carbide Cutting Inserts", captured.getInquiredProducts().get(0).getProductName());
+
+        // 2nd request: duplicate rfi_id already ingested -> must skip creating lead
+        when(leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId, "RFI-998877"))
+                .thenReturn(true);
+        reset(leadService);
+
+        WebhookAckResponse ack2 = integrationService.handleWebhook("tradeindia-rfi-slug", payload, "10.0.0.1", Collections.emptyMap());
+        assertNotNull(ack2);
+        // Lead should not be created again
+        verify(leadService, never()).createLead(any(), any());
     }
 
     @Test

@@ -69,9 +69,8 @@ const Button = React.forwardRef(function Button(
       ref={ref}
       type={type}
       disabled={disabled || loading}
-      className={`${baseClasses} ${variantClasses[variant] || variantClasses.primary} ${
-        sizeClasses[size] || sizeClasses.md
-      } ${className}`}
+      className={`${baseClasses} ${variantClasses[variant] || variantClasses.primary} ${sizeClasses[size] || sizeClasses.md
+        } ${className}`}
       {...props}
     >
       {loading ? (

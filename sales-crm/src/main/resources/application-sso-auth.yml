@@ -45,6 +45,8 @@ sso:
         - "WRITE"
       DELETE:
         - "DELETE"
+        - "MANAGE"
+        - "WRITE"
 
     custom-action-suffixes:
       "/assign": "ASSIGN"

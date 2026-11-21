@@ -80,6 +80,26 @@ export function isPurchaseTransactionsRoute(pathname) {
   );
 }
 
+export function isCrmIntegrationsCampaignsRoute(pathname) {
+  if (!pathname) return false;
+  const stripCompany = (p) => String(p || '').replace(/^\/company\/[^/]+/, '').replace(/\/$/, '') || '/';
+  const clean = stripCompany(pathname);
+  return (
+    clean === '/sales-crm/integrations' ||
+    clean.startsWith('/sales-crm/integrations/') ||
+    clean === '/crm/integrations' ||
+    clean.startsWith('/crm/integrations/') ||
+    clean === '/sales-crm/campaigns' ||
+    clean.startsWith('/sales-crm/campaigns/') ||
+    clean === '/crm/campaigns' ||
+    clean.startsWith('/crm/campaigns/') ||
+    clean === '/sales-crm/attribution' ||
+    clean.startsWith('/sales-crm/attribution/') ||
+    clean === '/crm/attribution' ||
+    clean.startsWith('/crm/attribution/')
+  );
+}
+
 export function isItemOrChildActive(item, currentPath) {
   if (!item || !currentPath) return false;
 
@@ -143,6 +163,14 @@ export function isItemOrChildActive(item, currentPath) {
           // Special module patterns: Purchase (Requisitions, RFQs, Supplier Quotes, Purchase Orders, Goods Receipts, Purchase Invoices)
           const isPurchaseMenu = item.id === 'acc-txn-pur' || item.id === 'txn-pi';
           if (isPurchaseMenu && isPurchaseTransactionsRoute(currentPath)) return true;
+
+          // Special module patterns: Integrations & Campaigns
+          const isIntegrationsCampaignsMenu =
+            item.id === 'crm-integrations-campaigns' ||
+            item.id === 'crm-integrations' ||
+            item.id === 'crm-campaigns' ||
+            item.id === 'crm-attribution';
+          if (isIntegrationsCampaignsMenu && isCrmIntegrationsCampaignsRoute(currentPath)) return true;
 
           const isApprovalsRoute = cleanCurrent === '/workflows/approvals' ||
             cleanCurrent.startsWith('/workflows/approvals/');

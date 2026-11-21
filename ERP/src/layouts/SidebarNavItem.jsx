@@ -2,9 +2,9 @@ import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { useSidebar } from './SidebarContext'
-import { isItemOrChildActive, isSalesTransactionsRoute, isPurchaseTransactionsRoute } from './SidebarNavUtils.js'
+import { isItemOrChildActive, isSalesTransactionsRoute, isPurchaseTransactionsRoute, isCrmIntegrationsCampaignsRoute } from './SidebarNavUtils.js'
 
-export { isItemOrChildActive, isSalesTransactionsRoute, isPurchaseTransactionsRoute }
+export { isItemOrChildActive, isSalesTransactionsRoute, isPurchaseTransactionsRoute, isCrmIntegrationsCampaignsRoute }
 
 function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
   const { isMenuOpen, toggleMenu, setMenuOpen } = useSidebar();

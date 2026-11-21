@@ -23,6 +23,10 @@ public interface CrmLeadRepository extends JpaRepository<CrmLead, UUID>, JpaSpec
 
     Optional<CrmLead> findByCompanyIdAndNormalizedEmailAndIsDeletedFalse(UUID companyId, String normalizedEmail);
 
+    boolean existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(UUID companyId, String externalLeadId);
+
+    Optional<CrmLead> findByCompanyIdAndExternalLeadIdAndIsDeletedFalse(UUID companyId, String externalLeadId);
+
     Page<CrmLead> findByCompanyIdAndIsDeletedFalse(UUID companyId, Pageable pageable);
 
     @Query("SELECT COUNT(l) FROM CrmLead l WHERE l.companyId = :companyId AND l.isDeleted = false")

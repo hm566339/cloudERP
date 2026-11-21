@@ -1,5 +1,7 @@
 package com.erp.crm.modules.integration.service.serviceImpl;
 
+import com.erp.crm.common.exception.BusinessValidationException;
+import com.erp.crm.common.exception.ResourceNotFoundException;
 import com.erp.crm.common.security.CurrentUserContext;
 import com.erp.crm.modules.integration.converter.Aes256EncryptionConverter;
 import com.erp.crm.modules.integration.dto.*;
@@ -48,6 +50,18 @@ class TwoTierIntegrationServiceImplTest {
 
     @Mock
     private CrmTenantIntegrationRepository legacyTenantIntegrationRepository;
+
+    @Mock
+    private com.erp.crm.modules.lead.service.CrmLeadService leadService;
+
+    @Mock
+    private com.erp.crm.modules.lead.repository.CrmLeadRepository leadRepository;
+
+    @Mock
+    private com.erp.crm.modules.setting.repository.CrmLeadSourceRepository leadSourceRepository;
+
+    @Mock
+    private com.erp.crm.modules.automation.service.RoundRobinAssignmentService roundRobinAssignmentService;
 
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -291,5 +305,127 @@ class TwoTierIntegrationServiceImplTest {
         assertEquals(TenantIntegrationStatus.DISCONNECTED, entity.getStatus());
         assertTrue(entity.getIsDeleted());
         verify(tenantIntegrationRepository, times(1)).save(entity);
+    }
+
+    @Test
+    @DisplayName("9. Trigger Sync: Successfully triggers sync for Facebook 2-tier integration")
+    void testTriggerSyncSuccessFacebook() {
+        UUID integrationId = UUID.randomUUID();
+        TenantIntegrationEntity entity = TenantIntegrationEntity.builder()
+                .id(integrationId)
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .integrationName("Facebook Lead Ads Ingestion")
+                .credentialsJson("{\"pages\":[{\"pageId\":\"p1\",\"pageAccessToken\":\"mock_token\"}]}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .webhookSlug("fb-slug-123")
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findByIdAndTenantIdAndIsDeletedFalse(integrationId, companyId))
+                .thenReturn(Optional.of(entity));
+        when(tenantIntegrationRepository.save(any(TenantIntegrationEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        SyncTriggerResponse response = integrationService.triggerSync(integrationId, companyId);
+
+        assertNotNull(response);
+        assertEquals(integrationId, response.getIntegrationId());
+        assertEquals("TRIGGERED", response.getSyncStatus());
+        assertNotNull(entity.getLastSyncedAt());
+        verify(tenantIntegrationRepository, times(1)).save(entity);
+    }
+
+    @Test
+    @DisplayName("10. Trigger Sync: Successfully triggers pull sync for IndiaMART integration")
+    void testTriggerSyncSuccessIndiaMART() {
+        UUID integrationId = UUID.randomUUID();
+        TenantIntegrationEntity entity = TenantIntegrationEntity.builder()
+                .id(integrationId)
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.INDIAMART)
+                .integrationName("IndiaMART Marketplace")
+                .credentialsJson("{\"crmKey\":\"GLUSR_KEY_TEST\"}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .webhookSlug("indiamart-slug-123")
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findByIdAndTenantIdAndIsDeletedFalse(integrationId, companyId))
+                .thenReturn(Optional.of(entity));
+        when(tenantIntegrationRepository.save(any(TenantIntegrationEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        SyncTriggerResponse response = integrationService.triggerSync(integrationId, companyId);
+
+        assertNotNull(response);
+        assertEquals(integrationId, response.getIntegrationId());
+        assertEquals("TRIGGERED", response.getSyncStatus());
+        assertTrue(response.getMessage().contains("IndiaMART"));
+    }
+
+    @Test
+    @DisplayName("11. Trigger Sync: Throws ResourceNotFoundException when integration not found")
+    void testTriggerSyncNotFound() {
+        UUID integrationId = UUID.randomUUID();
+        when(tenantIntegrationRepository.findByIdAndTenantIdAndIsDeletedFalse(integrationId, companyId))
+                .thenReturn(Optional.empty());
+        when(tenantIntegrationRepository.findById(integrationId))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> integrationService.triggerSync(integrationId, companyId));
+    }
+
+    @Test
+    @DisplayName("12. Trigger Sync: Throws BusinessValidationException when integration is disconnected")
+    void testTriggerSyncDisconnected() {
+        UUID integrationId = UUID.randomUUID();
+        TenantIntegrationEntity entity = TenantIntegrationEntity.builder()
+                .id(integrationId)
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .status(TenantIntegrationStatus.DISCONNECTED)
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findByIdAndTenantIdAndIsDeletedFalse(integrationId, companyId))
+                .thenReturn(Optional.of(entity));
+
+        assertThrows(BusinessValidationException.class, () -> integrationService.triggerSync(integrationId, companyId));
+    }
+
+    @Test
+    @DisplayName("13. Dynamic Provider Builder: SystemAdmin can create custom provider with tenantFields schema")
+    void testCreateProviderWithTenantFields() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("admin@mark2.in", "pass",
+                        List.of(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMIN"))));
+
+        when(providerRepository.findByCode(IntegrationProviderCode.JUSTDIAL)).thenReturn(Optional.empty());
+        when(providerRepository.save(any(IntegrationProviderEntity.class))).thenAnswer(i -> {
+            IntegrationProviderEntity e = i.getArgument(0);
+            e.setId(UUID.randomUUID());
+            return e;
+        });
+
+        AdminProviderCreateRequest request = AdminProviderCreateRequest.builder()
+                .code("JUSTDIAL")
+                .displayName("Justdial B2B Leads")
+                .authType(IntegrationAuthType.WEBHOOK)
+                .globalConfig(Map.of(
+                        "pullApiUrl", "https://api.justdial.com/inquiries",
+                        "tenantFields", List.of(
+                                Map.of("key", "lead_token", "label", "Justdial Lead Token", "type", "password", "required", true)
+                        )
+                ))
+                .isEnabled(true)
+                .build();
+
+        AdminProviderResponse response = integrationService.createProvider(request);
+
+        assertNotNull(response);
+        assertEquals(IntegrationProviderCode.JUSTDIAL, response.getCode());
+        assertEquals("Justdial B2B Leads", response.getDisplayName());
+        assertEquals(IntegrationAuthType.WEBHOOK, response.getAuthType());
+        assertTrue(response.getIsEnabled());
+        verify(providerRepository, times(1)).save(any(IntegrationProviderEntity.class));
     }
 }

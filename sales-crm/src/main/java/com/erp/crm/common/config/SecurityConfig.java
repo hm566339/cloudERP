@@ -21,57 +21,68 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final SsoAuthorizationManager ssoAuthorizationManager;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final SsoAuthorizationManager ssoAuthorizationManager;
+        private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+        private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .formLogin(form -> form.disable())
-                .httpBasic(basic -> basic.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                        .accessDeniedHandler(customAccessDeniedHandler))
-                .authorizeHttpRequests(auth -> auth
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .formLogin(form -> form.disable())
+                                .httpBasic(basic -> basic.disable())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .exceptionHandling(ex -> ex
+                                                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                                                .accessDeniedHandler(customAccessDeniedHandler))
+                                .authorizeHttpRequests(auth -> auth
 
-                        // Public APIs & Docs
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**",
-                                "/actuator/**",
-                                // Public Inbound Webhook Listener (IndiaMART, Meta, Google, etc.)
-                                "/api/crm/integrations/webhook/**",
-                                // Telephony CDR webhooks
-                                "/api/crm/communication/telephony/cdr/**",
-                                // Internal Workflow Service callbacks
-                                "/api/crm/workflows/callback",
-                                "/api/crm/workflows/callback/**",
-                                "/api/v1/crm/workflows/callback",
-                                "/api/v1/crm/workflows/callback/**",
-                                // Auth endpoints
-                                "/api/crm/auth/**",
-                                "/api/inventory/auth/**")
-                        .permitAll()
+                                                // Public APIs & Docs
+                                                .requestMatchers(
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/v3/api-docs/**",
+                                                                "/api-docs/**",
+                                                                "/swagger-resources/**",
+                                                                "/webjars/**",
+                                                                "/actuator/**",
+                                                                // Public Inbound Webhook Listener (IndiaMART, Meta,
+                                                                // Google, etc.)
+                                                                "/api/crm/integrations/webhook",
+                                                                "/api/crm/integrations/webhook/**",
+                                                                // Public OAuth Callback Redirects (Meta, etc.)
+                                                                "/api/crm/integrations/oauth/*/callback",
+                                                                "/api/crm/integrations/oauth/*/callback/**",
+                                                                "/api/crm/integrations/oauth/**",
+                                                                // Telephony CDR webhooks
+                                                                "/api/crm/communication/telephony/cdr/**",
+                                                                // Internal Workflow Service callbacks
+                                                                "/api/crm/workflows/callback",
+                                                                "/api/crm/workflows/callback/**",
+                                                                "/api/v1/crm/workflows/callback",
+                                                                "/api/v1/crm/workflows/callback/**",
+                                                                // Auth endpoints
+                                                                "/api/crm/auth/**",
+                                                                "/api/inventory/auth/**")
+                                                .permitAll()
 
-                        // SystemAdmin APIs (Global Providers & Settings)
-                        .requestMatchers("/api/admin/**").hasRole("SYSTEM_ADMIN")
+                                                // SystemAdmin APIs (Global Providers & Settings)
+                                                .requestMatchers("/api/admin/**", "/api/crm/integrations/providers",
+                                                                "/api/crm/integrations/providers/**")
+                                                .hasAnyRole("SYSTEM_ADMIN", "SYSTEMADMIN", "SUPER_ADMIN", "SUPERADMIN",
+                                                                "PLATFORM_ADMIN", "ADMIN")
 
-                        // Dynamic SSO-only authorization (features + active+allowed permissions)
-                        .requestMatchers("/api/crm/**").access(ssoAuthorizationManager)
+                                                // Dynamic SSO-only authorization (features + active+allowed
+                                                // permissions)
+                                                .requestMatchers("/api/crm/**").access(ssoAuthorizationManager)
 
-                        // Any request fallback
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .cors(Customizer.withDefaults());
+                                                // Any request fallback
+                                                .anyRequest().authenticated())
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                .cors(Customizer.withDefaults());
 
-        return http.build();
-    }
+                return http.build();
+        }
 }

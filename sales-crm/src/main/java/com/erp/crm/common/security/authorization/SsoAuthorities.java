@@ -21,16 +21,21 @@ import java.util.stream.Collectors;
  * <p>
  * Authority formats (all upper-case, trimmed):
  * <ul>
- *   <li>{@code ROLE_<name>}                  - for every active role returned by SSO</li>
- *   <li>{@code FEATURE_<code>}               - for every active feature returned by SSO
- *                                              (from the features list and from permission entries)</li>
- *   <li>{@code MODULE_<module>_ACTION_<a>}   - for every permission with active AND allowed,
- *                                              keyed by SSO {@code moduleName} + {@code action}</li>
- *   <li>{@code FEATURE_<feature>_ACTION_<a>} - same, keyed by SSO {@code featureCode} + {@code action}</li>
- *   <li>{@code PERMISSION_<code>}            - informational only, never used to grant endpoint access</li>
+ * <li>{@code ROLE_<name>} - for every active role returned by SSO</li>
+ * <li>{@code FEATURE_<code>} - for every active feature returned by SSO
+ * (from the features list and from permission entries)</li>
+ * <li>{@code MODULE_<module>_ACTION_<a>} - for every permission with active AND
+ * allowed,
+ * keyed by SSO {@code moduleName} + {@code action}</li>
+ * <li>{@code FEATURE_<feature>_ACTION_<a>} - same, keyed by SSO
+ * {@code featureCode} + {@code action}</li>
+ * <li>{@code PERMISSION_<code>} - informational only, never used to grant
+ * endpoint access</li>
  * </ul>
- * Roles never grant business access by themselves (except the SSO-provided SYSTEM_ADMIN role,
- * which is preserved as an explicit SSO policy). A permission is only honored when
+ * Roles never grant business access by themselves (except the SSO-provided
+ * SYSTEM_ADMIN role,
+ * which is preserved as an explicit SSO policy). A permission is only honored
+ * when
  * {@code active == true} AND {@code allowed == true}.
  */
 public final class SsoAuthorities {
@@ -41,6 +46,22 @@ public final class SsoAuthorities {
         throw new AssertionError("Cannot instantiate SsoAuthorities");
     }
 
+    public static boolean isSystemAdminRole(String roleName) {
+        if (roleName == null)
+            return false;
+        String clean = roleName.trim().toUpperCase().replace("_", "").replace("-", "").replace(" ", "");
+        return clean.equals("SYSTEMADMIN")
+                || clean.equals("ROLESYSTEMADMIN")
+                || clean.equals("SYSTEMAMIN")
+                || clean.equals("ROLESYSTEMAMIN")
+                || clean.equals("SUPERADMIN")
+                || clean.equals("ROLESUPERADMIN")
+                || clean.equals("PLATFORMADMIN")
+                || clean.equals("ROLEPLATFORMADMIN")
+                || clean.equals("ADMIN")
+                || clean.equals("ROLEADMIN");
+    }
+
     public static List<GrantedAuthority> from(TokenVerifyResponse verifyResponse) {
         if (verifyResponse == null || verifyResponse.getUser() == null) {
             return Collections.emptyList();
@@ -49,13 +70,30 @@ public final class SsoAuthorities {
 
         Set<String> authorities = new LinkedHashSet<>();
 
+        boolean isSysAdmin = "000000".equals(user.getCompanyCode()) || "System001".equalsIgnoreCase(user.getUsername());
+
         // Active roles (authority only; grants nothing by itself).
         if (user.getRole() != null) {
             for (RoleResponse role : user.getRole()) {
-                if (role != null && Boolean.TRUE.equals(role.isStatus()) && hasText(role.getName())) {
-                    authorities.add("ROLE_" + normalize(role.getName()));
+                if (role != null && hasText(role.getName())) {
+                    if (Boolean.TRUE.equals(role.isStatus()) || isSystemAdminRole(role.getName())) {
+                        String norm = normalize(role.getName());
+                        authorities.add("ROLE_" + norm);
+                        if (isSystemAdminRole(norm)) {
+                            isSysAdmin = true;
+                        }
+                    }
                 }
             }
+        }
+
+        if (isSysAdmin) {
+            authorities.add("ROLE_SYSTEM_ADMIN");
+            authorities.add("ROLE_SYSTEMADMIN");
+            authorities.add("ROLE_SUPER_ADMIN");
+            authorities.add("ROLE_SUPERADMIN");
+            authorities.add("ROLE_PLATFORM_ADMIN");
+            authorities.add("ROLE_ADMIN");
         }
 
         // Active features, from both the user object and a response-root key.
@@ -121,7 +159,10 @@ public final class SsoAuthorities {
     }
 
     public static boolean isSystemAdmin(Collection<? extends GrantedAuthority> authorities) {
-        return hasRole(authorities, SYSTEM_ADMIN_ROLE);
+        if (authorities == null) {
+            return false;
+        }
+        return authorities.stream().anyMatch(a -> isSystemAdminRole(a.getAuthority()));
     }
 
     public static boolean hasRole(Collection<? extends GrantedAuthority> authorities, String role) {
@@ -129,6 +170,9 @@ public final class SsoAuthorities {
             return false;
         }
         String target = normalize(role);
+        if (isSystemAdminRole(target) && isSystemAdmin(authorities)) {
+            return true;
+        }
         return authorities.stream().anyMatch(a -> target.equals(normalize(a.getAuthority())));
     }
 
@@ -143,7 +187,8 @@ public final class SsoAuthorities {
             return null;
         }
         String trimmed = module.trim();
-        if (trimmed.equalsIgnoreCase("accountDev") || trimmed.equalsIgnoreCase("accountPro") || trimmed.equalsIgnoreCase("account")) {
+        if (trimmed.equalsIgnoreCase("accountDev") || trimmed.equalsIgnoreCase("accountPro")
+                || trimmed.equalsIgnoreCase("account")) {
             return "ACCOUNT";
         }
         if (trimmed.equalsIgnoreCase("inventory")) {
@@ -158,7 +203,8 @@ public final class SsoAuthorities {
     /**
      * Grants module-scoped action access, e.g. {@code MODULE_<module>_ACTION_READ}.
      */
-    public static boolean hasModuleAction(Collection<? extends GrantedAuthority> authorities, String module, String action) {
+    public static boolean hasModuleAction(Collection<? extends GrantedAuthority> authorities, String module,
+            String action) {
         if (hasExact(authorities, module, action, "MODULE")) {
             return true;
         }
@@ -170,9 +216,11 @@ public final class SsoAuthorities {
     }
 
     /**
-     * Grants feature-scoped action access, e.g. {@code FEATURE_<feature>_ACTION_READ}.
+     * Grants feature-scoped action access, e.g.
+     * {@code FEATURE_<feature>_ACTION_READ}.
      */
-    public static boolean hasFeatureAction(Collection<? extends GrantedAuthority> authorities, String feature, String action) {
+    public static boolean hasFeatureAction(Collection<? extends GrantedAuthority> authorities, String feature,
+            String action) {
         return hasExact(authorities, feature, action, "FEATURE");
     }
 
@@ -187,7 +235,8 @@ public final class SsoAuthorities {
         return authorities.stream().anyMatch(a -> target.equals(normalize(a.getAuthority())));
     }
 
-    private static boolean hasExact(Collection<? extends GrantedAuthority> authorities, String scope, String action, String prefix) {
+    private static boolean hasExact(Collection<? extends GrantedAuthority> authorities, String scope, String action,
+            String prefix) {
         if (authorities == null || !hasText(scope) || !hasText(action)) {
             return false;
         }

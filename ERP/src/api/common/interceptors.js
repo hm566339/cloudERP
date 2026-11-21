@@ -160,6 +160,16 @@ export const isGlobalEndpoint = (pathname) => {
     return true;
   }
 
+  // 6. Global Platform CRM Integration Providers (Layer 1 SystemAdmin)
+  if (
+    pathname.startsWith('/api/crm/integrations/providers') ||
+    pathname.startsWith('/api/admin/integrations/providers') ||
+    pathname.startsWith('/api/admin/integrations') ||
+    pathname.startsWith('/api/admin/providers')
+  ) {
+    return true;
+  }
+
   return false;
 };
 
@@ -311,6 +321,19 @@ export const attachRequestInterceptor = (instance) => {
             delete config.params.companyCode;
             if (config.params.companyId !== undefined && !isValidCompanyId(config.params.companyId)) {
               delete config.params.companyId;
+            }
+          }
+        }
+
+        // If this is a global endpoint, ensure companyId is stripped from query params
+        if (isGlobalEndpoint(config.url)) {
+          if (config.params) {
+            if (typeof URLSearchParams !== 'undefined' && config.params instanceof URLSearchParams) {
+              config.params.delete('companyId');
+              config.params.delete('companyCode');
+            } else {
+              delete config.params.companyId;
+              delete config.params.companyCode;
             }
           }
         }

@@ -21,9 +21,12 @@ import {
   useGetCrmTagsQuery,
 } from '../../../api/sales-crm/crm.api';
 import TaxonomyModal from '../components/TaxonomyModal';
+import GlobalIntegrationProvidersPage from './GlobalIntegrationProvidersPage';
+import { useRBAC } from '../../../utils/rbac';
 
 export default function CrmSettingsPage() {
   const { companyId } = useParams();
+  const { isSuperAdmin } = useRBAC();
   const [activeTab, setActiveTab] = useState('general');
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -114,6 +117,18 @@ export default function CrmSettingsPage() {
         >
           <Tag size={13} /> Sources, Statuses & Tags
         </button>
+        {isSuperAdmin && (
+          <button
+            onClick={() => setActiveTab('providers')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              activeTab === 'providers'
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]'
+            }`}
+          >
+            <Shield size={13} /> Global Providers (System Admin)
+          </button>
+        )}
       </div>
 
       <div className="flex-1 p-6 overflow-auto flex flex-col">
@@ -260,6 +275,12 @@ export default function CrmSettingsPage() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'providers' && (
+          <div className="flex-1 -m-6 flex flex-col">
+            <GlobalIntegrationProvidersPage />
           </div>
         )}
       </div>

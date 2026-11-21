@@ -598,10 +598,19 @@ export const crmApiSlice = baseApi.injectEndpoints({
     }),
 
     getFacebookOAuthAuthorizeUrl: builder.query({
-      query: (params) => ({
-        url: '/api/crm/integrations/oauth/FACEBOOK/authorize',
-        params,
-      }),
+      query: (params) => {
+        const queryParams = typeof params === 'object' ? { ...params } : {};
+        const companyId = queryParams.companyId;
+        return {
+          url: '/api/crm/integrations/oauth/FACEBOOK/authorize',
+          params: queryParams,
+          headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+        };
+      },
+      transformResponse: (response) => {
+        // Handle unwrapped ApiResponse, nested data, or direct { authorizeUrl }
+        return response?.data || response;
+      },
     }),
 
     handleFacebookOAuthCallback: builder.mutation({
@@ -623,14 +632,23 @@ export const crmApiSlice = baseApi.injectEndpoints({
 
     getAdminIntegrationProviders: builder.query({
       query: () => ({
-        url: '/api/admin/integrations/providers',
+        url: '/api/crm/integrations/providers',
       }),
       providesTags: ['ADMIN_INTEGRATION_PROVIDERS'],
     }),
 
+    createAdminIntegrationProvider: builder.mutation({
+      query: (data) => ({
+        url: '/api/crm/integrations/providers',
+        method: 'POST',
+        data: { data },
+      }),
+      invalidatesTags: ['ADMIN_INTEGRATION_PROVIDERS', 'CRM_INTEGRATION_PROVIDERS'],
+    }),
+
     updateAdminIntegrationProvider: builder.mutation({
       query: ({ code, data }) => ({
-        url: `/api/admin/integrations/providers/${code}`,
+        url: `/api/crm/integrations/providers/${code}`,
         method: 'PUT',
         data: { data },
       }),
@@ -806,6 +824,7 @@ export const {
   useHandleFacebookOAuthCallbackMutation,
   useTriggerCrmIntegrationSyncMutation,
   useGetAdminIntegrationProvidersQuery,
+  useCreateAdminIntegrationProviderMutation,
   useUpdateAdminIntegrationProviderMutation,
 
   // Dashboard & Settings

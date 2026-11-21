@@ -1,7 +1,8 @@
 import {
   FileText, Clock, ShoppingCart, Truck, Receipt, ClipboardList, FileSearch,
   CreditCard, BarChart3, Book, BookMarked, FileMinus, FilePlus, FileSpreadsheet,
-  Scale, TrendingUp, Wallet, Users, ShieldAlert, Key, Layout, Shield, Download
+  Scale, TrendingUp, Wallet, Users, ShieldAlert, Key, Layout, Shield, Download,
+  Globe, Megaphone, PieChart
 } from 'lucide-react';
 
 export const salesTabs = [
@@ -265,6 +266,42 @@ export const accountingTabs = [
       '/accounts/reports/cash-flow',
       '/reports/cash-flow',
       '/finance/reports/cash-flow'
+    ]
+  }
+];
+
+export const crmIntegrationsCampaignsTabs = [
+  {
+    key: 'integrations',
+    label: 'Integrations',
+    icon: Globe,
+    path: '/sales-crm/integrations',
+    aliases: [
+      '/sales-crm/integrations',
+      '/crm/integrations',
+      '/integrations'
+    ]
+  },
+  {
+    key: 'campaigns',
+    label: 'Campaigns',
+    icon: Megaphone,
+    path: '/sales-crm/campaigns',
+    aliases: [
+      '/sales-crm/campaigns',
+      '/crm/campaigns',
+      '/campaigns'
+    ]
+  },
+  {
+    key: 'attribution',
+    label: 'Attribution',
+    icon: PieChart,
+    path: '/sales-crm/attribution',
+    aliases: [
+      '/sales-crm/attribution',
+      '/crm/attribution',
+      '/attribution'
     ]
   }
 ];
