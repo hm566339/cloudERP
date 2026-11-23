@@ -1977,7 +1977,18 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             JsonNode entries = root.path("entry");
             if (entries.isArray() && entries.size() > 0) {
                 for (JsonNode entry : entries) {
-                    String pageId = entry.path("id").asText(null);
+                    String pageId = null;
+                    if (entry.hasNonNull("id")) {
+                        String text = entry.path("id").asText("").trim();
+                        if (!text.isBlank() && !"null".equalsIgnoreCase(text)) {
+                            pageId = text;
+                        }
+                    } else if (entry.hasNonNull("page_id")) {
+                        String text = entry.path("page_id").asText("").trim();
+                        if (!text.isBlank() && !"null".equalsIgnoreCase(text)) {
+                            pageId = text;
+                        }
+                    }
 
                     JsonNode changes = entry.path("changes");
                     if (changes.isArray()) {
@@ -1990,7 +2001,10 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                                 String formId = val.path("form_id").asText(null);
                                 String adId = val.path("ad_id").asText(null);
                                 if (val.hasNonNull("page_id")) {
-                                    pageId = val.path("page_id").asText(pageId);
+                                    String text = val.path("page_id").asText("").trim();
+                                    if (!text.isBlank() && !"null".equalsIgnoreCase(text)) {
+                                        pageId = text;
+                                    }
                                 }
 
                                 TenantIntegrationEntity matchedTenant = findTenantIntegrationForFacebookPage(pageId);
@@ -2046,7 +2060,14 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                                     }
 
                                     matchedTenant.setLastSyncedAt(LocalDateTime.now());
-                                    tenantIntegrationRepository.save(matchedTenant);
+                                    if (tenantIntegrationRepository.existsById(matchedTenant.getId())) {
+                                        tenantIntegrationRepository.save(matchedTenant);
+                                    } else if (legacyTenantIntegrationRepository.existsById(matchedTenant.getId())) {
+                                        legacyTenantIntegrationRepository.findById(matchedTenant.getId()).ifPresent(leg -> {
+                                            leg.setLastSyncAt(LocalDateTime.now());
+                                            legacyTenantIntegrationRepository.save(leg);
+                                        });
+                                    }
 
                                     if (webhookLogRepository != null) {
                                         try {
@@ -2077,9 +2098,21 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                         }
                     }
                 }
-            } else if (root.has("leadgen_id") || root.has("page_id")) {
+            } else if (root.has("leadgen_id") || root.has("page_id") || root.has("entry")) {
                 // Support direct flat test payload
-                String pageId = root.hasNonNull("page_id") ? root.path("page_id").asText() : root.path("id").asText(null);
+                String pageId = null;
+                if (root.hasNonNull("page_id")) {
+                    String text = root.path("page_id").asText("").trim();
+                    if (!text.isBlank() && !"null".equalsIgnoreCase(text)) {
+                        pageId = text;
+                    }
+                }
+                if (pageId == null && root.hasNonNull("id")) {
+                    String text = root.path("id").asText("").trim();
+                    if (!text.isBlank() && !"null".equalsIgnoreCase(text)) {
+                        pageId = text;
+                    }
+                }
                 String leadgenId = root.path("leadgen_id").asText(null);
                 String formId = root.path("form_id").asText(null);
                 String adId = root.path("ad_id").asText(null);
@@ -2131,7 +2164,14 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                                 }
 
                                 matchedTenant.setLastSyncedAt(LocalDateTime.now());
-                                tenantIntegrationRepository.save(matchedTenant);
+                                if (tenantIntegrationRepository.existsById(matchedTenant.getId())) {
+                                    tenantIntegrationRepository.save(matchedTenant);
+                                } else if (legacyTenantIntegrationRepository.existsById(matchedTenant.getId())) {
+                                    legacyTenantIntegrationRepository.findById(matchedTenant.getId()).ifPresent(leg -> {
+                                        leg.setLastSyncAt(LocalDateTime.now());
+                                        legacyTenantIntegrationRepository.save(leg);
+                                    });
+                                }
                             } finally {
                                 CurrentUserContext.clearCompanyId();
                                 CurrentUserContext.clearUserId();
@@ -2177,123 +2217,333 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         return null;
     }
 
+    private String cleanPageId(String s) {
+        if (s == null) return "";
+        String trimmed = s.trim();
+        String lower = trimmed.toLowerCase();
+        if (lower.startsWith("page_") || lower.startsWith("page-")) {
+            return trimmed.substring(5).trim();
+        }
+        if (lower.startsWith("fb_") || lower.startsWith("fb-")) {
+            return trimmed.substring(3).trim();
+        }
+        if (lower.startsWith("p_")) {
+            return trimmed.substring(2).trim();
+        }
+        return trimmed;
+    }
+
+    private boolean isTargetPageIdMatch(String candidate, String target) {
+        if (candidate == null || target == null) return false;
+        String c = candidate.trim();
+        String t = target.trim();
+        if (c.isEmpty() || t.isEmpty()) return false;
+        if (c.equalsIgnoreCase(t)) return true;
+        String cleanC = cleanPageId(c);
+        String cleanT = cleanPageId(t);
+        return !cleanC.isEmpty() && cleanC.equalsIgnoreCase(cleanT);
+    }
+
+    private boolean isPageIdentifierFieldName(String name) {
+        if (name == null) return false;
+        String lower = name.toLowerCase().replace("_", "").replace("-", "");
+        return lower.equals("pageid")
+                || lower.equals("id")
+                || lower.equals("page")
+                || lower.equals("selectedpageid")
+                || lower.equals("facebookpageid")
+                || lower.equals("fbpageid")
+                || lower.equals("targetpageid");
+    }
+
+    private boolean checkJsonNodeForPageId(JsonNode node, String target, int depth) {
+        if (node == null || node.isNull() || depth > 10) {
+            return false;
+        }
+
+        if (node.isTextual()) {
+            String text = node.asText().trim();
+            if (isTargetPageIdMatch(text, target)) {
+                return true;
+            }
+            if ((text.startsWith("{") && text.endsWith("}")) || (text.startsWith("[") && text.endsWith("]"))) {
+                try {
+                    JsonNode nested = objectMapper.readTree(text);
+                    if (checkJsonNodeForPageId(nested, target, depth + 1)) {
+                        return true;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            return false;
+        }
+
+        if (node.isNumber()) {
+            return isTargetPageIdMatch(node.asText(), target);
+        }
+
+        if (node.isArray()) {
+            for (JsonNode item : node) {
+                if (checkJsonNodeForPageId(item, target, depth + 1)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (node.isObject()) {
+            Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> field = fields.next();
+                String fieldName = field.getKey();
+                JsonNode child = field.getValue();
+
+                // 1. If key itself is the pageId (e.g., pageMappings: { "104928192": { ... } } or pages: { "104928192": { ... } })
+                if (isTargetPageIdMatch(fieldName, target)) {
+                    return true;
+                }
+
+                // 2. If field represents a known page ID attribute
+                if (isPageIdentifierFieldName(fieldName)) {
+                    if (child.isTextual() || child.isNumber()) {
+                        if (isTargetPageIdMatch(child.asText(), target)) {
+                            return true;
+                        }
+                    }
+                }
+
+                // 3. Recurse into containers or JSON strings
+                if (child.isContainerNode() || child.isTextual()) {
+                    if (checkJsonNodeForPageId(child, target, depth + 1)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean matchesPageId(TenantIntegrationEntity entity, String pageId) {
+        if (entity == null || pageId == null || pageId.isBlank()) {
+            return false;
+        }
+        String target = pageId.trim();
+
+        if (entity.getCredentialsJson() != null && !entity.getCredentialsJson().isBlank()) {
+            try {
+                JsonNode credsNode = objectMapper.readTree(entity.getCredentialsJson());
+                if (checkJsonNodeForPageId(credsNode, target, 0)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                log.debug("[Meta Webhook] Error parsing credentialsJson for entity [{}]: {}", entity.getId(), e.getMessage());
+            }
+        }
+
+        if (entity.getRoutingConfigJson() != null && !entity.getRoutingConfigJson().isBlank()) {
+            try {
+                JsonNode routingNode = objectMapper.readTree(entity.getRoutingConfigJson());
+                if (checkJsonNodeForPageId(routingNode, target, 0)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                log.debug("[Meta Webhook] Error parsing routingConfigJson for entity [{}]: {}", entity.getId(), e.getMessage());
+            }
+        }
+
+        return false;
+    }
+
+    private boolean matchesLegacyPageId(CrmTenantIntegration legacy, String pageId) {
+        if (legacy == null || pageId == null || pageId.isBlank()) {
+            return false;
+        }
+        String target = pageId.trim();
+
+        if (legacy.getSettingsJson() != null && !legacy.getSettingsJson().isBlank()) {
+            try {
+                JsonNode settingsNode = objectMapper.readTree(legacy.getSettingsJson());
+                if (checkJsonNodeForPageId(settingsNode, target, 0)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                log.debug("[Meta Webhook] Error parsing legacy settingsJson for entity [{}]: {}", legacy.getId(), e.getMessage());
+            }
+        }
+
+        return false;
+    }
+
     private TenantIntegrationEntity findTenantIntegrationForFacebookPage(String pageId) {
         if (pageId == null || pageId.isBlank()) {
             log.warn("[Meta Webhook] Incoming webhook has null or blank page_id. Cannot resolve tenant.");
             return null;
         }
 
+        String target = pageId.trim();
+
+        // 1. Search in modern tenant_integrations repository
         List<TenantIntegrationEntity> fbIntegrations = tenantIntegrationRepository
                 .findAll()
                 .stream()
                 .filter(e -> e.getProviderCode() == IntegrationProviderCode.FACEBOOK && !Boolean.TRUE.equals(e.getIsDeleted()))
                 .toList();
 
-        if (fbIntegrations.isEmpty()) {
-            log.warn("[Meta Webhook] No active Facebook integrations found in database.");
-            return null;
-        }
-
         for (TenantIntegrationEntity entity : fbIntegrations) {
-            if (matchesPageId(entity, pageId)) {
-                log.info("[Meta Webhook] Resolved tenant [{}] (company: [{}]) for Facebook Page ID [{}]",
-                        entity.getId(), entity.getTenantId(), pageId);
+            if (matchesPageId(entity, target)) {
+                log.info("[Meta Webhook] Resolved tenant [{}] (company: [{}]) in tenant_integrations for Facebook Page ID [{}]",
+                        entity.getId(), entity.getTenantId(), target);
                 return entity;
             }
         }
 
-        log.warn("[Meta Webhook] Unknown Facebook Page ID [{}]. No integration record matched. Rejecting webhook event.", pageId);
+        // 2. Search in legacy crm_tenant_integration repository
+        List<CrmTenantIntegration> legacyIntegrations = legacyTenantIntegrationRepository
+                .findAll()
+                .stream()
+                .filter(e -> !Boolean.TRUE.equals(e.getIsDeleted()) && Boolean.TRUE.equals(e.getIsEnabled()))
+                .toList();
+
+        for (CrmTenantIntegration legacy : legacyIntegrations) {
+            boolean isFacebook = false;
+            if (legacy.getIntegrationChannelId() != null) {
+                CrmIntegrationChannel channel = channelRepository.findById(legacy.getIntegrationChannelId()).orElse(null);
+                if (channel != null && channel.getProviderCode() == IntegrationProvider.META_LEAD_ADS) {
+                    isFacebook = true;
+                }
+            }
+            if (!isFacebook && legacy.getConnectionName() != null) {
+                String cName = legacy.getConnectionName().toLowerCase();
+                if (cName.contains("facebook") || cName.contains("meta")) {
+                    isFacebook = true;
+                }
+            }
+            if (!isFacebook && legacy.getSettingsJson() != null) {
+                String sJson = legacy.getSettingsJson().toLowerCase();
+                if (sJson.contains("facebook") || sJson.contains("pageaccesstoken") || sJson.contains("page_id") || sJson.contains("leadgen")) {
+                    isFacebook = true;
+                }
+            }
+
+            if (isFacebook && matchesLegacyPageId(legacy, target)) {
+                log.info("[Meta Webhook] Resolved company [{}] in legacy crm_tenant_integration [{}] for Facebook Page ID [{}]",
+                        legacy.getCompanyId(), legacy.getId(), target);
+
+                TenantIntegrationEntity bridged = TenantIntegrationEntity.builder()
+                        .id(legacy.getId())
+                        .tenantId(legacy.getCompanyId())
+                        .providerCode(IntegrationProviderCode.FACEBOOK)
+                        .integrationName(legacy.getConnectionName() != null ? legacy.getConnectionName() : "Facebook Integration")
+                        .credentialsJson(legacy.getSettingsJson())
+                        .routingConfigJson(legacy.getSettingsJson())
+                        .status(TenantIntegrationStatus.CONNECTED)
+                        .webhookSlug(legacy.getWebhookSlug())
+                        .createdBy(legacy.getCreatedBy())
+                        .build();
+                return bridged;
+            }
+        }
+
+        log.warn("[Meta Webhook] Unknown Facebook Page ID [{}]. No integration record matched. Rejecting webhook event.", target);
         return null;
     }
 
-    private boolean matchesPageId(TenantIntegrationEntity entity, String pageId) {
-        if (pageId == null || pageId.isBlank()) {
-            return false;
-        }
-        String target = pageId.trim();
-
-        if (entity.getCredentialsJson() != null) {
-            Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
-            if (isPageIdMatch(creds, target)) {
-                return true;
-            }
-        }
-
-        if (entity.getRoutingConfigJson() != null) {
-            Map<String, Object> routing = parseJsonToMap(entity.getRoutingConfigJson());
-            if (isPageIdMatch(routing, target)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean isPageIdMatch(Map<String, Object> map, String target) {
-        if (map == null || map.isEmpty()) {
-            return false;
-        }
-        for (String key : List.of("pageId", "page_id", "id")) {
-            Object val = map.get(key);
-            if (val != null && target.equalsIgnoreCase(String.valueOf(val).trim())) {
-                return true;
-            }
-        }
-        Object pagesObj = map.get("pages");
-        if (pagesObj instanceof List<?> list) {
-            for (Object item : list) {
-                if (item instanceof Map<?, ?> m) {
-                    for (String key : List.of("pageId", "page_id", "id")) {
-                        Object val = m.get(key);
-                        if (val != null && target.equalsIgnoreCase(String.valueOf(val).trim())) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     private String resolvePageAccessToken(TenantIntegrationEntity entity, String pageId) {
-        if (entity.getCredentialsJson() == null) {
+        if (entity == null || entity.getCredentialsJson() == null || entity.getCredentialsJson().isBlank()) {
             return null;
         }
         String target = pageId != null ? pageId.trim() : null;
-        Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
 
-        // 1. Check inside "pages" list for matching pageId
-        Object pagesObj = creds.get("pages");
-        if (pagesObj instanceof List<?> list) {
-            for (Object item : list) {
-                if (item instanceof Map<?, ?> m) {
-                    boolean matches = false;
-                    if (target != null) {
-                        for (String key : List.of("pageId", "page_id", "id")) {
-                            Object val = m.get(key);
-                            if (val != null && target.equalsIgnoreCase(String.valueOf(val).trim())) {
-                                matches = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (matches) {
-                        for (String tokenKey : List.of("pageAccessToken", "accessToken", "token")) {
-                            Object token = m.get(tokenKey);
-                            if (token != null && !String.valueOf(token).isBlank()) {
-                                return String.valueOf(token).trim();
-                            }
-                        }
+        try {
+            JsonNode root = objectMapper.readTree(entity.getCredentialsJson());
+
+            // 1. If target pageId is given, search for page-specific token in credentialsJson
+            if (target != null && !target.isBlank()) {
+                String token = findPageAccessTokenInNode(root, target, 0);
+                if (token != null && !token.isBlank()) {
+                    return token;
+                }
+            }
+
+            // 2. Check top-level token fields in credentialsJson
+            for (String key : List.of("pageAccessToken", "accessToken", "page_access_token", "userAccessToken", "longLivedToken", "token")) {
+                if (root.hasNonNull(key)) {
+                    String t = root.path(key).asText("").trim();
+                    if (!t.isBlank()) {
+                        return t;
                     }
                 }
             }
+
+            // 3. Fallback: check routingConfigJson if token was stored there
+            if (entity.getRoutingConfigJson() != null && !entity.getRoutingConfigJson().isBlank()) {
+                JsonNode routingRoot = objectMapper.readTree(entity.getRoutingConfigJson());
+                if (target != null && !target.isBlank()) {
+                    String token = findPageAccessTokenInNode(routingRoot, target, 0);
+                    if (token != null && !token.isBlank()) {
+                        return token;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Meta Webhook] Failed to resolve Page Access Token: {}", e.getMessage());
         }
 
-        // 2. Check top-level pageAccessToken or userAccessToken
-        for (String tokenKey : List.of("pageAccessToken", "accessToken", "page_access_token", "userAccessToken", "longLivedToken")) {
-            Object token = creds.get(tokenKey);
-            if (token != null && !String.valueOf(token).isBlank()) {
-                return String.valueOf(token).trim();
+        return null;
+    }
+
+    private String findPageAccessTokenInNode(JsonNode node, String target, int depth) {
+        if (node == null || node.isNull() || depth > 10) {
+            return null;
+        }
+
+        if (node.isObject()) {
+            // Check if this object represents the target page
+            boolean thisObjectMatches = false;
+            for (String key : List.of("pageId", "page_id", "id", "page", "facebookPageId", "selectedPageId")) {
+                if (node.hasNonNull(key) && isTargetPageIdMatch(node.path(key).asText(), target)) {
+                    thisObjectMatches = true;
+                    break;
+                }
+            }
+
+            if (thisObjectMatches) {
+                for (String tokenKey : List.of("pageAccessToken", "page_access_token", "accessToken", "access_token", "token")) {
+                    if (node.hasNonNull(tokenKey)) {
+                        String t = node.path(tokenKey).asText("").trim();
+                        if (!t.isBlank()) return t;
+                    }
+                }
+            }
+
+            // Also check if field key is the pageId (e.g. pages: { "104928192": { "access_token": "..." } })
+            Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> field = fields.next();
+                if (isTargetPageIdMatch(field.getKey(), target)) {
+                    JsonNode child = field.getValue();
+                    if (child.isObject()) {
+                        for (String tokenKey : List.of("pageAccessToken", "page_access_token", "accessToken", "access_token", "token")) {
+                            if (child.hasNonNull(tokenKey)) {
+                                String t = child.path(tokenKey).asText("").trim();
+                                if (!t.isBlank()) return t;
+                            }
+                        }
+                    } else if (child.isTextual() && !child.asText().isBlank()) {
+                        return child.asText().trim();
+                    }
+                }
+
+                if (field.getValue().isContainerNode()) {
+                    String t = findPageAccessTokenInNode(field.getValue(), target, depth + 1);
+                    if (t != null && !t.isBlank()) return t;
+                }
+            }
+        } else if (node.isArray()) {
+            for (JsonNode item : node) {
+                String t = findPageAccessTokenInNode(item, target, depth + 1);
+                if (t != null && !t.isBlank()) return t;
             }
         }
 

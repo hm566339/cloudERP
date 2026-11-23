@@ -123,15 +123,6 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         CrmTenantIntegration integration = tenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse(slug)
                 .orElseGet(() -> tenantIntegrationEntityRepository.findByWebhookSlugAndIsDeletedFalse(slug)
                         .map(this::bridgeTwoTierEntity)
-                        .or(() -> {
-                            if ("facebook".equalsIgnoreCase(slug) || "meta".equalsIgnoreCase(slug)) {
-                                return tenantIntegrationEntityRepository.findAll().stream()
-                                        .filter(e -> e.getProviderCode() == IntegrationProviderCode.FACEBOOK && !Boolean.TRUE.equals(e.getIsDeleted()))
-                                        .findFirst()
-                                        .map(this::bridgeTwoTierEntity);
-                            }
-                            return Optional.empty();
-                        })
                         .orElseThrow(() -> new ResourceNotFoundException("No active integration found for webhook slug: " + slug)));
 
         UUID companyId = integration.getCompanyId();

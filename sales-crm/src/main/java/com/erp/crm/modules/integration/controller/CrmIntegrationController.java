@@ -308,6 +308,11 @@ public class CrmIntegrationController {
         String challenge = hubChallenge != null ? hubChallenge : altChallenge;
         String verifyToken = hubVerifyToken != null ? hubVerifyToken : altVerifyToken;
 
+        if ("facebook".equalsIgnoreCase(slug) || "meta".equalsIgnoreCase(slug)) {
+            String result = twoTierIntegrationService.verifyFacebookWebhook(mode, challenge, verifyToken);
+            return ResponseEntity.ok(result);
+        }
+
         String result = integrationService.verifyWebhook(slug, mode, challenge, verifyToken);
         return ResponseEntity.ok(result);
     }
@@ -323,6 +328,11 @@ public class CrmIntegrationController {
         while (headerNames != null && headerNames.hasMoreElements()) {
             String name = headerNames.nextElement();
             headers.put(name, request.getHeader(name));
+        }
+
+        if ("facebook".equalsIgnoreCase(slug) || "meta".equalsIgnoreCase(slug)) {
+            WebhookAckResponse ack = twoTierIntegrationService.handleFacebookWebhook(rawPayload, request.getRemoteAddr(), headers);
+            return ResponseEntity.ok(ack);
         }
 
         WebhookAckResponse ack = integrationService.handleWebhook(slug, rawPayload, request.getRemoteAddr(), headers);
