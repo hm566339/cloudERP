@@ -173,7 +173,32 @@ public final class SsoAuthorities {
      * Grants feature-scoped action access, e.g. {@code FEATURE_<feature>_ACTION_READ}.
      */
     public static boolean hasFeatureAction(Collection<? extends GrantedAuthority> authorities, String feature, String action) {
-        return hasExact(authorities, feature, action, "FEATURE");
+        if (hasExact(authorities, feature, action, "FEATURE")) {
+            return true;
+        }
+        if (feature != null && feature.endsWith("S")) {
+            if (hasExact(authorities, feature.substring(0, feature.length() - 1), action, "FEATURE")) {
+                return true;
+            }
+        } else if (feature != null) {
+            if (hasExact(authorities, feature + "S", action, "FEATURE")) {
+                return true;
+            }
+        }
+        // Direct PERMISSION_ authority check
+        if (authorities != null && hasText(feature) && hasText(action)) {
+            String codeTarget = "PERMISSION_" + normalize(feature) + ":" + normalize(action);
+            if (authorities.stream().anyMatch(a -> codeTarget.equalsIgnoreCase(a.getAuthority()))) {
+                return true;
+            }
+            if (feature.endsWith("S")) {
+                String singularCode = "PERMISSION_" + normalize(feature.substring(0, feature.length() - 1)) + ":" + normalize(action);
+                if (authorities.stream().anyMatch(a -> singularCode.equalsIgnoreCase(a.getAuthority()))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

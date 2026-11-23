@@ -148,12 +148,39 @@ public class AuthenticatedUser implements Principal {
         String canonicalScope = SsoAuthorities.normalizeModuleName(module);
         String targetAction = normalize(action);
         for (PermissionResponse permission : activeAndAllowedPermissions()) {
-            if (targetAction.equals(normalize(permission.getAction()))) {
+            String permCode = normalize(permission.getPermissionCode());
+            String permAction = normalize(permission.getAction());
+
+            // 1. Direct permissionCode check (e.g. CUSTOMERS:READ, CUSTOMER:READ, ACCOUNT:CUSTOMERS:READ)
+            if (permCode != null) {
+                if (permCode.equals(targetScope + ":" + targetAction)
+                        || permCode.equals(targetScope + "_" + targetAction)
+                        || (targetScope.endsWith("S") && permCode.equals(targetScope.substring(0, targetScope.length() - 1) + ":" + targetAction))
+                        || permCode.equals(targetScope + "S:" + targetAction)
+                        || permCode.endsWith(":" + targetScope + ":" + targetAction)) {
+                    return true;
+                }
+            }
+
+            // 2. Action + module/feature check
+            if (targetAction.equals(permAction)) {
                 String permModule = normalize(permission.getModuleName());
                 String permCanonicalModule = SsoAuthorities.normalizeModuleName(permission.getModuleName());
                 String permFeature = normalize(permission.getFeatureCode());
-                if (targetScope.equals(permModule) || targetScope.equals(permFeature)
-                        || (canonicalScope != null && (canonicalScope.equals(permCanonicalModule) || canonicalScope.equals(permFeature)))) {
+
+                boolean scopeMatches = targetScope.equals(permModule) || targetScope.equals(permFeature)
+                        || (canonicalScope != null && (canonicalScope.equals(permCanonicalModule) || canonicalScope.equals(permFeature)));
+
+                // Check singular/plural variants (e.g. CUSTOMERS vs CUSTOMER)
+                if (!scopeMatches && permFeature != null) {
+                    if (targetScope.endsWith("S") && targetScope.substring(0, targetScope.length() - 1).equals(permFeature)) {
+                        scopeMatches = true;
+                    } else if (permFeature.endsWith("S") && permFeature.substring(0, permFeature.length() - 1).equals(targetScope)) {
+                        scopeMatches = true;
+                    }
+                }
+
+                if (scopeMatches) {
                     return true;
                 }
             }

@@ -25,27 +25,43 @@ sso:
     # ------------------------------------------------------------------
     modules:
       CUSTOMERS:
+        - "/api/account/customers"
         - "/api/account/customers/**"
       VENDORS:
+        - "/api/account/vendors"
         - "/api/account/vendors/**"
+        - "/api/account/v1/vendors"
         - "/api/account/v1/vendors/**"
       SALES_INVOICES:
+        - "/api/account/sales/invoices"
         - "/api/account/sales/invoices/**"
+        - "/api/account/v1/sales-invoices"
         - "/api/account/v1/sales-invoices/**"
       SALES_ORDERS:
+        - "/api/account/v1/sales-orders"
         - "/api/account/v1/sales-orders/**"
+        - "/api/account/v2/sales-orders"
         - "/api/account/v2/sales-orders/**"
+        - "/api/account/sales/orders"
         - "/api/account/sales/orders/**"
+        - "/api/sales/sales-orders"
         - "/api/sales/sales-orders/**"
       DELIVERY_CHALLANS:
+        - "/api/account/v1/delivery-challans"
         - "/api/account/v1/delivery-challans/**"
+        - "/api/account/sales/delivery-challans"
         - "/api/account/sales/delivery-challans/**"
       QUOTATIONS:
+        - "/api/account/sales/quotations"
         - "/api/account/sales/quotations/**"
+        - "/api/account/v1/quotations"
         - "/api/account/v1/quotations/**"
       PROFORMA_INVOICES:
+        - "/api/account/v1/proforma-invoices"
         - "/api/account/v1/proforma-invoices/**"
+        - "/api/account/v2/proforma-invoices"
         - "/api/account/v2/proforma-invoices/**"
+        - "/api/account/proforma-invoices"
         - "/api/account/proforma-invoices/**"
       EXPENSE_REQUESTS:
         - "/api/account/v1/expense-requests"

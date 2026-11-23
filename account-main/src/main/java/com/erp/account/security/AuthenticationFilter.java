@@ -13,6 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.erp.account.modules.auth.dto.ssoresponse.TokenVerifyResponse;
 import com.erp.account.modules.auth.dto.ssoresponse.AccountStatus;
+import com.erp.account.modules.auth.dto.ssoresponse.RoleResponse;
 import com.erp.account.modules.auth.dto.ssoresponse.UserResponse;
 import com.erp.account.modules.auth.service.SsoService;
 import com.erp.account.modules.company.service.CompanyBootstrapService;
@@ -125,7 +126,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 TokenVerifyResponse verifyResponse = ssoService.verifyToken(accessToken);
 
                 if (isVerificationResponseUsable(verifyResponse)) {
-                    authenticateUser(verifyResponse, accessToken);
+                    authenticateUser(verifyResponse, accessToken, request);
                 } else {
                     // Fail closed: invalid, incomplete or unsafe authorization data.
                     log.warn("SSO verification response rejected for path [{}] (invalid/empty/inactive account).",
@@ -184,7 +185,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     // SecurityContext population
     // ───────────────────────────────────────────────────────────────────────
 
-    private void authenticateUser(TokenVerifyResponse verifyResponse, String accessToken) {
+    private void authenticateUser(TokenVerifyResponse verifyResponse, String accessToken, HttpServletRequest request) {
 
         UserResponse user = verifyResponse.getUser();
         String username = user.getUsername();
@@ -203,10 +204,24 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         if (user.getFullName() != null) {
             CurrentUserContext.setUserFullName(user.getFullName());
         }
-        if (user.getRole() != null && !user.getRole().isEmpty() && user.getRole().get(0) != null) {
-            String firstRole = user.getRole().get(0).getName();
-            if (firstRole != null && !firstRole.isBlank()) {
-                CurrentUserContext.setUserRole(firstRole);
+        if (user.getRole() != null && !user.getRole().isEmpty()) {
+            String selectedRole = null;
+            for (RoleResponse r : user.getRole()) {
+                if (r != null && Boolean.TRUE.equals(r.isStatus()) && r.getName() != null) {
+                    String rName = r.getName().trim();
+                    if ("SYSTEM_ADMIN".equalsIgnoreCase(rName) || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(rName)) {
+                        selectedRole = rName;
+                        break;
+                    }
+                    if ("OWNER".equalsIgnoreCase(rName) || "ROLE_OWNER".equalsIgnoreCase(rName)) {
+                        selectedRole = rName;
+                    } else if (selectedRole == null) {
+                        selectedRole = rName;
+                    }
+                }
+            }
+            if (selectedRole != null && !selectedRole.isBlank()) {
+                CurrentUserContext.setUserRole(selectedRole);
             }
         }
 
@@ -223,9 +238,34 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 authenticatedUser == null ? 0 : authenticatedUser.activeAndAllowedPermissionCount());
 
         boolean isSystemAdmin = SsoAuthorities.isSystemAdmin(authorities);
+        boolean isOwner = (authenticatedUser != null && authenticatedUser.hasActiveRole("OWNER"))
+                || "OWNER".equalsIgnoreCase(CurrentUserContext.getUserRole());
 
-        // Resolve company only for non-system-admin users (tenant isolation).
-        if (!isSystemAdmin) {
+        UUID requestCompanyId = extractCompanyIdFromRequest(request);
+
+        // Resolve company based on role and request
+        if (isSystemAdmin) {
+            if (requestCompanyId != null) {
+                CurrentUserContext.setCompanyId(requestCompanyId);
+                log.debug("SYSTEM_ADMIN with explicit request companyId [{}]", requestCompanyId);
+            } else {
+                CurrentUserContext.clearCompanyId();
+                log.info("SYSTEM_ADMIN detected for user [{}]; skipping tenant resolution", username);
+            }
+        } else if (isOwner) {
+            if (requestCompanyId != null) {
+                CurrentUserContext.setCompanyId(requestCompanyId);
+                log.debug("OWNER user [{}] operating on request companyId [{}]", username, requestCompanyId);
+            } else if (companyCode != null && !companyCode.isBlank()) {
+                try {
+                    UUID companyId = companyBootstrapService.ensureCompanyByCode(companyCode, accessToken);
+                    CurrentUserContext.setCompanyId(companyId);
+                } catch (Exception ex) {
+                    log.warn("Failed to bootstrap default company for OWNER {}: {}", companyCode, ex.getMessage());
+                }
+            }
+        } else {
+            // Resolve company only for non-system-admin users (tenant isolation).
             if (companyCode != null && !companyCode.isBlank()) {
                 try {
                     UUID companyId = companyBootstrapService.ensureCompanyByCode(companyCode, accessToken);
@@ -236,9 +276,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                             "Failed to verify company access for code " + companyCode, ex);
                 }
             }
-        } else {
-            CurrentUserContext.clearCompanyId();
-            log.info("SYSTEM_ADMIN detected for user [{}]; skipping tenant resolution", username);
         }
 
         // Populate SecurityContext (always overwrite — stateless session).
@@ -249,6 +286,35 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         log.debug("Authenticated user=[{}] authorities={}", username, authorities);
+    }
+
+    private UUID extractCompanyIdFromRequest(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        String header = request.getHeader("X-Company-Id");
+        if (!hasText(header)) {
+            header = request.getHeader("X-COMPANY-ID");
+        }
+        if (!hasText(header)) {
+            header = request.getHeader("x-company-id");
+        }
+        if (hasText(header)) {
+            try {
+                return UUID.fromString(header.trim());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid UUID in X-Company-Id header: {}", header);
+            }
+        }
+        String param = request.getParameter("companyId");
+        if (hasText(param)) {
+            try {
+                return UUID.fromString(param.trim());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid UUID in companyId query parameter: {}", param);
+            }
+        }
+        return null;
     }
 
     // ───────────────────────────────────────────────────────────────────────

@@ -135,6 +135,15 @@ public class CustomerCompanyFilteringIntegrationTest {
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                 "tenantUser", null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(auth);
+        CurrentUserContext.setUserRole("ROLE_USER");
+        CurrentUserContext.setCompanyId(companyId);
+    }
+
+    private void authenticateAsOwner(UUID companyId) {
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                "ownerUser", null, List.of(new SimpleGrantedAuthority("ROLE_OWNER")));
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        CurrentUserContext.setUserRole("OWNER");
         CurrentUserContext.setCompanyId(companyId);
     }
 
@@ -259,6 +268,46 @@ public class CustomerCompanyFilteringIntegrationTest {
 
         assertTrue(ex.getMessage().contains("Access denied"));
         verifyNoInteractions(customerRepository);
+    }
+
+    @Test
+    @DisplayName("Owner of organization querying Company B when assigned to Company A succeeds")
+    void testOwnerUserCompanyA_QueryCompanyB_Succeeds() {
+        authenticateAsOwner(companyAId);
+        Pageable pageable = PageRequest.of(0, 10);
+        CustomerFilterDto filter = new CustomerFilterDto();
+
+        when(customerRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(customerB1, customerB2), pageable, 2));
+        when(customerMapper.entityToResponse(customerB1)).thenReturn(responseB1);
+        when(customerMapper.entityToResponse(customerB2)).thenReturn(responseB2);
+
+        Page<CustomerResponse> page = customerService.getAllCustomers(filter, pageable, companyBId);
+
+        assertNotNull(page);
+        assertEquals(2, page.getTotalElements());
+        assertEquals(2, page.getContent().size());
+        assertEquals("CUST-B-01", page.getContent().get(0).getCustomerCode());
+    }
+
+    @Test
+    @DisplayName("Owner of organization querying their own Company A succeeds")
+    void testOwnerUserCompanyA_QueryOwnCompany_Succeeds() {
+        authenticateAsOwner(companyAId);
+        Pageable pageable = PageRequest.of(0, 10);
+        CustomerFilterDto filter = new CustomerFilterDto();
+
+        when(customerRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(customerA1, customerA2), pageable, 2));
+        when(customerMapper.entityToResponse(customerA1)).thenReturn(responseA1);
+        when(customerMapper.entityToResponse(customerA2)).thenReturn(responseA2);
+
+        Page<CustomerResponse> page = customerService.getAllCustomers(filter, pageable, companyAId);
+
+        assertNotNull(page);
+        assertEquals(2, page.getTotalElements());
+        assertEquals(2, page.getContent().size());
+        assertEquals("CUST-A-01", page.getContent().get(0).getCustomerCode());
     }
 
     @Test

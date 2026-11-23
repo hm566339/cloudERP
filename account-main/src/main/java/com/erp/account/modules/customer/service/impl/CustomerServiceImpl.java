@@ -10,6 +10,7 @@ import com.erp.account.util.CustomerLedgerHelper;
 import com.erp.account.util.CustomerValidationUtil;
 import com.erp.account.util.GstValidationUtil;
 import com.erp.account.util.TenantUtils;
+import com.erp.account.security.CurrentUserContext;
 import com.erp.account.common.dto.request.RequestWrapper;
 import com.erp.account.common.exception.*;
 import com.erp.account.modules.customer.dto.response.*;
@@ -180,7 +181,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional(readOnly = true)
     public CustomerResponse getCustomerByCode(String customerCode) {
         Customer customer;
-        if (TenantUtils.isSystemAdmin()) {
+        if (TenantUtils.isSystemAdmin() || CurrentUserContext.isOwner()) {
             UUID companyId = TenantUtils.getCurrentCompanyId();
             if (companyId != null) {
                 customer = customerRepository.findByCustomerCodeAndCompanyId(customerCode, companyId)
@@ -212,8 +213,8 @@ public class CustomerServiceImpl implements CustomerService {
         log.info("Fetching customers with filters: {}, requestedCompanyId: {}", filter, requestedCompanyId);
 
         UUID resolvedCompanyId;
-        if (TenantUtils.isSystemAdmin()) {
-            resolvedCompanyId = requestedCompanyId;
+        if (TenantUtils.isSystemAdmin() || CurrentUserContext.isOwner()) {
+            resolvedCompanyId = requestedCompanyId != null ? requestedCompanyId : TenantUtils.getCurrentCompanyId();
         } else {
             UUID currentCompanyId = TenantUtils.getCurrentCompanyId();
             if (currentCompanyId != null) {
@@ -310,7 +311,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private Customer getCustomerEntityById(UUID customerId) {
-        if (TenantUtils.isSystemAdmin()) {
+        if (TenantUtils.isSystemAdmin() || CurrentUserContext.isOwner()) {
             return customerRepository.findByIdAndIsDeletedFalse(customerId)
                     .orElseThrow(() -> CustomerNotFoundException.byId(customerId));
         } else {

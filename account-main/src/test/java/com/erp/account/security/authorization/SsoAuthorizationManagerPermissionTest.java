@@ -552,4 +552,97 @@ class SsoAuthorizationManagerPermissionTest {
                 .build();
         assertThat(decide(userWithDisallowedWrite, "POST", sendUrl)).matches(d -> !d.isGranted());
     }
+
+    // ── OWNER with CUSTOMERS:READ ──────────────────────────────────────────
+
+    @Test
+    @DisplayName("OWNER with active+allowed CUSTOMERS:READ permission is granted GET /api/account/customers")
+    void ownerWithCustomersReadGetsCustomersRead() {
+        PermissionResponse perm = PermissionResponse.builder()
+                .permissionCode("CUSTOMERS:READ")
+                .action("READ")
+                .moduleName("ACCOUNT")
+                .featureCode("CUSTOMERS")
+                .active(true)
+                .allowed(true)
+                .build();
+
+        AuthenticatedUser user = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("harshomohit4@gmail.com")
+                .companyCode("APEXINDIAP")
+                .roles(List.of("OWNER"))
+                .activeFeatures(Set.of("CUSTOMERS"))
+                .permissions(List.of(perm))
+                .build();
+
+        AuthorizationDecision decision = decide(user, "GET", "/api/account/customers");
+        assertThat(decision.isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("OWNER with singular CUSTOMER feature is granted GET /api/account/customers")
+    void ownerWithSingularCustomerFeatureGetsCustomersRead() {
+        PermissionResponse perm = PermissionResponse.builder()
+                .permissionCode("CUSTOMER:READ")
+                .action("READ")
+                .moduleName("ACCOUNT")
+                .featureCode("CUSTOMER")
+                .active(true)
+                .allowed(true)
+                .build();
+
+        AuthenticatedUser user = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("harshomohit4@gmail.com")
+                .companyCode("APEXINDIAP")
+                .roles(List.of("OWNER"))
+                .activeFeatures(Set.of("CUSTOMER"))
+                .permissions(List.of(perm))
+                .build();
+
+        AuthorizationDecision decision = decide(user, "GET", "/api/account/customers");
+        assertThat(decision.isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("User without CUSTOMERS:READ is denied GET /api/account/customers")
+    void userWithoutCustomersReadDenied() {
+        AuthenticatedUser user = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("unauthorized@example.com")
+                .companyCode("APEXINDIAP")
+                .roles(List.of("USER"))
+                .activeFeatures(Set.of())
+                .permissions(List.of())
+                .build();
+
+        AuthorizationDecision decision = decide(user, "GET", "/api/account/customers");
+        assertThat(decision.isGranted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("User with allowed=false CUSTOMERS:READ is denied GET /api/account/customers")
+    void userWithDisallowedCustomersReadDenied() {
+        PermissionResponse perm = PermissionResponse.builder()
+                .permissionCode("CUSTOMERS:READ")
+                .action("READ")
+                .moduleName("ACCOUNT")
+                .featureCode("CUSTOMERS")
+                .active(true)
+                .allowed(false)
+                .build();
+
+        AuthenticatedUser user = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("disallowed@example.com")
+                .companyCode("APEXINDIAP")
+                .roles(List.of("USER"))
+                .activeFeatures(Set.of("CUSTOMERS"))
+                .permissions(List.of(perm))
+                .build();
+
+        AuthorizationDecision decision = decide(user, "GET", "/api/account/customers");
+        assertThat(decision.isGranted()).isFalse();
+    }
 }
