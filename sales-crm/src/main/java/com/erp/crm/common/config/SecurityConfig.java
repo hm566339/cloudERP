@@ -52,6 +52,8 @@ public class SecurityConfig {
                                                                 // Google, etc.)
                                                                 "/api/crm/integrations/webhook",
                                                                 "/api/crm/integrations/webhook/**",
+                                                                "/api/crm/integrations/facebook/webhook",
+                                                                "/api/crm/integrations/facebook/webhook/**",
                                                                 // Public OAuth Callback Redirects (Meta, etc.)
                                                                 "/api/crm/integrations/oauth/*/callback",
                                                                 "/api/crm/integrations/oauth/*/callback/**",

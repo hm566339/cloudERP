@@ -66,4 +66,8 @@ public interface TwoTierIntegrationService {
             UUID companyId);
 
     OAuthCallbackResponse getFacebookAccountDetails(UUID companyId);
+
+    String verifyFacebookWebhook(String mode, String challenge, String verifyToken);
+
+    WebhookAckResponse handleFacebookWebhook(String rawPayload, String sourceIp, Map<String, String> headers);
 }

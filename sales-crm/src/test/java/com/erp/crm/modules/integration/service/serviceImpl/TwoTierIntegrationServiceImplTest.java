@@ -15,6 +15,8 @@ import com.erp.crm.modules.integration.repository.CrmIntegrationChannelRepositor
 import com.erp.crm.modules.integration.repository.CrmTenantIntegrationRepository;
 import com.erp.crm.modules.integration.repository.IntegrationProviderRepository;
 import com.erp.crm.modules.integration.repository.TenantIntegrationEntityRepository;
+import com.erp.crm.modules.lead.dto.request.LeadCreateRequest;
+import com.erp.crm.modules.setting.entity.CrmLeadSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,6 +61,9 @@ class TwoTierIntegrationServiceImplTest {
 
     @Mock
     private com.erp.crm.modules.setting.repository.CrmLeadSourceRepository leadSourceRepository;
+
+    @Mock
+    private com.erp.crm.modules.integration.repository.CrmIntegrationWebhookLogRepository webhookLogRepository;
 
     @Mock
     private com.erp.crm.modules.automation.service.RoundRobinAssignmentService roundRobinAssignmentService;
@@ -427,5 +432,129 @@ class TwoTierIntegrationServiceImplTest {
         assertEquals(IntegrationAuthType.WEBHOOK, response.getAuthType());
         assertTrue(response.getIsEnabled());
         verify(providerRepository, times(1)).save(any(IntegrationProviderEntity.class));
+    }
+
+    @Test
+    @DisplayName("14. Facebook: subscribeFacebookPage successfully handles flat credentials")
+    void testSubscribeFacebookPageFlatCredentials() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("user@mark2.in", "pass",
+                        List.of(new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("CRM_INTEGRATION_MANAGE"))));
+
+        UUID intId = UUID.randomUUID();
+        TenantIntegrationEntity fbEntity = TenantIntegrationEntity.builder()
+                .id(intId)
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .credentialsJson("{\"pageId\":\"fb_page_mohit\",\"pageAccessToken\":\"mock_page_token_abc\",\"pageName\":\"Mohit CRM Testing\"}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(companyId))
+                .thenReturn(List.of(fbEntity));
+        when(tenantIntegrationRepository.save(any(TenantIntegrationEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        Map<String, Object> result = integrationService.subscribeFacebookPage("fb_page_mohit", true, companyId);
+
+        assertNotNull(result);
+        assertEquals("fb_page_mohit", result.get("pageId"));
+        assertTrue((Boolean) result.get("subscribed"));
+        assertTrue((Boolean) result.get("success"));
+        verify(tenantIntegrationRepository, times(1)).save(any(TenantIntegrationEntity.class));
+    }
+
+    @Test
+    @DisplayName("15. Facebook: getFacebookAccountDetails synthesizes page DTO from flat credentials")
+    void testGetFacebookAccountDetailsFlatCredentials() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("user@mark2.in", "pass",
+                        List.of(new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("CRM_INTEGRATION_MANAGE"))));
+
+        TenantIntegrationEntity fbEntity = TenantIntegrationEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .credentialsJson("{\"pageId\":\"104928192\",\"pageAccessToken\":\"mock_long_token_1234567\",\"pageName\":\"Mohit CRM Testing\",\"formId\":\"form_999\",\"formName\":\"Contact Form\"}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findByTenantIdAndIsDeletedFalseOrderByCreatedAtDesc(companyId))
+                .thenReturn(List.of(fbEntity));
+
+        OAuthCallbackResponse response = integrationService.getFacebookAccountDetails(companyId);
+
+        assertNotNull(response);
+        assertTrue(response.isSuccess());
+        assertFalse(response.getPages().isEmpty());
+        OAuthCallbackResponse.FacebookPageDto pageDto = response.getPages().get(0);
+        assertEquals("104928192", pageDto.getPageId());
+        assertEquals("Mohit CRM Testing", pageDto.getPageName());
+        assertFalse(pageDto.getForms().isEmpty());
+        assertEquals("form_999", pageDto.getForms().get(0).getFormId());
+    }
+
+    @Test
+    @DisplayName("16. Facebook: verifyFacebookWebhook succeeds on valid hub.challenge")
+    void testVerifyFacebookWebhookHandshake() {
+        String challenge = "1158201444";
+        String response = integrationService.verifyFacebookWebhook("subscribe", challenge, "mark2_crm_token");
+        assertEquals(challenge, response);
+    }
+
+    @Test
+    @DisplayName("17. Facebook: handleFacebookWebhook parses webhook payload, resolves tenant and creates lead")
+    void testHandleFacebookWebhookLeadIngestion() {
+        TenantIntegrationEntity fbEntity = TenantIntegrationEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .credentialsJson("{\"pageId\":\"page_123\",\"pageAccessToken\":\"mock_page_token\",\"pageName\":\"Mohit CRM Testing\"}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findAll()).thenReturn(List.of(fbEntity));
+        when(leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(eq(companyId), anyString())).thenReturn(false);
+        when(leadSourceRepository.findByCompanyIdAndSourceCodeAndIsDeletedFalse(eq(companyId), anyString()))
+                .thenReturn(Optional.of(CrmLeadSource.builder().id(UUID.randomUUID()).build()));
+
+        UUID leadId = UUID.randomUUID();
+        when(leadService.createLead(any(LeadCreateRequest.class), eq(companyId)))
+                .thenReturn(com.erp.crm.modules.lead.dto.response.LeadResponse.builder().id(leadId).firstName("Mohit").lastName("Sharma").build());
+
+        String metaPayload = """
+                {
+                  "object": "page",
+                  "entry": [
+                    {
+                      "id": "page_123",
+                      "time": 1700000000,
+                      "changes": [
+                        {
+                          "field": "leadgen",
+                          "value": {
+                            "ad_id": "ad_111",
+                            "form_id": "form_222",
+                            "leadgen_id": "leadgen_333",
+                            "created_time": 1700000000,
+                            "page_id": "page_123"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """;
+
+        WebhookAckResponse ack = integrationService.handleFacebookWebhook(metaPayload, "127.0.0.1", Map.of());
+
+        assertNotNull(ack);
+        assertEquals("ACCEPTED", ack.getStatus());
+        assertEquals("PROCESSED", ack.getProcessingStatus());
+        assertEquals(leadId, ack.getLeadId());
+        assertEquals(1, ack.getLeadsCount());
+        verify(leadService, times(1)).createLead(any(LeadCreateRequest.class), eq(companyId));
     }
 }

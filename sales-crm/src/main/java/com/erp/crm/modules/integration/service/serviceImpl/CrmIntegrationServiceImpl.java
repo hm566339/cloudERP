@@ -11,6 +11,7 @@ import com.erp.crm.modules.integration.entity.CrmIntegrationWebhookLog;
 import com.erp.crm.modules.integration.entity.CrmTenantIntegration;
 import com.erp.crm.modules.integration.entity.TenantIntegrationEntity;
 import com.erp.crm.modules.integration.enums.IntegrationProvider;
+import com.erp.crm.modules.integration.enums.IntegrationProviderCode;
 import com.erp.crm.modules.integration.enums.IntegrationSyncStatus;
 import com.erp.crm.modules.integration.enums.TenantIntegrationStatus;
 import com.erp.crm.modules.integration.enums.WebhookProcessingStatus;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
@@ -52,22 +54,48 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     private final CrmLeadService leadService;
     private final ObjectMapper objectMapper;
 
+    private CrmTenantIntegration bridgeTwoTierEntity(TenantIntegrationEntity twoTier) {
+        IntegrationProvider legacyProvider = switch (twoTier.getProviderCode()) {
+            case FACEBOOK -> IntegrationProvider.META_LEAD_ADS;
+            case INDIAMART -> IntegrationProvider.INDIAMART;
+            case TRADEINDIA -> IntegrationProvider.TRADEINDIA;
+            case CUSTOM_WEBHOOK -> IntegrationProvider.WEBHOOK;
+            default -> IntegrationProvider.WEBHOOK;
+        };
+        CrmIntegrationChannel ch = channelRepository.findByProviderCode(legacyProvider).orElse(null);
+        CrmTenantIntegration bridged = CrmTenantIntegration.builder()
+                .integrationChannelId(ch != null ? ch.getId() : null)
+                .webhookSlug(twoTier.getWebhookSlug())
+                .connectionName(twoTier.getIntegrationName())
+                .isEnabled(twoTier.getStatus() == TenantIntegrationStatus.CONNECTED)
+                .syncStatus(IntegrationSyncStatus.ACTIVE)
+                .settingsJson(twoTier.getCredentialsJson())
+                .build();
+        bridged.setId(twoTier.getId());
+        bridged.setCompanyId(twoTier.getTenantId());
+        return bridged;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public String verifyWebhook(String slug, String mode, String challenge, String verifyToken) {
         log.info("Webhook verification challenge received for slug: {}, mode: {}", slug, mode);
+
+        if ("facebook".equalsIgnoreCase(slug) || "meta".equalsIgnoreCase(slug)) {
+            if (mode != null && !"subscribe".equalsIgnoreCase(mode)) {
+                log.warn("Invalid webhook subscription mode for Facebook: {}", mode);
+                throw new IllegalArgumentException("Invalid mode. Expected 'subscribe'");
+            }
+            if (challenge == null || challenge.isBlank()) {
+                throw new IllegalArgumentException("Missing hub.challenge");
+            }
+            log.info("Meta Webhook verification challenge accepted for slug [{}]: {}", slug, challenge);
+            return challenge;
+        }
+
         CrmTenantIntegration integration = tenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse(slug)
                 .orElseGet(() -> tenantIntegrationEntityRepository.findByWebhookSlugAndIsDeletedFalse(slug)
-                        .map(twoTier -> {
-                            CrmTenantIntegration bridged = CrmTenantIntegration.builder()
-                                    .webhookSlug(twoTier.getWebhookSlug())
-                                    .connectionName(twoTier.getIntegrationName())
-                                    .settingsJson(twoTier.getCredentialsJson())
-                                    .build();
-                            bridged.setId(twoTier.getId());
-                            bridged.setCompanyId(twoTier.getTenantId());
-                            return bridged;
-                        })
+                        .map(this::bridgeTwoTierEntity)
                         .orElseThrow(() -> new ResourceNotFoundException("No active integration found for webhook slug: " + slug)));
 
         if (mode != null && !"subscribe".equalsIgnoreCase(mode)) {
@@ -93,26 +121,15 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
 
         CrmTenantIntegration integration = tenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse(slug)
                 .orElseGet(() -> tenantIntegrationEntityRepository.findByWebhookSlugAndIsDeletedFalse(slug)
-                        .map(twoTier -> {
-                            IntegrationProvider legacyProvider = switch (twoTier.getProviderCode()) {
-                                case FACEBOOK -> IntegrationProvider.META_LEAD_ADS;
-                                case INDIAMART -> IntegrationProvider.INDIAMART;
-                                case TRADEINDIA -> IntegrationProvider.TRADEINDIA;
-                                case CUSTOM_WEBHOOK -> IntegrationProvider.WEBHOOK;
-                                default -> IntegrationProvider.WEBHOOK;
-                            };
-                            CrmIntegrationChannel ch = channelRepository.findByProviderCode(legacyProvider).orElse(null);
-                            CrmTenantIntegration bridged = CrmTenantIntegration.builder()
-                                    .integrationChannelId(ch != null ? ch.getId() : null)
-                                    .webhookSlug(twoTier.getWebhookSlug())
-                                    .connectionName(twoTier.getIntegrationName())
-                                    .isEnabled(twoTier.getStatus() == TenantIntegrationStatus.CONNECTED)
-                                    .syncStatus(IntegrationSyncStatus.ACTIVE)
-                                    .settingsJson(twoTier.getCredentialsJson())
-                                    .build();
-                            bridged.setId(twoTier.getId());
-                            bridged.setCompanyId(twoTier.getTenantId());
-                            return bridged;
+                        .map(this::bridgeTwoTierEntity)
+                        .or(() -> {
+                            if ("facebook".equalsIgnoreCase(slug) || "meta".equalsIgnoreCase(slug)) {
+                                return tenantIntegrationEntityRepository.findAll().stream()
+                                        .filter(e -> e.getProviderCode() == IntegrationProviderCode.FACEBOOK && !Boolean.TRUE.equals(e.getIsDeleted()))
+                                        .findFirst()
+                                        .map(this::bridgeTwoTierEntity);
+                            }
+                            return Optional.empty();
                         })
                         .orElseThrow(() -> new ResourceNotFoundException("No active integration found for webhook slug: " + slug)));
 
@@ -382,7 +399,7 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
             } else if (provider == IntegrationProvider.TRADEINDIA) {
                 leads.addAll(extractTradeIndiaLeads(root));
             } else if (provider == IntegrationProvider.META_LEAD_ADS) {
-                leads.addAll(extractMetaLeadAds(root));
+                leads.addAll(extractMetaLeadAds(root, integration));
             } else {
                 // Generic / Custom Webhook or auto-detection
                 if (isIndiaMartFormat(root)) {
@@ -390,7 +407,7 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                 } else if (isTradeIndiaFormat(root)) {
                     leads.addAll(extractTradeIndiaLeads(root));
                 } else if (isMetaLeadFormat(root)) {
-                    leads.addAll(extractMetaLeadAds(root));
+                    leads.addAll(extractMetaLeadAds(root, integration));
                 } else {
                     leads.addAll(extractGenericLeads(root));
                 }
@@ -540,6 +557,10 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private List<LeadCreateRequest> extractMetaLeadAds(JsonNode root) {
+        return extractMetaLeadAds(root, null);
+    }
+
+    private List<LeadCreateRequest> extractMetaLeadAds(JsonNode root, CrmTenantIntegration integration) {
         List<LeadCreateRequest> leads = new ArrayList<>();
 
         // Case A: Meta Webhook Event Notification: entry[].changes[].value
@@ -549,6 +570,28 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                     for (JsonNode change : entry.get("changes")) {
                         JsonNode val = change.path("value");
                         if (!val.isMissingNode()) {
+                            String leadgenId = val.path("leadgen_id").asText(null);
+                            String pageId = val.path("page_id").asText(entry.path("id").asText(null));
+
+                            // If val doesn't have field_data, fetch from Graph API using integration token
+                            if (leadgenId != null && !leadgenId.isBlank() && !val.has("field_data") && integration != null) {
+                                String pageToken = extractPageAccessTokenFromSettings(integration.getSettingsJson(), pageId);
+                                if (pageToken != null && !pageToken.isBlank() && !pageToken.startsWith("mock_")) {
+                                    try {
+                                        String leadUrl = String.format("https://graph.facebook.com/v19.0/%s?fields=created_time,id,ad_id,form_id,field_data&access_token=%s",
+                                                leadgenId, URLEncoder.encode(pageToken, StandardCharsets.UTF_8));
+                                        log.info("[Meta Webhook] Fetching lead details from Graph API: leadgen_id={}", leadgenId);
+                                        String body = httpGet(leadUrl, 10);
+                                        if (body != null && !body.isBlank() && body.contains("field_data")) {
+                                            JsonNode leadNode = objectMapper.readTree(body);
+                                            leads.add(parseMetaLeadNode(leadNode));
+                                            continue;
+                                        }
+                                    } catch (Exception ex) {
+                                        log.warn("[Meta Webhook] Failed to fetch lead from Graph API: {}", ex.getMessage());
+                                    }
+                                }
+                            }
                             leads.add(parseMetaLeadNode(val));
                         }
                     }
@@ -561,6 +604,58 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         // Case B: Direct Lead Ad object (Zapier / Webhook Partner format)
         leads.add(parseMetaLeadNode(root));
         return leads;
+    }
+
+    private String extractPageAccessTokenFromSettings(String settingsJson, String pageId) {
+        if (settingsJson == null || settingsJson.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode root = objectMapper.readTree(settingsJson);
+            if (root.hasNonNull("pageAccessToken")) {
+                return root.get("pageAccessToken").asText();
+            }
+            if (root.has("pages") && root.get("pages").isArray()) {
+                for (JsonNode p : root.get("pages")) {
+                    if (pageId == null || pageId.equals(p.path("pageId").asText())) {
+                        if (p.hasNonNull("pageAccessToken")) {
+                            return p.get("pageAccessToken").asText();
+                        }
+                    }
+                }
+            }
+            if (root.hasNonNull("userAccessToken")) {
+                return root.get("userAccessToken").asText();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private String httpGet(String urlString, int timeoutSeconds) {
+        try {
+            java.net.URL url = java.net.URI.create(urlString).toURL();
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(timeoutSeconds * 1000);
+            conn.setReadTimeout(timeoutSeconds * 1000);
+            conn.setRequestProperty("User-Agent", "Mark2-CRM-Connector/1.0");
+            conn.connect();
+            int status = conn.getResponseCode();
+            if (status >= 200 && status < 300) {
+                try (java.io.InputStream is = conn.getInputStream()) {
+                    return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            } else {
+                try (java.io.InputStream es = conn.getErrorStream()) {
+                    String err = es != null ? new String(es.readAllBytes(), StandardCharsets.UTF_8) : "";
+                    log.warn("HTTP GET [{}] returned non-success status [{}]: {}", urlString, status, err);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("HTTP GET [{}] failed: {}", urlString, e.getMessage());
+        }
+        return null;
     }
 
     private LeadCreateRequest parseMetaLeadNode(JsonNode node) {

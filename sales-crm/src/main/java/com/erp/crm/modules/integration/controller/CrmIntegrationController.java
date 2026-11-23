@@ -263,6 +263,37 @@ public class CrmIntegrationController {
     // PUBLIC INBOUND WEBHOOK LISTENERS & SYNC TRIGGER
     // =========================================================================
 
+    @GetMapping(value = "/facebook/webhook", produces = org.springframework.http.MediaType.TEXT_PLAIN_VALUE)
+    @Operation(summary = "Dedicated Meta Webhook Verification Handshake (hub.challenge)")
+    public ResponseEntity<String> verifyFacebookWebhook(
+            @RequestParam(name = "hub.mode", required = false) String hubMode,
+            @RequestParam(name = "hub.challenge", required = false) String hubChallenge,
+            @RequestParam(name = "hub.verify_token", required = false) String hubVerifyToken,
+            @RequestParam(name = "hub_mode", required = false) String altMode,
+            @RequestParam(name = "hub_challenge", required = false) String altChallenge,
+            @RequestParam(name = "hub_verify_token", required = false) String altVerifyToken) {
+        String mode = hubMode != null ? hubMode : altMode;
+        String challenge = hubChallenge != null ? hubChallenge : altChallenge;
+        String verifyToken = hubVerifyToken != null ? hubVerifyToken : altVerifyToken;
+        String result = twoTierIntegrationService.verifyFacebookWebhook(mode, challenge, verifyToken);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/facebook/webhook")
+    @Operation(summary = "Dedicated Meta Webhook Event Receiver (Facebook / Instagram Lead Ads)")
+    public ResponseEntity<WebhookAckResponse> handleFacebookWebhook(
+            @RequestBody String rawPayload,
+            HttpServletRequest request) {
+        Map<String, String> headers = new HashMap<>();
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames != null && headerNames.hasMoreElements()) {
+            String name = headerNames.nextElement();
+            headers.put(name, request.getHeader(name));
+        }
+        WebhookAckResponse ack = twoTierIntegrationService.handleFacebookWebhook(rawPayload, request.getRemoteAddr(), headers);
+        return ResponseEntity.ok(ack);
+    }
+
     @GetMapping(value = "/webhook/{slug}", produces = org.springframework.http.MediaType.TEXT_PLAIN_VALUE)
     @Operation(summary = "Meta Ads / Webhook Verification Handshake (hub.challenge)")
     public ResponseEntity<String> verifyWebhook(

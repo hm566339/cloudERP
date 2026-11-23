@@ -97,6 +97,8 @@ public class JwtAuthenticationFilter
                         "/api/crm/integrations/oauth/**",
                         "/api/crm/integrations/webhook/**",
                         "/api/crm/integrations/webhook",
+                        "/api/crm/integrations/facebook/webhook",
+                        "/api/crm/integrations/facebook/webhook/**",
 
                         // Swagger / OpenAPI
                         "/swagger-ui/**",

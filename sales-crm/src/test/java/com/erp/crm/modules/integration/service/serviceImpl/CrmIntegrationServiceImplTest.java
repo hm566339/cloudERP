@@ -535,4 +535,12 @@ class CrmIntegrationServiceImplTest {
         // Ensure leadService was NEVER called
         verify(leadService, never()).createLead(any(), any());
     }
+
+    @Test
+    @DisplayName("Should verify Facebook webhook handshake with slug 'facebook'")
+    void testVerifyWebhook_FacebookSlug() {
+        String challenge = "192837465";
+        String response = integrationService.verifyWebhook("facebook", "subscribe", challenge, "any_token");
+        assertEquals(challenge, response);
+    }
 }

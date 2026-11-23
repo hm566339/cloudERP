@@ -19,7 +19,11 @@ import com.erp.crm.modules.integration.repository.CrmTenantIntegrationRepository
 import com.erp.crm.modules.integration.repository.IntegrationProviderRepository;
 import com.erp.crm.modules.integration.repository.TenantIntegrationEntityRepository;
 import com.erp.crm.modules.integration.service.TwoTierIntegrationService;
+import com.erp.crm.modules.integration.entity.CrmIntegrationWebhookLog;
+import com.erp.crm.modules.integration.enums.WebhookProcessingStatus;
+import com.erp.crm.modules.integration.repository.CrmIntegrationWebhookLogRepository;
 import com.erp.crm.modules.lead.dto.request.LeadCreateRequest;
+import com.erp.crm.modules.lead.dto.response.LeadResponse;
 import com.erp.crm.modules.lead.repository.CrmLeadRepository;
 import com.erp.crm.modules.lead.service.CrmLeadService;
 import com.erp.crm.modules.setting.entity.CrmLeadSource;
@@ -38,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -54,10 +59,17 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     private final CrmLeadRepository leadRepository;
     private final CrmLeadService leadService;
     private final CrmLeadSourceRepository leadSourceRepository;
+    private final CrmIntegrationWebhookLogRepository webhookLogRepository;
     private final ObjectMapper objectMapper;
 
     @Value("${PUBLIC_BASE_URL:https://www.mark2.in}")
     private String publicBaseUrl;
+
+    public record HttpResponseData(int statusCode, String body, String errorBody) {
+        public boolean isSuccess() {
+            return statusCode >= 200 && statusCode < 300;
+        }
+    }
 
     // Helper HTTP methods using standard HttpURLConnection (avoids loopback
     // selector issues)
@@ -87,35 +99,96 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         return null;
     }
 
-    private int httpPost(String urlString, int timeoutSeconds) {
+    private HttpResponseData httpPostForm(String urlString, Map<String, String> formData, int timeoutSeconds) {
         try {
             java.net.URL url = java.net.URI.create(urlString).toURL();
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setConnectTimeout(timeoutSeconds * 1000);
             conn.setReadTimeout(timeoutSeconds * 1000);
-            conn.setFixedLengthStreamingMode(0);
-            conn.connect();
-            return conn.getResponseCode();
+            conn.setRequestProperty("User-Agent", "Mark2-CRM-Connector/1.0");
+            conn.setDoOutput(true);
+
+            if (formData != null && !formData.isEmpty()) {
+                StringBuilder postData = new StringBuilder();
+                for (Map.Entry<String, String> param : formData.entrySet()) {
+                    if (param.getValue() == null) continue;
+                    if (postData.length() != 0) postData.append('&');
+                    postData.append(URLEncoder.encode(param.getKey(), StandardCharsets.UTF_8));
+                    postData.append('=');
+                    postData.append(URLEncoder.encode(param.getValue(), StandardCharsets.UTF_8));
+                }
+                byte[] postDataBytes = postData.toString().getBytes(StandardCharsets.UTF_8);
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
+                try (java.io.OutputStream os = conn.getOutputStream()) {
+                    os.write(postDataBytes);
+                    os.flush();
+                }
+            } else {
+                conn.setFixedLengthStreamingMode(0);
+                try (java.io.OutputStream os = conn.getOutputStream()) {
+                    os.flush();
+                }
+            }
+
+            int status = conn.getResponseCode();
+            String body = null;
+            String errorBody = null;
+            if (status >= 200 && status < 300) {
+                try (java.io.InputStream is = conn.getInputStream()) {
+                    body = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            } else {
+                try (java.io.InputStream es = conn.getErrorStream()) {
+                    if (es != null) {
+                        errorBody = new String(es.readAllBytes(), StandardCharsets.UTF_8);
+                    }
+                }
+                log.warn("HTTP POST [{}] returned non-success status [{}]: {}", urlString, status, errorBody);
+            }
+            return new HttpResponseData(status, body, errorBody);
         } catch (Exception e) {
             log.warn("HTTP POST [{}] failed: {}", urlString, e.getMessage());
-            return 500;
+            return new HttpResponseData(500, null, e.getMessage());
         }
     }
 
-    private int httpDelete(String urlString, int timeoutSeconds) {
+    private int httpPost(String urlString, int timeoutSeconds) {
+        return httpPostForm(urlString, null, timeoutSeconds).statusCode();
+    }
+
+    private HttpResponseData httpDeleteDetailed(String urlString, int timeoutSeconds) {
         try {
             java.net.URL url = java.net.URI.create(urlString).toURL();
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
             conn.setRequestMethod("DELETE");
             conn.setConnectTimeout(timeoutSeconds * 1000);
             conn.setReadTimeout(timeoutSeconds * 1000);
+            conn.setRequestProperty("User-Agent", "Mark2-CRM-Connector/1.0");
             conn.connect();
-            return conn.getResponseCode();
+            int status = conn.getResponseCode();
+            String body = null;
+            String err = null;
+            if (status >= 200 && status < 300) {
+                try (java.io.InputStream is = conn.getInputStream()) {
+                    body = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            } else {
+                try (java.io.InputStream es = conn.getErrorStream()) {
+                    err = es != null ? new String(es.readAllBytes(), StandardCharsets.UTF_8) : "";
+                    log.warn("HTTP DELETE [{}] returned non-success status [{}]: {}", urlString, status, err);
+                }
+            }
+            return new HttpResponseData(status, body, err);
         } catch (Exception e) {
             log.warn("HTTP DELETE [{}] failed: {}", urlString, e.getMessage());
-            return 500;
+            return new HttpResponseData(500, null, e.getMessage());
         }
+    }
+
+    private int httpDelete(String urlString, int timeoutSeconds) {
+        return httpDeleteDetailed(urlString, timeoutSeconds).statusCode();
     }
 
     // =========================================================================
@@ -1313,19 +1386,26 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     }
 
     private void autoSubscribeFacebookPage(String pageId, String pageAccessToken) {
-        if (pageId == null || pageId.isBlank() || pageAccessToken == null || pageAccessToken.isBlank()) {
+        if (pageId == null || pageId.isBlank() || pageAccessToken == null || pageAccessToken.isBlank()
+                || pageAccessToken.startsWith("mock_")) {
             return;
         }
         try {
-            String url = String.format(
-                    "https://graph.facebook.com/v19.0/%s/subscribed_apps?subscribed_fields=leadgen&access_token=%s",
-                    pageId, URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
-            new Thread(() -> {
-                int status = httpPost(url, 5);
-                log.info("Facebook page auto-subscription response [HTTP {}]", status);
-            }).start();
+            String url = String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps", pageId);
+            Map<String, String> form = Map.of(
+                    "subscribed_fields", "leadgen",
+                    "access_token", pageAccessToken
+            );
+            HttpResponseData resp = httpPostForm(url, form, 10);
+            if (resp.isSuccess()) {
+                log.info("[Meta Page Subscribe] Facebook page [{}] auto-subscribed successfully to leadgen webhooks: {}",
+                        pageId, resp.body());
+            } else {
+                log.warn("[Meta Page Subscribe] Facebook page [{}] auto-subscription returned status [{}]: {}",
+                        pageId, resp.statusCode(), resp.errorBody());
+            }
         } catch (Exception e) {
-            log.warn("Facebook page auto-subscription failed silently: {}", e.getMessage());
+            log.warn("[Meta Page Subscribe] Facebook page [{}] auto-subscription failed: {}", pageId, e.getMessage());
         }
     }
 
@@ -1596,23 +1676,63 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             }
         }
 
-        if (pageAccessToken != null && !pageAccessToken.startsWith("mock_") && !pageAccessToken.isBlank()) {
-            try {
-                String subUrl = String.format(
-                        "https://graph.facebook.com/v19.0/%s/subscribed_apps?subscribed_fields=leadgen&access_token=%s",
-                        pageId, URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
-                if (subscribe) {
-                    httpPost(subUrl, 8);
-                } else {
-                    httpDelete(String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps?access_token=%s",
-                            pageId, URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8)), 8);
-                }
-            } catch (Exception e) {
-                log.warn("Meta Webhook Subscription API call for page {} returned warning: {}", pageId, e.getMessage());
+        // Support flat credentials as saved by frontend modal
+        if (pageAccessToken == null || pageAccessToken.isBlank()) {
+            String flatPageId = creds.get("pageId") != null ? String.valueOf(creds.get("pageId")) : null;
+            if (pageId == null || pageId.isBlank() || pageId.equals(flatPageId)) {
+                pageAccessToken = creds.get("pageAccessToken") != null ? String.valueOf(creds.get("pageAccessToken")) : null;
+                creds.put("isSyncEnabled", subscribe);
+                creds.put("isSubscribed", subscribe);
             }
         }
 
-        creds.put("pages", pagesList);
+        // Fallback to userAccessToken / longLivedToken
+        if (pageAccessToken == null || pageAccessToken.isBlank()) {
+            pageAccessToken = creds.get("userAccessToken") != null ? String.valueOf(creds.get("userAccessToken")) : null;
+        }
+
+        boolean metaSuccess = true;
+        String metaMessage = subscribe ? "Subscribed page to leadgen webhooks" : "Unsubscribed page from leadgen webhooks";
+        String metaRawResponse = null;
+
+        if (pageAccessToken != null && !pageAccessToken.startsWith("mock_") && !pageAccessToken.isBlank()) {
+            try {
+                if (subscribe) {
+                    String subUrl = String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps", pageId);
+                    Map<String, String> form = Map.of(
+                            "subscribed_fields", "leadgen",
+                            "access_token", pageAccessToken
+                    );
+                    HttpResponseData resp = httpPostForm(subUrl, form, 10);
+                    metaRawResponse = resp.isSuccess() ? resp.body() : resp.errorBody();
+                    if (!resp.isSuccess()) {
+                        metaSuccess = false;
+                        metaMessage = "Meta API rejected subscription (HTTP " + resp.statusCode() + "): " + resp.errorBody();
+                        log.warn("Meta Webhook Subscription API call for page {} failed: {}", pageId, metaMessage);
+                    } else {
+                        log.info("Meta Webhook Subscription API call for page {} succeeded: {}", pageId, resp.body());
+                    }
+                } else {
+                    String unsubUrl = String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps?access_token=%s",
+                            pageId, URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
+                    HttpResponseData resp = httpDeleteDetailed(unsubUrl, 10);
+                    metaRawResponse = resp.isSuccess() ? resp.body() : resp.errorBody();
+                    if (!resp.isSuccess()) {
+                        metaSuccess = false;
+                        metaMessage = "Meta API rejected unsubscription (HTTP " + resp.statusCode() + "): " + resp.errorBody();
+                        log.warn("Meta Webhook Unsubscription API call for page {} failed: {}", pageId, metaMessage);
+                    }
+                }
+            } catch (Exception e) {
+                metaSuccess = false;
+                metaMessage = "Meta API call error: " + e.getMessage();
+                log.warn("Meta Webhook Subscription API call for page {} returned error: {}", pageId, e.getMessage());
+            }
+        }
+
+        if (!pagesList.isEmpty()) {
+            creds.put("pages", pagesList);
+        }
         try {
             entity.setCredentialsJson(objectMapper.writeValueAsString(creds));
         } catch (Exception e) {
@@ -1623,9 +1743,11 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         Map<String, Object> result = new HashMap<>();
         result.put("pageId", pageId);
         result.put("subscribed", subscribe);
-        result.put("success", true);
-        result.put("message",
-                subscribe ? "Subscribed page to leadgen webhooks" : "Unsubscribed page from leadgen webhooks");
+        result.put("success", metaSuccess);
+        result.put("message", metaMessage);
+        if (metaRawResponse != null) {
+            result.put("metaResponse", metaRawResponse);
+        }
         return result;
     }
 
@@ -1748,6 +1870,37 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             }
         }
 
+        // If nested page list was empty, synthesize from flat credentials
+        if (pageDtos.isEmpty() && creds.get("pageId") != null) {
+            String pId = String.valueOf(creds.get("pageId"));
+            String pName = creds.get("pageName") != null ? String.valueOf(creds.get("pageName")) : "Connected Facebook Page";
+            String rawPageToken = creds.get("pageAccessToken") != null ? String.valueOf(creds.get("pageAccessToken")) : "";
+            String maskedPageToken = rawPageToken.length() > 6
+                    ? "••••••••" + rawPageToken.substring(rawPageToken.length() - 4)
+                    : "••••••••";
+            Boolean isSync = creds.get("isSyncEnabled") != null
+                    ? Boolean.valueOf(String.valueOf(creds.get("isSyncEnabled")))
+                    : Boolean.TRUE;
+
+            List<OAuthCallbackResponse.FacebookFormDto> formDtos = new ArrayList<>();
+            if (creds.get("formId") != null) {
+                formDtos.add(OAuthCallbackResponse.FacebookFormDto.builder()
+                        .formId(String.valueOf(creds.get("formId")))
+                        .formName(creds.get("formName") != null ? String.valueOf(creds.get("formName")) : "All Lead Forms")
+                        .status("ACTIVE")
+                        .build());
+            }
+
+            pageDtos.add(OAuthCallbackResponse.FacebookPageDto.builder()
+                    .pageId(pId)
+                    .pageName(pName)
+                    .category("Lead Generation")
+                    .pageAccessToken(maskedPageToken)
+                    .isSyncEnabled(isSync)
+                    .forms(formDtos)
+                    .build());
+        }
+
         return OAuthCallbackResponse.builder()
                 .success(true)
                 .integrationId(entity.getId())
@@ -1757,6 +1910,379 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                 .pages(pageDtos)
                 .message("Facebook integration active")
                 .build();
+    }
+
+    @Override
+    public String verifyFacebookWebhook(String mode, String challenge, String verifyToken) {
+        log.info("[Meta Webhook] Verification GET received: mode={}, challenge={}, verifyToken={}",
+                mode, challenge, (verifyToken != null ? "PRESENT" : "NULL"));
+
+        if (mode != null && !"subscribe".equalsIgnoreCase(mode)) {
+            log.warn("[Meta Webhook] Invalid webhook subscription mode: {}", mode);
+            throw new IllegalArgumentException("Invalid mode. Expected 'subscribe'");
+        }
+
+        if (challenge == null || challenge.isBlank()) {
+            throw new IllegalArgumentException("hub.challenge parameter is required");
+        }
+
+        IntegrationProviderEntity provider = providerRepository.findByCode(IntegrationProviderCode.FACEBOOK).orElse(null);
+        String expectedToken = null;
+        if (provider != null) {
+            Map<String, Object> cfg = parseJsonToMap(provider.getGlobalConfigJson());
+            if (cfg.containsKey("verifyToken")) {
+                expectedToken = String.valueOf(cfg.get("verifyToken"));
+            } else if (cfg.containsKey("webhookSecret")) {
+                expectedToken = String.valueOf(cfg.get("webhookSecret"));
+            }
+        }
+
+        if (expectedToken != null && !expectedToken.isBlank()) {
+            if (!expectedToken.equals(verifyToken)) {
+                log.warn("[Meta Webhook] Verification token mismatch. Expected: {}, Received: {}", expectedToken, verifyToken);
+                throw new SecurityException("Meta webhook verify token mismatch");
+            }
+        }
+
+        log.info("[Meta Webhook] Verification challenge accepted. Responding with challenge: {}", challenge);
+        return challenge;
+    }
+
+    @Override
+    @Transactional
+    public WebhookAckResponse handleFacebookWebhook(String rawPayload, String sourceIp, Map<String, String> headers) {
+        log.info("[Meta Webhook] Inbound event received from IP [{}]: {}", sourceIp, rawPayload);
+
+        if (rawPayload == null || rawPayload.isBlank()) {
+            return WebhookAckResponse.builder()
+                    .status("EMPTY")
+                    .message("Payload is empty")
+                    .build();
+        }
+
+        List<UUID> createdLeadIds = new ArrayList<>();
+        String idempotencyHash = computeSha256("META_GLOBAL:" + rawPayload);
+
+        try {
+            JsonNode root = objectMapper.readTree(rawPayload);
+
+            JsonNode entries = root.path("entry");
+            if (entries.isArray()) {
+                for (JsonNode entry : entries) {
+                    String pageId = entry.path("id").asText(null);
+
+                    JsonNode changes = entry.path("changes");
+                    if (changes.isArray()) {
+                        for (JsonNode change : changes) {
+                            String field = change.path("field").asText("");
+                            JsonNode val = change.path("value");
+
+                            if ("leadgen".equalsIgnoreCase(field) || val.has("leadgen_id")) {
+                                String leadgenId = val.path("leadgen_id").asText(null);
+                                String formId = val.path("form_id").asText(null);
+                                String adId = val.path("ad_id").asText(null);
+                                if (val.hasNonNull("page_id")) {
+                                    pageId = val.path("page_id").asText(pageId);
+                                }
+
+                                TenantIntegrationEntity matchedTenant = findTenantIntegrationForFacebookPage(pageId);
+                                if (matchedTenant == null) {
+                                    log.warn("[Meta Webhook] No connected tenant found for Facebook Page ID [{}]. Event ignored.", pageId);
+                                    continue;
+                                }
+
+                                UUID companyId = matchedTenant.getTenantId();
+
+                                if (leadgenId != null && !leadgenId.isBlank()
+                                        && leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId, leadgenId)) {
+                                    log.info("[Meta Webhook] Duplicate lead [{}] skipped for company [{}]", leadgenId, companyId);
+                                    continue;
+                                }
+
+                                String pageAccessToken = resolvePageAccessToken(matchedTenant, pageId);
+
+                                LeadCreateRequest leadReq = null;
+                                if (leadgenId != null && !leadgenId.isBlank()
+                                        && pageAccessToken != null && !pageAccessToken.isBlank() && !pageAccessToken.startsWith("mock_")) {
+                                    leadReq = fetchAndParseMetaLead(leadgenId, pageAccessToken, formId, adId);
+                                }
+
+                                if (leadReq == null) {
+                                    leadReq = parseMetaLeadNode(val);
+                                }
+
+                                UUID sourceId = getOrCreateLeadSourceId(companyId, "META_ADS", "Meta Ads");
+                                leadReq.setTenantIntegrationId(matchedTenant.getId());
+                                leadReq.setLeadSourceId(sourceId);
+                                if (leadgenId != null && !leadgenId.isBlank()) {
+                                    leadReq.setExternalLeadId(leadgenId);
+                                }
+
+                                LeadResponse created = leadService.createLead(leadReq, companyId);
+                                if (created != null && created.getId() != null) {
+                                    createdLeadIds.add(created.getId());
+                                    log.info("[Meta Webhook] Successfully created lead [{}] for company [{}] from Facebook leadgen_id [{}]",
+                                            created.getId(), companyId, leadgenId);
+                                }
+
+                                matchedTenant.setLastSyncedAt(LocalDateTime.now());
+                                tenantIntegrationRepository.save(matchedTenant);
+
+                                if (webhookLogRepository != null) {
+                                    try {
+                                        String headersJson = headers != null ? objectMapper.writeValueAsString(headers) : "{}";
+                                        CrmIntegrationWebhookLog webhookLog = CrmIntegrationWebhookLog.builder()
+                                                .companyId(companyId)
+                                                .tenantIntegrationId(matchedTenant.getId())
+                                                .providerCode(IntegrationProvider.META_LEAD_ADS)
+                                                .sourceIp(sourceIp)
+                                                .headersJson(headersJson)
+                                                .rawPayload(rawPayload)
+                                                .idempotencyHash(idempotencyHash)
+                                                .processingStatus(WebhookProcessingStatus.PROCESSED)
+                                                .leadId(!createdLeadIds.isEmpty() ? createdLeadIds.get(0) : null)
+                                                .processedAt(LocalDateTime.now())
+                                                .retryCount(0)
+                                                .build();
+                                        webhookLogRepository.save(webhookLog);
+                                    } catch (Exception ex) {
+                                        log.warn("[Meta Webhook] Could not save webhook log: {}", ex.getMessage());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("[Meta Webhook] Error processing event: {}", e.getMessage(), e);
+        }
+
+        return WebhookAckResponse.builder()
+                .status("ACCEPTED")
+                .idempotencyHash(idempotencyHash)
+                .processingStatus("PROCESSED")
+                .leadIds(createdLeadIds)
+                .leadId(!createdLeadIds.isEmpty() ? createdLeadIds.get(0) : null)
+                .leadsCount(createdLeadIds.size())
+                .provider("FACEBOOK")
+                .message("Successfully processed " + createdLeadIds.size() + " leads from Meta")
+                .build();
+    }
+
+    private LeadCreateRequest fetchAndParseMetaLead(String leadgenId, String pageAccessToken, String formId, String adId) {
+        try {
+            String leadUrl = String.format("https://graph.facebook.com/v19.0/%s?fields=created_time,id,ad_id,form_id,field_data&access_token=%s",
+                    leadgenId, URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
+            log.info("[Meta Webhook] Fetching lead details from Graph API: leadgen_id={}", leadgenId);
+            String body = httpGet(leadUrl, 10);
+            if (body != null && !body.isBlank() && !body.contains("\"error\":")) {
+                JsonNode leadNode = objectMapper.readTree(body);
+                log.info("[Meta Webhook] Successfully retrieved lead data from Meta: id={}, hasFieldData={}",
+                        leadNode.path("id").asText(), leadNode.has("field_data"));
+                return parseMetaLeadNode(leadNode);
+            } else {
+                log.warn("[Meta Webhook] Graph API returned error or empty response for leadgen_id [{}]: {}", leadgenId, body);
+            }
+        } catch (Exception e) {
+            log.warn("[Meta Webhook] Failed to fetch lead details from Graph API: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    private TenantIntegrationEntity findTenantIntegrationForFacebookPage(String pageId) {
+        List<TenantIntegrationEntity> fbIntegrations = tenantIntegrationRepository
+                .findAll()
+                .stream()
+                .filter(e -> e.getProviderCode() == IntegrationProviderCode.FACEBOOK && !Boolean.TRUE.equals(e.getIsDeleted()))
+                .toList();
+
+        if (fbIntegrations.isEmpty()) {
+            return null;
+        }
+
+        if (pageId != null && !pageId.isBlank()) {
+            for (TenantIntegrationEntity entity : fbIntegrations) {
+                if (matchesPageId(entity, pageId)) {
+                    return entity;
+                }
+            }
+        }
+
+        if (fbIntegrations.size() == 1) {
+            return fbIntegrations.get(0);
+        }
+
+        return null;
+    }
+
+    private boolean matchesPageId(TenantIntegrationEntity entity, String pageId) {
+        if (entity.getCredentialsJson() == null || pageId == null) {
+            return false;
+        }
+        Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
+        if (pageId.equals(String.valueOf(creds.get("pageId")))) {
+            return true;
+        }
+        Object pagesObj = creds.get("pages");
+        if (pagesObj instanceof List<?> list) {
+            for (Object item : list) {
+                if (item instanceof Map<?, ?> m) {
+                    if (pageId.equals(String.valueOf(m.get("pageId")))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private String resolvePageAccessToken(TenantIntegrationEntity entity, String pageId) {
+        Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
+        Object pagesObj = creds.get("pages");
+        if (pagesObj instanceof List<?> list) {
+            for (Object item : list) {
+                if (item instanceof Map<?, ?> m) {
+                    if (pageId != null && pageId.equals(String.valueOf(m.get("pageId")))) {
+                        Object token = m.get("pageAccessToken");
+                        if (token != null && !String.valueOf(token).isBlank()) {
+                            return String.valueOf(token);
+                        }
+                    }
+                }
+            }
+        }
+        if (creds.get("pageAccessToken") != null && !String.valueOf(creds.get("pageAccessToken")).isBlank()) {
+            return String.valueOf(creds.get("pageAccessToken"));
+        }
+        if (creds.get("userAccessToken") != null && !String.valueOf(creds.get("userAccessToken")).isBlank()) {
+            return String.valueOf(creds.get("userAccessToken"));
+        }
+        return null;
+    }
+
+    private LeadCreateRequest parseMetaLeadNode(JsonNode node) {
+        String leadgenId = getFieldIgnoreCase(node, "leadgen_id", "id");
+        String formId = getFieldIgnoreCase(node, "form_id");
+        String adId = getFieldIgnoreCase(node, "ad_id");
+        String campaignName = getFieldIgnoreCase(node, "campaign_name", "ad_name", "form_name");
+
+        String fullName = null;
+        String firstName = null;
+        String lastName = null;
+        String email = null;
+        String phone = null;
+        String company = null;
+        String city = null;
+        String state = null;
+        String country = null;
+        String postalCode = null;
+        String address = null;
+        StringBuilder notes = new StringBuilder();
+
+        JsonNode fieldData = node.path("field_data");
+        if (fieldData.isArray()) {
+            for (JsonNode f : fieldData) {
+                String fName = f.path("name").asText("").trim().toLowerCase();
+                String fVal = null;
+                JsonNode vals = f.path("values");
+                if (vals.isArray() && vals.size() > 0) {
+                    fVal = vals.get(0).asText();
+                } else if (f.hasNonNull("value")) {
+                    fVal = f.get("value").asText();
+                }
+
+                if (fVal == null || fVal.isBlank())
+                    continue;
+
+                if (fName.contains("full_name") || fName.equals("name")) {
+                    fullName = fVal;
+                } else if (fName.equals("first_name")) {
+                    firstName = fVal;
+                } else if (fName.equals("last_name")) {
+                    lastName = fVal;
+                } else if (fName.contains("email")) {
+                    email = fVal;
+                } else if (fName.contains("phone") || fName.contains("mobile")) {
+                    phone = fVal;
+                } else if (fName.contains("company") || fName.contains("org") || fName.contains("business")) {
+                    company = fVal;
+                } else if (fName.equals("city")) {
+                    city = fVal;
+                } else if (fName.equals("state")) {
+                    state = fVal;
+                } else if (fName.contains("country")) {
+                    country = fVal;
+                } else if (fName.contains("zip") || fName.contains("postal")) {
+                    postalCode = fVal;
+                } else if (fName.contains("street") || fName.equals("address")) {
+                    address = fVal;
+                } else {
+                    if (notes.length() > 0)
+                        notes.append("; ");
+                    notes.append(f.path("name").asText()).append(": ").append(fVal);
+                }
+            }
+        }
+
+        if (fullName == null && firstName == null) {
+            fullName = getFieldIgnoreCase(node, "full_name", "name");
+            firstName = getFieldIgnoreCase(node, "first_name");
+            lastName = getFieldIgnoreCase(node, "last_name");
+        }
+        if (email == null)
+            email = getFieldIgnoreCase(node, "email");
+        if (phone == null)
+            phone = getFieldIgnoreCase(node, "phone_number", "phone", "mobile");
+        if (company == null)
+            company = getFieldIgnoreCase(node, "company_name", "company");
+        if (city == null)
+            city = getFieldIgnoreCase(node, "city");
+        if (state == null)
+            state = getFieldIgnoreCase(node, "state");
+
+        if (firstName == null) {
+            String[] split = splitFullName(fullName != null ? fullName : ("Meta Ad Lead " + (leadgenId != null ? leadgenId : "")));
+            firstName = split[0];
+            lastName = split[1];
+        }
+
+        String inquiryText = notes.length() > 0 ? notes.toString() : "Meta Lead Ad response (Form: " + (formId != null ? formId : "Lead Form") + ")";
+
+        return LeadCreateRequest.builder()
+                .firstName(firstName)
+                .lastName(lastName)
+                .email(email)
+                .phone(phone)
+                .organizationName(company)
+                .city(city)
+                .state(state)
+                .country(country != null ? country : "India")
+                .postalCode(postalCode)
+                .addressLine1(address)
+                .rawInquiryText(inquiryText)
+                .externalLeadId(leadgenId)
+                .utmSource("Meta Ads")
+                .utmMedium("cpc")
+                .utmCampaign(campaignName != null ? campaignName : formId)
+                .build();
+    }
+
+    private String computeSha256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1)
+                    hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            return String.valueOf(input.hashCode());
+        }
     }
 
 }
