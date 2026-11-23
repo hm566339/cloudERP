@@ -12,7 +12,7 @@ import {
   Filter,
   RefreshCw
 } from 'lucide-react';
-import PageHeader from '../../../components/common/PageHeader';
+import TasksActivitiesHeader from '../components/TasksActivitiesHeader';
 import { Select } from '../../../components/common';
 import { useGetCrmActivitiesQuery } from '../../../api/sales-crm/crm.api';
 import ActivityFormModal from '../components/ActivityFormModal';
@@ -38,47 +38,50 @@ export default function ActivitiesPage() {
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
-      <PageHeader
-        title="Customer Interaction Timeline"
-        description="Audit trail of logged phone calls, client meetings, emails and internal notes"
-      >
-        <button
-          onClick={() => setIsLogOpen(true)}
-          className="btn-primary flex items-center gap-2 text-xs font-semibold"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Log Activity</span>
-        </button>
-      </PageHeader>
-
-      {/* Filter toolbar */}
-      <div className="px-6 py-2.5 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Type</label>
-          <Select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="w-48"
+      <TasksActivitiesHeader
+        activeTab="activities"
+        actions={
+          <button
+            type="button"
+            onClick={() => setIsLogOpen(true)}
+            className="btn-primary flex items-center gap-1.5 text-xs font-semibold h-8 px-3.5 cursor-pointer rounded-lg shadow-sm"
           >
-            <option value="">All Activity Types</option>
-            <option value="CALL">Phone Calls</option>
-            <option value="MEETING">Client Meetings</option>
-            <option value="EMAIL">Email Threads</option>
-            <option value="NOTE">Internal Notes</option>
-          </Select>
+            <Plus size={15} />
+            <span>Log Activity</span>
+          </button>
+        }
+      />
+
+      <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 min-h-0">
+        {/* Filter toolbar */}
+        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Activity Type</span>
+            <Select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="w-56"
+            >
+              <option value="">All Activity Types</option>
+              <option value="CALL">Phone Calls</option>
+              <option value="MEETING">Client Meetings</option>
+              <option value="EMAIL">Email Threads</option>
+              <option value="NOTE">Internal Notes</option>
+            </Select>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="h-8 px-3 text-[10.4px] font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
+            title="Refresh Timeline"
+          >
+            <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
+            <span>Refresh</span>
+          </button>
         </div>
 
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white rounded-lg border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-100 dark:hover:bg-[#1C202B] transition-colors"
-          title="Refresh"
-        >
-          <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
-
-      <div className="flex-1 p-6 overflow-auto flex flex-col">
         <div className="bg-white dark:bg-[#161922] p-6 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex-1">
           {isLoading ? (
             <div className="p-12 text-center text-xs text-zinc-400">Loading activity timeline...</div>

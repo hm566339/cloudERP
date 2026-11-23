@@ -2,7 +2,7 @@ import {
   FileText, Clock, ShoppingCart, Truck, Receipt, ClipboardList, FileSearch,
   CreditCard, BarChart3, Book, BookMarked, FileMinus, FilePlus, FileSpreadsheet,
   Scale, TrendingUp, Wallet, Users, ShieldAlert, Key, Layout, Shield, Download,
-  Globe, Megaphone, PieChart
+  Globe, Megaphone, PieChart, CheckSquare, Calendar
 } from 'lucide-react';
 
 export const salesTabs = [
@@ -302,6 +302,31 @@ export const crmIntegrationsCampaignsTabs = [
       '/sales-crm/attribution',
       '/crm/attribution',
       '/attribution'
+    ]
+  }
+];
+
+export const crmTasksActivitiesTabs = [
+  {
+    key: 'tasks',
+    label: 'Tasks',
+    icon: CheckSquare,
+    path: '/sales-crm/tasks',
+    aliases: [
+      '/sales-crm/tasks',
+      '/crm/tasks',
+      '/tasks'
+    ]
+  },
+  {
+    key: 'activities',
+    label: 'Activities',
+    icon: Calendar,
+    path: '/sales-crm/activities',
+    aliases: [
+      '/sales-crm/activities',
+      '/crm/activities',
+      '/activities'
     ]
   }
 ];

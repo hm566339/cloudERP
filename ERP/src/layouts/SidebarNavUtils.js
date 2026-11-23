@@ -100,6 +100,22 @@ export function isCrmIntegrationsCampaignsRoute(pathname) {
   );
 }
 
+export function isCrmTasksActivitiesRoute(pathname) {
+  if (!pathname) return false;
+  const stripCompany = (p) => String(p || '').replace(/^\/company\/[^/]+/, '').replace(/\/$/, '') || '/';
+  const clean = stripCompany(pathname);
+  return (
+    clean === '/sales-crm/tasks' ||
+    clean.startsWith('/sales-crm/tasks/') ||
+    clean === '/crm/tasks' ||
+    clean.startsWith('/crm/tasks/') ||
+    clean === '/sales-crm/activities' ||
+    clean.startsWith('/sales-crm/activities/') ||
+    clean === '/crm/activities' ||
+    clean.startsWith('/crm/activities/')
+  );
+}
+
 export function isItemOrChildActive(item, currentPath) {
   if (!item || !currentPath) return false;
 
@@ -171,6 +187,13 @@ export function isItemOrChildActive(item, currentPath) {
             item.id === 'crm-campaigns' ||
             item.id === 'crm-attribution';
           if (isIntegrationsCampaignsMenu && isCrmIntegrationsCampaignsRoute(currentPath)) return true;
+
+          // Special module patterns: Tasks & Activities
+          const isTasksActivitiesMenu =
+            item.id === 'crm-tasks-activities' ||
+            item.id === 'crm-tasks' ||
+            item.id === 'crm-activities';
+          if (isTasksActivitiesMenu && isCrmTasksActivitiesRoute(currentPath)) return true;
 
           const isApprovalsRoute = cleanCurrent === '/workflows/approvals' ||
             cleanCurrent.startsWith('/workflows/approvals/');

@@ -6,7 +6,7 @@ import {
   Tag, User, Target, Warehouse, ScanLine, Factory, PackageOpen, ClipboardList, Boxes,
   ArrowDownCircle, ArrowUpCircle, Calculator, BarChart3, Shield, Database, Box,
   Receipt, FileSpreadsheet, Landmark, Download, Scale3d, ArrowRightLeft, BoxSelect, Lock,
-  UserCog, Workflow, FolderTree, MessageSquare, Cable
+  UserCog, Workflow, FolderTree, MessageSquare, Cable, CheckSquare
 } from 'lucide-react';
 
 import {
@@ -432,18 +432,10 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
           action: 'READ',
         },
         {
-          id: 'crm-tasks',
-          label: 'Tasks',
+          id: 'crm-tasks-activities',
+          label: 'Tasks & Activities',
           path: `${base}/sales-crm/tasks`,
-          icon: ClipboardCheck,
-          featureCode: 'CRM_ACTIVITIES',
-          action: 'READ',
-        },
-        {
-          id: 'crm-activities',
-          label: 'Activities',
-          path: `${base}/sales-crm/activities`,
-          icon: Calendar,
+          icon: CheckSquare,
           featureCode: 'CRM_ACTIVITIES',
           action: 'READ',
         },

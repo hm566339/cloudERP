@@ -4,67 +4,175 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'docs/**'
+      - 'docker-compose.test.yml'
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Select service to build and push (or "all")'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - frontend
+          - gateway
+          - auth
+          - account
+          - inventory
+          - workflow
+          - communication
+          - manufacturing
+          - sales-crm
+          - none
+      deploy_to_server:
+        description: 'Deploy to production server after build?'
+        required: true
+        default: true
+        type: boolean
 
 concurrency:
   group: production-deployment
   cancel-in-progress: false
 
 jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.resolve.outputs.services }}
+      has_services: ${{ steps.resolve.outputs.has_services }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Filter Changed Paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'ERP/**'
+              - 'Dockerfile.frontend'
+            gateway:
+              - 'gateway_service/**'
+            auth:
+              - 'ERP_System/**'
+            account:
+              - 'account-main/**'
+            inventory:
+              - 'inventory/**'
+            workflow:
+              - 'workflow-service/**'
+            communication:
+              - 'communication-service/**'
+            manufacturing:
+              - 'manufacturing/**'
+            sales-crm:
+              - 'sales-crm/**'
+
+      - name: Resolve Target Matrix
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            SELECTED="${{ inputs.service }}"
+            if [ "$SELECTED" = "all" ]; then
+              MATRIX='["frontend","gateway","auth","account","inventory","workflow","communication","manufacturing","sales-crm"]'
+            elif [ "$SELECTED" = "none" ]; then
+              MATRIX='[]'
+            else
+              MATRIX="[\"$SELECTED\"]"
+            fi
+          else
+            MATRIX='${{ steps.filter.outputs.changes }}'
+          fi
+
+          echo "Selected Services: $MATRIX"
+          if [ -z "$MATRIX" ] || [ "$MATRIX" = "[]" ]; then
+            echo "has_services=false" >> "$GITHUB_OUTPUT"
+            echo "services=[]" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_services=true" >> "$GITHUB_OUTPUT"
+            echo "services=$MATRIX" >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-push:
-    name: Build & Push Service (${{ matrix.service.name }})
+    name: Build & Push (${{ matrix.service }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_services == 'true'
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        service:
-          - name: frontend
-            context: .
-            dockerfile: Dockerfile.frontend
-          - name: gateway
-            context: ./gateway_service
-            dockerfile: ./gateway_service/dockerfile
-          - name: auth
-            context: ./ERP_System
-            dockerfile: ./ERP_System/dockerfile
-          - name: account
-            context: ./account-main
-            dockerfile: ./account-main/dockerfile
-          - name: inventory
-            context: ./inventory
-            dockerfile: ./inventory/dockerfile
-          - name: workflow
-            context: ./workflow-service
-            dockerfile: ./workflow-service/Dockerfile
-          - name: communication
-            context: ./communication-service
-            dockerfile: ./communication-service/Dockerfile
-          - name: manufacturing
-            context: ./manufacturing
-            dockerfile: ./manufacturing/Dockerfile
-          - name: sales-crm
-            context: ./sales-crm
-            dockerfile: ./sales-crm/Dockerfile
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Resolve Context & Dockerfile
+        id: meta
+        run: |
+          case "${{ matrix.service }}" in
+            frontend)
+              echo "context=." >> "$GITHUB_OUTPUT"
+              echo "dockerfile=Dockerfile.frontend" >> "$GITHUB_OUTPUT"
+              ;;
+            gateway)
+              echo "context=./gateway_service" >> "$GITHUB_OUTPUT"
+              echo "dockerfile=./gateway_service/dockerfile" >> "$GITHUB_OUTPUT"
+              ;;
+            auth)
+              echo "context=./ERP_System" >> "$GITHUB_OUTPUT"
+              echo "dockerfile=./ERP_System/dockerfile" >> "$GITHUB_OUTPUT"
+              ;;
+            account)
+              echo "context=./account-main" >> "$GITHUB_OUTPUT"
+              echo "dockerfile=./account-main/dockerfile" >> "$GITHUB_OUTPUT"
+              ;;
+            inventory)
+              echo "context=./inventory" >> "$GITHUB_OUTPUT"
+              echo "dockerfile=./inventory/dockerfile" >> "$GITHUB_OUTPUT"
+              ;;
+            workflow)
+              echo "context=./workflow-service" >> "$GITHUB_OUTPUT"
+              echo "dockerfile=./workflow-service/Dockerfile" >> "$GITHUB_OUTPUT"
+              ;;
+            communication)
+              echo "context=./communication-service" >> "$GITHUB_OUTPUT"
+              echo "dockerfile=./communication-service/Dockerfile" >> "$GITHUB_OUTPUT"
+              ;;
+            manufacturing)
+              echo "context=./manufacturing" >> "$GITHUB_OUTPUT"
+              echo "dockerfile=./manufacturing/Dockerfile" >> "$GITHUB_OUTPUT"
+              ;;
+            sales-crm)
+              echo "context=./sales-crm" >> "$GITHUB_OUTPUT"
+              echo "dockerfile=./sales-crm/Dockerfile" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
       - name: Set up Java JDK 17
-        if: matrix.service.name == 'communication' || matrix.service.name == 'sales-crm'
+        if: matrix.service == 'communication' || matrix.service == 'sales-crm'
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Run Communication Service Tests
-        if: matrix.service.name == 'communication'
+        if: matrix.service == 'communication'
         run: |
           cd communication-service
           chmod +x mvnw
           ./mvnw test
 
       - name: Run Sales & CRM Service Tests
-        if: matrix.service.name == 'sales-crm'
+        if: matrix.service == 'sales-crm'
         run: |
           cd sales-crm
           chmod +x mvnw
@@ -82,18 +190,22 @@ jobs:
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.service.context }}
-          file: ${{ matrix.service.dockerfile }}
+          context: ${{ steps.meta.outputs.context }}
+          file: ${{ steps.meta.outputs.dockerfile }}
           push: true
           tags: |
-            mohit950/clouderp:${{ matrix.service.name }}-latest
-            mohit950/clouderp:${{ matrix.service.name }}-${{ github.sha }}
-          cache-from: type=gha,scope=${{ matrix.service.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.service.name }}
+            mohit950/clouderp:${{ matrix.service }}-latest
+            mohit950/clouderp:${{ matrix.service }}-${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
   deploy-production:
     name: Deploy to Production Server
-    needs: build-and-push
+    needs: [detect-changes, build-and-push]
+    if: |
+      always() &&
+      (github.event_name != 'workflow_dispatch' || inputs.deploy_to_server == true) &&
+      (needs.build-and-push.result == 'success' || needs.build-and-push.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - name: Execute Deployment via SSH
@@ -132,8 +244,8 @@ jobs:
             chmod +x *.sh
 
             # Trigger deployment pulling prebuilt Docker Hub images
-            echo "Executing deploy.sh with commit tag: ${{ github.sha }}..."
-            ./deploy.sh "${{ github.sha }}"
+            echo "Executing deploy.sh with latest images..."
+            ./deploy.sh "latest"
 
             echo "=========================================================="
             echo " Deployment Finished Successfully!"

@@ -11,7 +11,7 @@ import {
   Building2,
   Users
 } from 'lucide-react';
-import PageHeader from '../../../components/common/PageHeader';
+import TasksActivitiesHeader from '../components/TasksActivitiesHeader';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import {
@@ -84,6 +84,30 @@ export default function TasksPage() {
     }
   };
 
+  const handleExport = () => {
+    if (!filteredTasks || filteredTasks.length === 0) return;
+    const headers = ['Title', 'Description', 'Target Entity', 'Priority', 'Due Date', 'Status'];
+    const csvRows = [headers.join(',')];
+    filteredTasks.forEach((t) => {
+      const title = `"${(t.title || '').replace(/"/g, '""')}"`;
+      const desc = `"${(t.description || '').replace(/"/g, '""')}"`;
+      const entity = t.entityType || 'LEAD';
+      const priority = t.priority || 'MEDIUM';
+      const due = t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '';
+      const status = t.status || 'PENDING';
+      csvRows.push([title, desc, entity, priority, `"${due}"`, status].join(','));
+    });
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `crm-tasks-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const basicFilters = useMemo(() => [
     {
       key: 'status',
@@ -112,13 +136,16 @@ export default function TasksPage() {
   const columns = useMemo(() => [
     {
       id: 'title',
-      label: 'Task Title & Description',
+      label: 'TASK TITLE & DESCRIPTION',
       sortable: true,
+      headerClassName: 'w-2/5 min-w-[260px]',
+      className: 'w-2/5 min-w-[260px]',
       render: (val, t) => {
         const isCompleted = t?.status === 'COMPLETED';
         return (
           <div className="flex items-start gap-2.5">
             <button
+              type="button"
               onClick={() => !isCompleted && handleToggleComplete(t?.id)}
               disabled={isCompleted}
               className={`mt-0.5 rounded transition-colors ${
@@ -139,8 +166,10 @@ export default function TasksPage() {
     },
     {
       id: 'entityType',
-      label: 'Target Entity',
+      label: 'TARGET ENTITY',
       sortable: true,
+      headerClassName: 'w-48',
+      className: 'w-48 whitespace-nowrap',
       render: (val, t) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-100 dark:bg-[#1C202B] text-zinc-700 dark:text-[#E6E8EE]">
           {t?.entityType || val || 'LEAD'}
@@ -149,8 +178,10 @@ export default function TasksPage() {
     },
     {
       id: 'priority',
-      label: 'Priority',
+      label: 'PRIORITY',
       sortable: true,
+      headerClassName: 'w-36',
+      className: 'w-36 whitespace-nowrap',
       render: (val, t) => {
         const p = t?.priority || val || 'MEDIUM';
         let statusType = 'neutral';
@@ -168,8 +199,10 @@ export default function TasksPage() {
     },
     {
       id: 'dueDate',
-      label: 'Due Date',
+      label: 'DUE DATE',
       sortable: true,
+      headerClassName: 'w-44',
+      className: 'w-44 whitespace-nowrap',
       render: (val, t) => {
         const date = t?.dueDate || val ? new Date(t?.dueDate || val) : null;
         const isOverdue = date && date < new Date() && t?.status !== 'COMPLETED';
@@ -184,8 +217,10 @@ export default function TasksPage() {
     },
     {
       id: 'status',
-      label: 'Status',
+      label: 'STATUS',
       sortable: true,
+      headerClassName: 'w-36',
+      className: 'w-36 whitespace-nowrap',
       render: (val, t) => (
         <DataTableStatusBadge
           status={t?.status || val || 'PENDING'}
@@ -209,73 +244,79 @@ export default function TasksPage() {
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
-      <PageHeader
-        title="CRM Action Tasks"
-        description="Tracking sales follow-ups, calls, and action items"
-      >
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="btn-primary flex items-center gap-2 text-xs font-semibold"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>New Task</span>
-        </button>
-      </PageHeader>
+      <TasksActivitiesHeader
+        activeTab="tasks"
+        actions={
+          <button
+            type="button"
+            onClick={() => setIsCreateOpen(true)}
+            className="btn-primary flex items-center gap-1.5 text-xs font-semibold h-8 px-3.5 cursor-pointer rounded-lg shadow-sm"
+          >
+            <Plus size={15} />
+            <span>New Task</span>
+          </button>
+        }
+      />
 
-      <div className="flex-1 p-6 overflow-hidden flex flex-col">
-        <DataTable
-          permissionFeature="CRM"
-          selectable
-          selectedRows={selectedRows}
-          onSelectionChange={setSelectedRows}
-          columns={columns}
-          data={paginatedTasks}
-          rowKey="id"
-          loading={isLoading}
-          isRefreshing={isFetching}
+      <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 min-h-0">
+        <div className="flex-1 flex flex-col min-h-[300px]">
+          <div className="flex-1 min-h-[300px]">
+            <DataTable
+              permissionFeature="CRM"
+              selectable={false}
+              showIndex={true}
+              columns={columns}
+              data={paginatedTasks}
+              rowKey="id"
+              loading={isLoading}
+              isRefreshing={isFetching}
 
-          // Search
-          searchable
-          searchValue={filters.searchKey || ''}
-          searchPlaceholder="Search task title, description..."
-          onSearchChange={(val) => setFilter('searchKey', val)}
+              // Search
+              searchable
+              searchValue={filters.searchKey || ''}
+              searchPlaceholder="Search task title, description..."
+              onSearchChange={(val) => setFilter('searchKey', val)}
 
-          // Filters
-          filters={basicFilters}
-          filterValues={filters}
-          onFilterChange={setFilter}
+              // Filters
+              filters={basicFilters}
+              filterValues={filters}
+              onFilterChange={setFilter}
 
-          // Reset & Refresh
-          onReset={resetFilters}
-          onRefresh={refetch}
+              // Reset & Refresh
+              onReset={resetFilters}
+              onRefresh={refetch}
+              onExport={handleExport}
+              exportLabel="Export"
 
-          // Column Visibility
-          visibleColumns={visibleColumns}
-          onVisibleColumnsChange={setVisibleColumns}
+              // Column Visibility
+              visibleColumns={visibleColumns}
+              onVisibleColumnsChange={setVisibleColumns}
 
-          // Sorting
-          sort={{ key: sortBy, direction: sortOrder }}
-          onSortChange={({ key }) => handleColumnSort(key)}
+              // Sorting
+              sort={{ key: sortBy, direction: sortOrder }}
+              onSortChange={({ key }) => handleColumnSort(key)}
 
-          // Row Actions
-          rowActions={rowActions}
+              // Row Actions
+              rowActions={rowActions}
 
-          // Pagination
-          pagination={{
-            page,
-            pageSize,
-            totalPages,
-            totalElements,
-          }}
-          pageIndexBase={0}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-          itemName="tasks"
+              // Pagination
+              pagination={{
+                page,
+                pageSize,
+                totalPages,
+                totalElements,
+              }}
+              pageIndexBase={0}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              itemName="tasks"
 
-          // Empty State
-          emptyMessage="No tasks found"
-          emptyDescription="Try adjusting your status or priority filters to find action items."
-        />
+              // Empty State
+              emptyMessage="No tasks found"
+              emptyDescription="Try adjusting your status or priority filters to find action items."
+            />
+          </div>
+        </div>
       </div>
 
       <TaskFormModal
