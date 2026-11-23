@@ -1,9 +1,9 @@
 package com.erp.crm.common.security;
 
 import java.util.UUID;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import com.erp.crm.common.exception.UnauthorizedException;
 import com.erp.crm.common.exception.BusinessValidationException;
 import com.erp.crm.common.security.authorization.AuthenticatedUser;
 
@@ -209,7 +209,7 @@ public class CurrentUserContext {
             if (ownerCompanyId != null) {
                 return ownerCompanyId;
             }
-            throw new BusinessValidationException(
+            throw new AccessDeniedException(
                     "Company ID is required for organization owner operations. " +
                     "You must specify which company to operate on.");
         }
@@ -217,10 +217,10 @@ public class CurrentUserContext {
         // NORMAL USER: use assigned company from ThreadLocal
         UUID tenantCompanyId = getCompanyId();
         if (tenantCompanyId == null) {
-            throw new UnauthorizedException("Company context not found in user session.");
+            throw new AccessDeniedException("Company context not found in user session.");
         }
         if (requestCompanyId != null && !requestCompanyId.equals(tenantCompanyId)) {
-            throw new UnauthorizedException("Access denied: Cross-tenant access forbidden.");
+            throw new AccessDeniedException("Access denied: Cross-tenant access forbidden.");
         }
         return tenantCompanyId;
     }
@@ -249,10 +249,10 @@ public class CurrentUserContext {
         // NORMAL USER
         UUID tenantCompanyId = getCompanyId();
         if (tenantCompanyId == null) {
-            throw new UnauthorizedException("Company context not found in user session.");
+            throw new AccessDeniedException("Company context not found in user session.");
         }
         if (requestCompanyId != null && !requestCompanyId.equals(tenantCompanyId)) {
-            throw new UnauthorizedException("Access denied: Cross-tenant access forbidden.");
+            throw new AccessDeniedException("Access denied: Cross-tenant access forbidden.");
         }
         return tenantCompanyId;
     }

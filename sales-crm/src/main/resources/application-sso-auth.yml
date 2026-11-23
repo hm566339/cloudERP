@@ -2,30 +2,43 @@ sso:
   authorization:
     modules:
       CRM_LEADS:
+        - "/api/crm/leads"
         - "/api/crm/leads/**"
       CRM_ACCOUNTS:
+        - "/api/crm/accounts"
         - "/api/crm/accounts/**"
       CRM_CONTACTS:
+        - "/api/crm/contacts"
         - "/api/crm/contacts/**"
       CRM_OPPORTUNITIES:
+        - "/api/crm/opportunities"
         - "/api/crm/opportunities/**"
       CRM_PIPELINES:
+        - "/api/crm/pipelines"
         - "/api/crm/pipelines/**"
       CRM_ACTIVITIES:
+        - "/api/crm/activities"
         - "/api/crm/activities/**"
       CRM_TASKS:
+        - "/api/crm/tasks"
         - "/api/crm/tasks/**"
       CRM_COMMUNICATION:
+        - "/api/crm/communication"
         - "/api/crm/communication/**"
       CRM_QUOTATIONS:
+        - "/api/crm/quotations"
         - "/api/crm/quotations/**"
       CRM_CAMPAIGNS:
+        - "/api/crm/campaigns"
         - "/api/crm/campaigns/**"
       CRM_AUTOMATION:
+        - "/api/crm/automation"
         - "/api/crm/automation/**"
       CRM_SETTINGS:
+        - "/api/crm/settings"
         - "/api/crm/settings/**"
       CRM_INTEGRATIONS:
+        - "/api/crm/integrations"
         - "/api/crm/integrations/**"
       CRM_DASHBOARD:
         - "/api/crm/dashboard"

@@ -13,12 +13,8 @@ public class RestClientConfig {
 
     @Bean
     public RestClient restClient() {
-        String targetUrl = ssoBackendUrl;
-        if (targetUrl != null && targetUrl.contains("auth-service:8090")) {
-            targetUrl = targetUrl.replace("auth-service:8090", "localhost:8090");
-        }
         return RestClient.builder()
-                .baseUrl(targetUrl)
+                .baseUrl(ssoBackendUrl)
                 .build();
     }
 }

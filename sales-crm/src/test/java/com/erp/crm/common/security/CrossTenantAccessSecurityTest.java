@@ -1,6 +1,6 @@
 package com.erp.crm.common.security;
 
-import com.erp.crm.common.exception.UnauthorizedException;
+import org.springframework.security.access.AccessDeniedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ class CrossTenantAccessSecurityTest {
         CurrentUserContext.setUserId(UUID.randomUUID());
 
         // Attempt to access or pass Company B
-        UnauthorizedException ex = assertThrows(UnauthorizedException.class, () -> {
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class, () -> {
             CurrentUserContext.resolveCompanyId(companyB);
         });
 
@@ -61,7 +61,7 @@ class CrossTenantAccessSecurityTest {
         UUID targetCompany = UUID.randomUUID();
 
         // No session context set
-        assertThrows(UnauthorizedException.class, () -> {
+        assertThrows(AccessDeniedException.class, () -> {
             CurrentUserContext.resolveCompanyId(targetCompany);
         });
     }

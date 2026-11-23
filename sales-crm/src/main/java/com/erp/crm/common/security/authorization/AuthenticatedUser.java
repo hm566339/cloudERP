@@ -36,6 +36,7 @@ public class AuthenticatedUser implements Principal {
     private final UUID userId;
     private final String username;
     private final String companyCode;
+    private final UUID companyId;
     private final UUID organizationId;
     private final String organizationCode;
     private final String accessMode;
@@ -86,6 +87,7 @@ public class AuthenticatedUser implements Principal {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .companyCode(user.getCompanyCode())
+                .companyId(user.getCompanyId())
                 .organizationId(user.getOrganizationId())
                 .organizationCode(user.getOrganizationCode())
                 .accessMode(user.getAccessMode())
@@ -143,8 +145,9 @@ public class AuthenticatedUser implements Principal {
 
     /**
      * True when an active+allowed SSO permission is scoped to the given module
-     * (via {@code moduleName} or {@code featureCode}) for the required action.
-     * Matching is case-insensitive on both module and action.
+     * (via {@code moduleName}, {@code featureCode}, or {@code permissionCode}) for the required action.
+     * Evaluates module hierarchy (e.g. CRM parent module access covers CRM features),
+     * singular/plural variants (CRM_INTEGRATIONS vs CRM_INTEGRATION), and action hierarchies (MANAGE/ALL implies READ/WRITE).
      */
     public boolean hasPermission(String module, String action) {
         if (!hasText(module) || !hasText(action)) {
@@ -153,19 +156,71 @@ public class AuthenticatedUser implements Principal {
         String targetScope = normalize(module);
         String canonicalScope = SsoAuthorities.normalizeModuleName(module);
         String targetAction = normalize(action);
+
         for (PermissionResponse permission : activeAndAllowedPermissions()) {
-            if (targetAction.equals(normalize(permission.getAction()))) {
+            if (isActionMatching(targetAction, normalize(permission.getAction()))) {
                 String permModule = normalize(permission.getModuleName());
                 String permCanonicalModule = SsoAuthorities.normalizeModuleName(permission.getModuleName());
                 String permFeature = normalize(permission.getFeatureCode());
-                if (targetScope.equals(permModule) || targetScope.equals(permFeature)
-                        || (canonicalScope != null && (canonicalScope.equals(permCanonicalModule)
-                                || canonicalScope.equals(permFeature)))) {
+                String permCode = normalize(permission.getPermissionCode());
+
+                // 1. Direct scope match (featureCode or moduleName)
+                if (isScopeMatching(targetScope, canonicalScope, permModule, permCanonicalModule, permFeature)) {
+                    return true;
+                }
+
+                // 2. Permission code match (e.g. CRM_INTEGRATIONS:READ or CRM:READ)
+                if (permCode != null && isPermissionCodeMatching(targetScope, targetAction, permCode)) {
+                    return true;
+                }
+
+                // 3. Parent CRM module access (e.g. CRM:READ or moduleName CRM grants CRM feature access)
+                if (isCrmModuleParentMatching(targetScope, permModule, permFeature)) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    private static boolean isActionMatching(String targetAction, String permAction) {
+        if (targetAction == null || permAction == null) return false;
+        if (targetAction.equals(permAction)) return true;
+        if ("MANAGE".equals(permAction) || "ALL".equals(permAction)) return true;
+        if ("READ".equals(targetAction) && ("WRITE".equals(permAction) || "UPDATE".equals(permAction))) return true;
+        return false;
+    }
+
+    private static boolean isScopeMatching(String targetScope, String canonicalScope,
+                                          String permModule, String permCanonicalModule, String permFeature) {
+        if (targetScope.equals(permModule) || targetScope.equals(permFeature)) return true;
+        if (canonicalScope != null && (canonicalScope.equals(permCanonicalModule) || canonicalScope.equals(permFeature))) return true;
+        // Singular vs plural matching (e.g. CRM_INTEGRATIONS vs CRM_INTEGRATION)
+        String targetSingular = trimTrailingS(targetScope);
+        if (targetSingular.equals(trimTrailingS(permFeature)) || targetSingular.equals(trimTrailingS(permModule))) return true;
+        return false;
+    }
+
+    private static boolean isPermissionCodeMatching(String targetScope, String targetAction, String permCode) {
+        if (permCode.equals(targetScope + ":" + targetAction)) return true;
+        if (permCode.equals(trimTrailingS(targetScope) + ":" + targetAction)) return true;
+        if (permCode.equals(targetScope + ":MANAGE") || permCode.equals(targetScope + ":ALL")) return true;
+        if (targetScope.startsWith("CRM") && (permCode.equals("CRM:" + targetAction) || permCode.equals("CRM:MANAGE") || permCode.equals("CRM:ALL"))) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isCrmModuleParentMatching(String targetScope, String permModule, String permFeature) {
+        if (!targetScope.startsWith("CRM")) return false;
+        return "CRM".equals(permModule) && (permFeature == null || "CRM".equals(permFeature));
+    }
+
+    private static String trimTrailingS(String val) {
+        if (val != null && val.endsWith("S") && val.length() > 1) {
+            return val.substring(0, val.length() - 1);
+        }
+        return val != null ? val : "";
     }
 
     public int activeAndAllowedPermissionCount() {

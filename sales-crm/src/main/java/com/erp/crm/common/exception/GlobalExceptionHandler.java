@@ -23,6 +23,14 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
+        return new ResponseEntity<>(
+                ApiResponse.error(ex.getMessage(), "Forbidden", HttpStatus.FORBIDDEN),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
         return new ResponseEntity<>(

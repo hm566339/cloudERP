@@ -210,7 +210,14 @@ public final class SsoAuthorities {
         }
         String canonical = normalizeModuleName(module);
         if (canonical != null && !canonical.equalsIgnoreCase(module)) {
-            return hasExact(authorities, canonical, action, "MODULE");
+            if (hasExact(authorities, canonical, action, "MODULE")) {
+                return true;
+            }
+        }
+        if (module != null && module.toUpperCase().startsWith("CRM") && !module.equalsIgnoreCase("CRM")) {
+            if (hasExact(authorities, "CRM", action, "MODULE") || hasExact(authorities, "CRM", "MANAGE", "MODULE")) {
+                return true;
+            }
         }
         return false;
     }
@@ -221,7 +228,20 @@ public final class SsoAuthorities {
      */
     public static boolean hasFeatureAction(Collection<? extends GrantedAuthority> authorities, String feature,
             String action) {
-        return hasExact(authorities, feature, action, "FEATURE");
+        if (hasExact(authorities, feature, action, "FEATURE")) {
+            return true;
+        }
+        if (feature != null && feature.endsWith("S")) {
+            if (hasExact(authorities, feature.substring(0, feature.length() - 1), action, "FEATURE")) {
+                return true;
+            }
+        }
+        if (feature != null && feature.toUpperCase().startsWith("CRM") && !feature.equalsIgnoreCase("CRM")) {
+            if (hasExact(authorities, "CRM", action, "FEATURE") || hasExact(authorities, "CRM", "MANAGE", "FEATURE")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

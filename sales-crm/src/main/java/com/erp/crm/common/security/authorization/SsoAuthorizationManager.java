@@ -109,11 +109,13 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
             return new AuthorizationDecision(true);
         }
 
-        // OWNER has full administrative access within their organization.
-        // They can access all modules/features without explicit per-permission checks.
-        if (CurrentUserContext.isOwner()) {
-            debugDecision(authentication, method, uri, null, null, null, true, "OWNER bypass");
-            return new AuthorizationDecision(true);
+        // Validate active company membership for CRM access (SYSTEM_ADMIN can operate across companies)
+        boolean hasCompany = CurrentUserContext.hasCompanyId()
+                || (principal instanceof AuthenticatedUser user && (user.getCompanyId() != null || StringUtils.hasText(user.getCompanyCode())));
+        if (!systemAdmin && !hasCompany) {
+            log.warn("Access denied for URI: {}: Authenticated user lacks active company membership.", uri);
+            debugDecision(authentication, method, uri, null, null, null, false, "no active company membership");
+            return new AuthorizationDecision(false);
         }
 
         if (isAuthenticatedProfileEndpoint(uri)) {
@@ -347,10 +349,20 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
         String targetScope = SsoAuthorities.normalize(module);
         String targetAction = SsoAuthorities.normalize(action);
         for (var permission : user.activeAndAllowedPermissions()) {
-            if (targetAction.equals(SsoAuthorities.normalize(permission.getAction()))
-                    && (targetScope.equals(SsoAuthorities.normalize(permission.getModuleName()))
-                            || targetScope.equals(SsoAuthorities.normalize(permission.getFeatureCode())))) {
-                return permission.getPermissionCode() != null ? permission.getPermissionCode() : module + ":" + action;
+            String permAction = SsoAuthorities.normalize(permission.getAction());
+            String permModule = SsoAuthorities.normalize(permission.getModuleName());
+            String permFeature = SsoAuthorities.normalize(permission.getFeatureCode());
+            String permCode = SsoAuthorities.normalize(permission.getPermissionCode());
+
+            if (targetAction != null && targetAction.equals(permAction)) {
+                if (targetScope.equals(permModule) || targetScope.equals(permFeature)
+                        || (targetScope.startsWith("CRM") && "CRM".equals(permModule))) {
+                    return permission.getPermissionCode() != null ? permission.getPermissionCode() : module + ":" + action;
+                }
+            }
+            if (permCode != null && (permCode.equals(targetScope + ":" + targetAction)
+                    || (targetScope.startsWith("CRM") && permCode.equals("CRM:" + targetAction)))) {
+                return permCode;
             }
         }
         return module + ":" + action;
