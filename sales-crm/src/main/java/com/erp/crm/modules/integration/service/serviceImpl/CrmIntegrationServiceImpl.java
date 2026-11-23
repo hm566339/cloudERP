@@ -1,6 +1,7 @@
 package com.erp.crm.modules.integration.service.serviceImpl;
 
 import com.erp.crm.common.exception.ResourceNotFoundException;
+import com.erp.crm.common.security.CurrentUserContext;
 import com.erp.crm.common.util.TenantUtils;
 import com.erp.crm.modules.integration.dto.SyncTriggerResponse;
 import com.erp.crm.modules.integration.dto.TenantIntegrationRequest;
@@ -193,23 +194,28 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                         .build());
             }
 
-            for (LeadCreateRequest leadReq : leadRequests) {
-                // Deduplicate external leads by externalLeadId (e.g. TradeIndia rfi_id, IndiaMART queryId)
-                if (leadReq.getExternalLeadId() != null && !leadReq.getExternalLeadId().isBlank()
-                        && leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId, leadReq.getExternalLeadId())) {
-                    log.info("Skipping already ingested external lead [externalLeadId: {}] for company [{}]",
-                            leadReq.getExternalLeadId(), companyId);
-                    continue;
-                }
+            CurrentUserContext.setCompanyId(companyId);
+            try {
+                for (LeadCreateRequest leadReq : leadRequests) {
+                    // Deduplicate external leads by externalLeadId (e.g. TradeIndia rfi_id, IndiaMART queryId)
+                    if (leadReq.getExternalLeadId() != null && !leadReq.getExternalLeadId().isBlank()
+                            && leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId, leadReq.getExternalLeadId())) {
+                        log.info("Skipping already ingested external lead [externalLeadId: {}] for company [{}]",
+                                leadReq.getExternalLeadId(), companyId);
+                        continue;
+                    }
 
-                leadReq.setTenantIntegrationId(integration.getId());
-                if (leadReq.getLeadSourceId() == null) {
-                    leadReq.setLeadSourceId(leadSourceId);
+                    leadReq.setTenantIntegrationId(integration.getId());
+                    if (leadReq.getLeadSourceId() == null) {
+                        leadReq.setLeadSourceId(leadSourceId);
+                    }
+                    LeadResponse createdLead = leadService.createLead(leadReq, companyId);
+                    if (createdLead != null && createdLead.getId() != null) {
+                        createdLeadIds.add(createdLead.getId());
+                    }
                 }
-                LeadResponse createdLead = leadService.createLead(leadReq, companyId);
-                if (createdLead != null && createdLead.getId() != null) {
-                    createdLeadIds.add(createdLead.getId());
-                }
+            } finally {
+                CurrentUserContext.clearCompanyId();
             }
 
             UUID firstLeadId = !createdLeadIds.isEmpty() ? createdLeadIds.get(0) : null;

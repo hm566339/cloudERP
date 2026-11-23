@@ -504,8 +504,12 @@ class TwoTierIntegrationServiceImplTest {
     }
 
     @Test
-    @DisplayName("17. Facebook: handleFacebookWebhook parses webhook payload, resolves tenant and creates lead")
+    @DisplayName("17. Facebook: handleFacebookWebhook parses webhook payload, resolves tenant and creates lead without user session")
     void testHandleFacebookWebhookLeadIngestion() {
+        // Clear all user context to simulate unauthenticated server-to-server webhook
+        CurrentUserContext.clear();
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+
         TenantIntegrationEntity fbEntity = TenantIntegrationEntity.builder()
                 .id(UUID.randomUUID())
                 .tenantId(companyId)
@@ -554,6 +558,214 @@ class TwoTierIntegrationServiceImplTest {
         assertEquals("ACCEPTED", ack.getStatus());
         assertEquals("PROCESSED", ack.getProcessingStatus());
         assertEquals(leadId, ack.getLeadId());
+        assertEquals(1, ack.getLeadsCount());
+        verify(leadService, times(1)).createLead(any(LeadCreateRequest.class), eq(companyId));
+    }
+
+    @Test
+    @DisplayName("18. Facebook: handleFacebookWebhook safely ignores unknown page IDs and does not create leads")
+    void testHandleFacebookWebhook_UnknownPageId_CreatesNoLead() {
+        CurrentUserContext.clear();
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+
+        TenantIntegrationEntity fbEntity = TenantIntegrationEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .credentialsJson("{\"pageId\":\"page_known_123\",\"pageAccessToken\":\"tok_123\"}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findAll()).thenReturn(List.of(fbEntity));
+
+        String metaPayload = """
+                {
+                  "object": "page",
+                  "entry": [
+                    {
+                      "id": "unknown_page_999",
+                      "changes": [
+                        {
+                          "field": "leadgen",
+                          "value": {
+                            "leadgen_id": "leadgen_888",
+                            "page_id": "unknown_page_999"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """;
+
+        WebhookAckResponse ack = integrationService.handleFacebookWebhook(metaPayload, "127.0.0.1", Map.of());
+
+        assertNotNull(ack);
+        assertEquals(0, ack.getLeadsCount());
+        verify(leadService, never()).createLead(any(), any());
+    }
+
+    @Test
+    @DisplayName("19. Facebook: handleFacebookWebhook skips duplicate leadgen events")
+    void testHandleFacebookWebhook_DuplicateLead_Skipped() {
+        CurrentUserContext.clear();
+
+        TenantIntegrationEntity fbEntity = TenantIntegrationEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .credentialsJson("{\"pageId\":\"page_123\",\"pageAccessToken\":\"mock_page_token\"}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findAll()).thenReturn(List.of(fbEntity));
+        when(leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(eq(companyId), eq("duplicate_leadgen_111")))
+                .thenReturn(true);
+
+        String metaPayload = """
+                {
+                  "object": "page",
+                  "entry": [
+                    {
+                      "id": "page_123",
+                      "changes": [
+                        {
+                          "field": "leadgen",
+                          "value": {
+                            "leadgen_id": "duplicate_leadgen_111",
+                            "page_id": "page_123"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """;
+
+        WebhookAckResponse ack = integrationService.handleFacebookWebhook(metaPayload, "127.0.0.1", Map.of());
+
+        assertNotNull(ack);
+        assertEquals(0, ack.getLeadsCount());
+        verify(leadService, never()).createLead(any(), any());
+    }
+
+    @Test
+    @DisplayName("20. Facebook: handleFacebookWebhook handles dummy test payload (444444444444) gracefully")
+    void testHandleFacebookWebhook_DummyTestPayload_GracefulCreation() {
+        CurrentUserContext.clear();
+
+        TenantIntegrationEntity fbEntity = TenantIntegrationEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .credentialsJson("{\"pageId\":\"104928192\",\"pageAccessToken\":\"dummy_token\"}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findAll()).thenReturn(List.of(fbEntity));
+        when(leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(eq(companyId), eq("444444444444")))
+                .thenReturn(false);
+        when(leadSourceRepository.findByCompanyIdAndSourceCodeAndIsDeletedFalse(eq(companyId), anyString()))
+                .thenReturn(Optional.of(CrmLeadSource.builder().id(UUID.randomUUID()).build()));
+
+        UUID leadId = UUID.randomUUID();
+        when(leadService.createLead(any(LeadCreateRequest.class), eq(companyId)))
+                .thenReturn(com.erp.crm.modules.lead.dto.response.LeadResponse.builder().id(leadId).firstName("Meta Ad Lead").lastName("444444444444").build());
+
+        String dummyPayload = """
+                {
+                  "object": "page",
+                  "entry": [
+                    {
+                      "id": "104928192",
+                      "time": 1732360000,
+                      "changes": [
+                        {
+                          "field": "leadgen",
+                          "value": {
+                            "ad_id": "0",
+                            "form_id": "form_test_555",
+                            "leadgen_id": "444444444444",
+                            "created_time": 1732360000,
+                            "page_id": "104928192"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """;
+
+        WebhookAckResponse ack = integrationService.handleFacebookWebhook(dummyPayload, "127.0.0.1", Map.of());
+
+        assertNotNull(ack);
+        assertEquals(1, ack.getLeadsCount());
+        assertEquals(leadId, ack.getLeadId());
+        verify(leadService, times(1)).createLead(any(LeadCreateRequest.class), eq(companyId));
+    }
+
+    @Test
+    @DisplayName("21. Facebook: handleFacebookWebhook resolves page in nested pages array")
+    void testHandleFacebookWebhook_NestedPagesArray_ResolvesTenant() {
+        CurrentUserContext.clear();
+
+        String credsJson = """
+                {
+                  "userAccessToken": "user_token_abc",
+                  "pages": [
+                    {
+                      "pageId": "nested_page_789",
+                      "pageName": "Nested Testing Page",
+                      "pageAccessToken": "nested_token_xyz"
+                    }
+                  ]
+                }
+                """;
+
+        TenantIntegrationEntity fbEntity = TenantIntegrationEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .credentialsJson(credsJson)
+                .status(TenantIntegrationStatus.CONNECTED)
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findAll()).thenReturn(List.of(fbEntity));
+        when(leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(eq(companyId), anyString())).thenReturn(false);
+        when(leadSourceRepository.findByCompanyIdAndSourceCodeAndIsDeletedFalse(eq(companyId), anyString()))
+                .thenReturn(Optional.of(CrmLeadSource.builder().id(UUID.randomUUID()).build()));
+
+        UUID leadId = UUID.randomUUID();
+        when(leadService.createLead(any(LeadCreateRequest.class), eq(companyId)))
+                .thenReturn(com.erp.crm.modules.lead.dto.response.LeadResponse.builder().id(leadId).build());
+
+        String metaPayload = """
+                {
+                  "object": "page",
+                  "entry": [
+                    {
+                      "id": "nested_page_789",
+                      "changes": [
+                        {
+                          "field": "leadgen",
+                          "value": {
+                            "leadgen_id": "leadgen_555",
+                            "page_id": "nested_page_789"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """;
+
+        WebhookAckResponse ack = integrationService.handleFacebookWebhook(metaPayload, "127.0.0.1", Map.of());
+
+        assertNotNull(ack);
         assertEquals(1, ack.getLeadsCount());
         verify(leadService, times(1)).createLead(any(LeadCreateRequest.class), eq(companyId));
     }
