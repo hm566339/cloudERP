@@ -137,23 +137,44 @@ export default function QuotationFormModal({
 
     try {
       setErrorMsg(null);
+      const quotationDate = new Date().toISOString().split('T')[0];
+      const validDays = Number(formData.validUntilDays) || 30;
+      const validUntilDate = new Date(Date.now() + validDays * 86400000).toISOString().split('T')[0];
+      const placeOfSupply = formData.isInterState ? '99' : '27';
+
       const payload = {
         accountId: formData.accountId,
         opportunityId: formData.opportunityId || null,
-        title: formData.title || 'Quotation',
-        validityDays: Number(formData.validUntilDays) || 30,
+        title: formData.title?.trim() || 'Commercial Quotation',
+        quotationDate,
+        validUntil: validUntilDate,
+        validityDays: validDays,
+        placeOfSupplyStateCode: placeOfSupply,
+        isInterState: Boolean(formData.isInterState),
+        discountPct: Number(overallDiscountPercent.toFixed(2)),
         termsAndConditions: formData.termsAndConditions,
+        customerNotes: formData.notes,
         notes: formData.notes,
-        isInterState: formData.isInterState,
-        items: items.map((it, idx) => ({
-          lineNumber: idx + 1,
-          description: it.description.trim(),
-          hsnSacCode: it.hsnCode.trim() || null,
-          quantity: Number(it.quantity) || 1,
-          unitPrice: Number(it.unitPrice) || 0,
-          discountPercent: Number(it.discountPercent) || 0,
-          taxRatePercent: Number(it.gstRate) || 0,
-        })),
+        items: items.map((it, idx) => {
+          const qty = Number(it.quantity) || 1;
+          const price = Number(it.unitPrice) || 0;
+          const disc = Number(it.discountPercent) || 0;
+          const gst = Number(it.gstRate) || 0;
+          return {
+            lineNumber: idx + 1,
+            productName: it.description?.trim() || `Item ${idx + 1}`,
+            description: it.description?.trim() || '',
+            hsnSacCode: it.hsnCode?.trim() || '998313',
+            quantity: qty,
+            unitPrice: price,
+            discountPct: disc,
+            discountPercent: disc,
+            taxRatePercent: gst,
+            cgstRate: formData.isInterState ? 0 : gst / 2,
+            sgstRate: formData.isInterState ? 0 : gst / 2,
+            igstRate: formData.isInterState ? gst : 0,
+          };
+        }),
       };
 
       await createQuotation({ companyId, data: payload }).unwrap();

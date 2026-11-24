@@ -17,6 +17,8 @@ import useUrlFilters from '../../../hooks/useUrlFilters';
 import {
   useGetCrmQuotationsQuery,
   useConvertQuotationToOrderMutation,
+  useApproveCrmQuotationMutation,
+  useRejectCrmQuotationMutation,
   useGetCrmAccountsQuery,
 } from '../../../api/sales-crm/crm.api';
 import QuotationFormModal from '../components/QuotationFormModal';
@@ -41,6 +43,8 @@ export default function QuotationsPage() {
   const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [approvingQuote, setApprovingQuote] = useState(null);
+  const [directApproveQuote, setDirectApproveQuote] = useState(null);
+  const [directRejectQuote, setDirectRejectQuote] = useState(null);
   const [printingQuote, setPrintingQuote] = useState(null);
   const [convertingQuote, setConvertingQuote] = useState(null);
 
@@ -69,6 +73,8 @@ export default function QuotationsPage() {
   const accounts = toArray(accountsRes);
 
   const [convertToOrder, { isLoading: isConverting }] = useConvertQuotationToOrderMutation();
+  const [approveQuote, { isLoading: isApprovingDirect }] = useApproveCrmQuotationMutation();
+  const [rejectQuote, { isLoading: isRejectingDirect }] = useRejectCrmQuotationMutation();
 
   const quotations = toArray(quotesRes);
   const totalElements = quotesRes?.data?.totalElements || quotesRes?.totalElements || quotations.length;
@@ -82,6 +88,28 @@ export default function QuotationsPage() {
       refetch();
     } catch (err) {
       console.error('Failed to convert quotation to sales order', err);
+    }
+  };
+
+  const handleDirectApproveConfirm = async () => {
+    if (!directApproveQuote) return;
+    try {
+      await approveQuote({ id: directApproveQuote.id, companyId }).unwrap();
+      setDirectApproveQuote(null);
+      refetch();
+    } catch (err) {
+      console.error('Failed to approve quotation', err);
+    }
+  };
+
+  const handleDirectRejectConfirm = async () => {
+    if (!directRejectQuote) return;
+    try {
+      await rejectQuote({ id: directRejectQuote.id, companyId, reason: 'Commercial rejection' }).unwrap();
+      setDirectRejectQuote(null);
+      refetch();
+    } catch (err) {
+      console.error('Failed to reject quotation', err);
     }
   };
 
@@ -189,6 +217,26 @@ export default function QuotationsPage() {
         hidden: (row) => row.status !== 'DRAFT' && row.status !== 'REJECTED',
         className: 'hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20',
         onClick: (row) => setApprovingQuote(row),
+      });
+    }
+    if (quotePerms.canApprove || quotePerms.canUpdate) {
+      actions.push({
+        key: 'approve',
+        label: 'Approve Quotation',
+        icon: CheckCircle2,
+        tooltip: 'Approve Quote',
+        hidden: (row) => row.status !== 'PENDING_APPROVAL',
+        className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20',
+        onClick: (row) => setDirectApproveQuote(row),
+      });
+      actions.push({
+        key: 'reject',
+        label: 'Reject Quotation',
+        icon: AlertCircle,
+        tooltip: 'Reject Quote',
+        hidden: (row) => row.status !== 'PENDING_APPROVAL',
+        className: 'hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20',
+        onClick: (row) => setDirectRejectQuote(row),
       });
     }
     if (quotePerms.canConvertOrder) {
@@ -315,6 +363,26 @@ export default function QuotationsPage() {
         isOpen={!!printingQuote}
         onClose={() => setPrintingQuote(null)}
         quotation={printingQuote}
+      />
+
+      <ConfirmModal
+        isOpen={!!directApproveQuote}
+        onClose={() => setDirectApproveQuote(null)}
+        onConfirm={handleDirectApproveConfirm}
+        title="Approve Commercial Quotation"
+        message={`Approve quotation "${directApproveQuote?.quotationNumber || directApproveQuote?.title}"? This approves the discount threshold and makes the quotation ready to be sent or converted to a Sales Order.`}
+        confirmText={isApprovingDirect ? 'Approving...' : 'Approve Quotation'}
+        variant="primary"
+      />
+
+      <ConfirmModal
+        isOpen={!!directRejectQuote}
+        onClose={() => setDirectRejectQuote(null)}
+        onConfirm={handleDirectRejectConfirm}
+        title="Reject Commercial Quotation"
+        message={`Reject quotation "${directRejectQuote?.quotationNumber || directRejectQuote?.title}"? Status will be marked as REJECTED.`}
+        confirmText={isRejectingDirect ? 'Rejecting...' : 'Reject Quotation'}
+        variant="danger"
       />
 
       <ConfirmModal

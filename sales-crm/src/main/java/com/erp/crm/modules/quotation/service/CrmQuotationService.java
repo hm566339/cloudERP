@@ -19,6 +19,10 @@ public interface CrmQuotationService {
 
     QuotationResponse submitForApproval(UUID id, UUID requestCompanyId);
 
+    QuotationResponse approveQuotation(UUID id, UUID requestCompanyId);
+
+    QuotationResponse rejectQuotation(UUID id, UUID requestCompanyId, String reason);
+
     void handleWorkflowCallback(WorkflowCallbackRequest callback);
 
     ConvertToSalesOrderResponse convertToSalesOrder(UUID id, UUID requestCompanyId);

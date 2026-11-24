@@ -64,6 +64,25 @@ public class CrmQuotationController {
         return ResponseEntity.ok(ApiResponse.success(response, "Quotation submitted for approval"));
     }
 
+    @PostMapping("/{id}/approve")
+    @Operation(summary = "Approve Quotation Directly (Manager / Finance Approval)")
+    public ResponseEntity<ApiResponse<QuotationResponse>> approveQuotation(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId) {
+        QuotationResponse response = quotationService.approveQuotation(id, companyId);
+        return ResponseEntity.ok(ApiResponse.success(response, "Quotation approved successfully"));
+    }
+
+    @PostMapping("/{id}/reject")
+    @Operation(summary = "Reject Quotation")
+    public ResponseEntity<ApiResponse<QuotationResponse>> rejectQuotation(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String reason) {
+        QuotationResponse response = quotationService.rejectQuotation(id, companyId, reason);
+        return ResponseEntity.ok(ApiResponse.success(response, "Quotation rejected"));
+    }
+
     @PostMapping("/{id}/convert-to-sales-order")
     @Operation(summary = "Convert Accepted Quotation to ERP Sales Order")
     public ResponseEntity<ApiResponse<ConvertToSalesOrderResponse>> convertToSalesOrder(

@@ -25,13 +25,16 @@ public class QuotationCreateRequest {
 
     private UUID contactId;
 
-    @NotNull(message = "Quotation date is required")
+    private String title;
+
+    private Integer validityDays;
+
+    private Boolean isInterState;
+
     private LocalDate quotationDate;
 
-    @NotNull(message = "Valid until date is required")
     private LocalDate validUntil;
 
-    @NotBlank(message = "Place of supply state code is required (e.g., 27 for Maharashtra)")
     private String placeOfSupplyStateCode;
 
     @Builder.Default
@@ -65,13 +68,13 @@ public class QuotationCreateRequest {
         private UUID productId;
         private String productCode;
 
-        @NotBlank(message = "Product name is required")
         private String productName;
 
-        @NotBlank(message = "HSN/SAC code is required")
         private String hsnSacCode;
 
         private String description;
+
+        private Integer lineNumber;
 
         @NotNull(message = "Quantity is required")
         private BigDecimal quantity;
@@ -84,6 +87,10 @@ public class QuotationCreateRequest {
 
         @Builder.Default
         private BigDecimal discountPct = BigDecimal.ZERO;
+
+        private BigDecimal discountPercent;
+
+        private BigDecimal taxRatePercent;
 
         @Builder.Default
         private BigDecimal cgstRate = BigDecimal.ZERO;

@@ -16,6 +16,8 @@ import { PageHeader, ConfirmModal } from '../../../components/common';
 import {
   useGetCrmQuotationByIdQuery,
   useConvertQuotationToOrderMutation,
+  useApproveCrmQuotationMutation,
+  useRejectCrmQuotationMutation,
 } from '../../../api/sales-crm/crm.api';
 import QuotationApprovalModal from '../components/QuotationApprovalModal';
 import QuotationPrintModal from '../components/QuotationPrintModal';
@@ -26,11 +28,15 @@ export default function QuotationDetailsPage() {
   const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [isApprovalOpen, setIsApprovalOpen] = useState(false);
+  const [isApproveOpen, setIsApproveOpen] = useState(false);
+  const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [isPrintOpen, setIsPrintOpen] = useState(false);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
 
   const { data: quoteRes, isLoading, refetch } = useGetCrmQuotationByIdQuery({ id, companyId });
   const [convertToOrder, { isLoading: isConverting }] = useConvertQuotationToOrderMutation();
+  const [approveQuotation, { isLoading: isApproving }] = useApproveCrmQuotationMutation();
+  const [rejectQuotation, { isLoading: isRejecting }] = useRejectCrmQuotationMutation();
 
   const quotation = quoteRes?.id
     ? quoteRes
@@ -63,7 +69,28 @@ export default function QuotationDetailsPage() {
     }
   };
 
+  const handleApproveConfirm = async () => {
+    try {
+      await approveQuotation({ id: quotation.id, companyId }).unwrap();
+      setIsApproveOpen(false);
+      refetch();
+    } catch (err) {
+      console.error('Approve failed', err);
+    }
+  };
+
+  const handleRejectConfirm = async () => {
+    try {
+      await rejectQuotation({ id: quotation.id, companyId, reason: 'Commercial rejection' }).unwrap();
+      setIsRejectOpen(false);
+      refetch();
+    } catch (err) {
+      console.error('Reject failed', err);
+    }
+  };
+
   const isApproved = quotation.status === 'APPROVED';
+  const isPendingApproval = quotation.status === 'PENDING_APPROVAL';
   const canSubmit = quotation.status === 'DRAFT' || quotation.status === 'REJECTED';
 
   return (
@@ -109,6 +136,23 @@ export default function QuotationDetailsPage() {
               >
                 <Send size={13} /> Submit Approval
               </button>
+            )}
+
+            {isPendingApproval && (
+              <>
+                <button
+                  onClick={() => setIsApproveOpen(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <CheckCircle2 size={13} /> Approve Quotation
+                </button>
+                <button
+                  onClick={() => setIsRejectOpen(true)}
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <AlertCircle size={13} /> Reject
+                </button>
+              </>
             )}
 
             {isApproved && (
@@ -202,6 +246,26 @@ export default function QuotationDetailsPage() {
         isOpen={isPrintOpen}
         onClose={() => setIsPrintOpen(false)}
         quotation={quotation}
+      />
+
+      <ConfirmModal
+        isOpen={isApproveOpen}
+        onClose={() => setIsApproveOpen(false)}
+        onConfirm={handleApproveConfirm}
+        title="Approve Commercial Quotation"
+        message={`Approve quotation "${quotation.quotationNumber || quotation.title}"? Status will transition to APPROVED, authorizing deal progression and order booking.`}
+        confirmText={isApproving ? 'Approving...' : 'Approve Quotation'}
+        variant="primary"
+      />
+
+      <ConfirmModal
+        isOpen={isRejectOpen}
+        onClose={() => setIsRejectOpen(false)}
+        onConfirm={handleRejectConfirm}
+        title="Reject Commercial Quotation"
+        message={`Reject quotation "${quotation.quotationNumber || quotation.title}"? Status will be marked as REJECTED.`}
+        confirmText={isRejecting ? 'Rejecting...' : 'Reject Quotation'}
+        variant="danger"
       />
 
       <ConfirmModal

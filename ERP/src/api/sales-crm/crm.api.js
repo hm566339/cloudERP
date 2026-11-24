@@ -342,6 +342,25 @@ export const crmApiSlice = baseApi.injectEndpoints({
       invalidatesTags: ['CRM_QUOTATIONS'],
     }),
 
+    approveCrmQuotation: builder.mutation({
+      query: ({ id, companyId }) => ({
+        url: `/api/crm/quotations/${id}/approve`,
+        method: 'POST',
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_QUOTATIONS', 'CRM_DASHBOARD'],
+    }),
+
+    rejectCrmQuotation: builder.mutation({
+      query: ({ id, companyId, reason }) => ({
+        url: `/api/crm/quotations/${id}/reject`,
+        method: 'POST',
+        params: reason ? { reason } : undefined,
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_QUOTATIONS', 'CRM_DASHBOARD'],
+    }),
+
     convertQuotationToOrder: builder.mutation({
       query: ({ id, companyId }) => ({
         url: `/api/crm/quotations/${id}/convert-to-sales-order`,
@@ -830,6 +849,8 @@ export const {
   useGetCrmQuotationByIdQuery,
   useCreateCrmQuotationMutation,
   useSubmitQuotationApprovalMutation,
+  useApproveCrmQuotationMutation,
+  useRejectCrmQuotationMutation,
   useConvertQuotationToOrderMutation,
 
   // Tasks & Activities

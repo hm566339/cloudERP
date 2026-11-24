@@ -58,6 +58,14 @@ public class CrmQuotationServiceImpl implements CrmQuotationService {
         String quoteNumber = generateQuotationNumber();
         log.info("Creating Quotation: {} for companyId: {}", quoteNumber, companyId);
 
+        LocalDate qDate = request.getQuotationDate() != null ? request.getQuotationDate() : LocalDate.now();
+        LocalDate vUntil = request.getValidUntil() != null
+                ? request.getValidUntil()
+                : qDate.plusDays(request.getValidityDays() != null ? request.getValidityDays() : 30);
+        String posState = (request.getPlaceOfSupplyStateCode() != null && !request.getPlaceOfSupplyStateCode().isBlank())
+                ? request.getPlaceOfSupplyStateCode()
+                : (Boolean.TRUE.equals(request.getIsInterState()) ? "99" : "27");
+
         BigDecimal threshold = companySettingRepository.findByCompanyIdAndIsDeletedFalse(companyId)
                 .map(CrmCompanySetting::getDiscountApprovalThreshold)
                 .orElse(new BigDecimal("15.00"));
@@ -69,56 +77,77 @@ public class CrmQuotationServiceImpl implements CrmQuotationService {
         List<CrmQuotationItem> itemsToSave = new ArrayList<>();
         int itemOrder = 1;
 
-        for (QuotationCreateRequest.ItemRequest line : request.getItems()) {
-            BigDecimal qty = line.getQuantity();
-            BigDecimal price = line.getUnitPrice();
-            BigDecimal gross = qty.multiply(price);
+        if (request.getItems() != null) {
+            for (QuotationCreateRequest.ItemRequest line : request.getItems()) {
+                BigDecimal qty = line.getQuantity() != null ? line.getQuantity() : BigDecimal.ONE;
+                BigDecimal price = line.getUnitPrice() != null ? line.getUnitPrice() : BigDecimal.ZERO;
+                BigDecimal gross = qty.multiply(price);
 
-            BigDecimal lineDiscountPct = line.getDiscountPct() != null ? line.getDiscountPct() : BigDecimal.ZERO;
-            if (lineDiscountPct.compareTo(maxLineDiscountPct) > 0) {
-                maxLineDiscountPct = lineDiscountPct;
+                BigDecimal lineDiscountPct = line.getDiscountPct() != null && line.getDiscountPct().compareTo(BigDecimal.ZERO) > 0
+                        ? line.getDiscountPct()
+                        : (line.getDiscountPercent() != null ? line.getDiscountPercent() : BigDecimal.ZERO);
+                if (lineDiscountPct.compareTo(maxLineDiscountPct) > 0) {
+                    maxLineDiscountPct = lineDiscountPct;
+                }
+
+                BigDecimal lineDiscountAmt = gross.multiply(lineDiscountPct).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+                BigDecimal taxable = gross.subtract(lineDiscountAmt);
+
+                BigDecimal cgstRate = line.getCgstRate() != null ? line.getCgstRate() : BigDecimal.ZERO;
+                BigDecimal sgstRate = line.getSgstRate() != null ? line.getSgstRate() : BigDecimal.ZERO;
+                BigDecimal igstRate = line.getIgstRate() != null ? line.getIgstRate() : BigDecimal.ZERO;
+
+                if (cgstRate.compareTo(BigDecimal.ZERO) == 0 && sgstRate.compareTo(BigDecimal.ZERO) == 0 && igstRate.compareTo(BigDecimal.ZERO) == 0) {
+                    BigDecimal taxRate = line.getTaxRatePercent() != null ? line.getTaxRatePercent() : BigDecimal.ZERO;
+                    if (Boolean.TRUE.equals(request.getIsInterState())) {
+                        igstRate = taxRate;
+                    } else {
+                        cgstRate = taxRate.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+                        sgstRate = taxRate.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+                    }
+                }
+
+                BigDecimal cgstAmt = taxable.multiply(cgstRate).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+                BigDecimal sgstAmt = taxable.multiply(sgstRate).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+                BigDecimal igstAmt = taxable.multiply(igstRate).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+
+                BigDecimal lineTax = cgstAmt.add(sgstAmt).add(igstAmt);
+                BigDecimal lineTotal = taxable.add(lineTax);
+
+                calculatedSubtotal = calculatedSubtotal.add(taxable);
+                calculatedTaxTotal = calculatedTaxTotal.add(lineTax);
+
+                String pName = (line.getProductName() != null && !line.getProductName().isBlank())
+                        ? line.getProductName()
+                        : (line.getDescription() != null && !line.getDescription().isBlank() ? line.getDescription() : "Commercial Item");
+                String hsn = (line.getHsnSacCode() != null && !line.getHsnSacCode().isBlank())
+                        ? line.getHsnSacCode()
+                        : "998313";
+
+                CrmQuotationItem item = CrmQuotationItem.builder()
+                        .itemOrder(line.getLineNumber() != null ? line.getLineNumber() : itemOrder++)
+                        .productId(line.getProductId())
+                        .productCode(line.getProductCode())
+                        .productName(pName)
+                        .hsnSacCode(hsn)
+                        .description(line.getDescription())
+                        .quantity(qty)
+                        .uom(line.getUom() != null ? line.getUom() : "PCS")
+                        .unitPrice(price)
+                        .discountPct(lineDiscountPct)
+                        .discountAmount(lineDiscountAmt)
+                        .taxableAmount(taxable)
+                        .cgstRate(cgstRate)
+                        .cgstAmount(cgstAmt)
+                        .sgstRate(sgstRate)
+                        .sgstAmount(sgstAmt)
+                        .igstRate(igstRate)
+                        .igstAmount(igstAmt)
+                        .totalAmount(lineTotal)
+                        .build();
+                item.setCompanyId(companyId);
+                itemsToSave.add(item);
             }
-
-            BigDecimal lineDiscountAmt = gross.multiply(lineDiscountPct).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-            BigDecimal taxable = gross.subtract(lineDiscountAmt);
-
-            BigDecimal cgstRate = line.getCgstRate() != null ? line.getCgstRate() : BigDecimal.ZERO;
-            BigDecimal sgstRate = line.getSgstRate() != null ? line.getSgstRate() : BigDecimal.ZERO;
-            BigDecimal igstRate = line.getIgstRate() != null ? line.getIgstRate() : BigDecimal.ZERO;
-
-            BigDecimal cgstAmt = taxable.multiply(cgstRate).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-            BigDecimal sgstAmt = taxable.multiply(sgstRate).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-            BigDecimal igstAmt = taxable.multiply(igstRate).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-
-            BigDecimal lineTax = cgstAmt.add(sgstAmt).add(igstAmt);
-            BigDecimal lineTotal = taxable.add(lineTax);
-
-            calculatedSubtotal = calculatedSubtotal.add(taxable);
-            calculatedTaxTotal = calculatedTaxTotal.add(lineTax);
-
-            CrmQuotationItem item = CrmQuotationItem.builder()
-                    .itemOrder(itemOrder++)
-                    .productId(line.getProductId())
-                    .productCode(line.getProductCode())
-                    .productName(line.getProductName())
-                    .hsnSacCode(line.getHsnSacCode())
-                    .description(line.getDescription())
-                    .quantity(qty)
-                    .uom(line.getUom() != null ? line.getUom() : "PCS")
-                    .unitPrice(price)
-                    .discountPct(lineDiscountPct)
-                    .discountAmount(lineDiscountAmt)
-                    .taxableAmount(taxable)
-                    .cgstRate(cgstRate)
-                    .cgstAmount(cgstAmt)
-                    .sgstRate(sgstRate)
-                    .sgstAmount(sgstAmt)
-                    .igstRate(igstRate)
-                    .igstAmount(igstAmt)
-                    .totalAmount(lineTotal)
-                    .build();
-            item.setCompanyId(companyId);
-            itemsToSave.add(item);
         }
 
         BigDecimal headerDiscountPct = request.getDiscountPct() != null ? request.getDiscountPct() : BigDecimal.ZERO;
@@ -130,8 +159,8 @@ public class CrmQuotationServiceImpl implements CrmQuotationService {
 
         CrmQuotation quotation = CrmQuotation.builder()
                 .quotationNumber(quoteNumber)
-                .quotationDate(request.getQuotationDate())
-                .validUntil(request.getValidUntil())
+                .quotationDate(qDate)
+                .validUntil(vUntil)
                 .opportunityId(request.getOpportunityId())
                 .accountId(request.getAccountId())
                 .contactId(request.getContactId())
@@ -144,7 +173,7 @@ public class CrmQuotationServiceImpl implements CrmQuotationService {
                 .freightCharges(request.getFreightCharges() != null ? request.getFreightCharges() : BigDecimal.ZERO)
                 .otherCharges(request.getOtherCharges() != null ? request.getOtherCharges() : BigDecimal.ZERO)
                 .totalAmount(finalTotal)
-                .placeOfSupplyStateCode(request.getPlaceOfSupplyStateCode())
+                .placeOfSupplyStateCode(posState)
                 .paymentTerms(request.getPaymentTerms())
                 .deliveryTerms(request.getDeliveryTerms())
                 .warrantyTerms(request.getWarrantyTerms())
@@ -226,6 +255,44 @@ public class CrmQuotationServiceImpl implements CrmQuotationService {
         quotation.setWorkflowTransactionId(txnId);
 
         return enrichResponse(quotationRepository.save(quotation));
+    }
+
+    @Override
+    public QuotationResponse approveQuotation(UUID id, UUID requestCompanyId) {
+        UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
+        CrmQuotation quotation = quotationRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Quotation not found with id: " + id));
+
+        quotation.setStatus(QuotationStatus.APPROVED);
+        quotation.setApprovalStatus(QuotationApprovalStatus.APPROVED);
+        quotation.setApprovedAt(LocalDateTime.now());
+        quotation.setApprovedByUserId(TenantUtils.getCurrentUserId());
+
+        CrmQuotation saved = quotationRepository.save(quotation);
+        outboxService.publishEvent(companyId, "QUOTATION", quotation.getId(),
+                "QUOTATION_APPROVED", "{\"quotationId\":\"" + quotation.getId() + "\",\"quoteNumber\":\"" + quotation.getQuotationNumber() + "\"}");
+
+        return enrichResponse(saved);
+    }
+
+    @Override
+    public QuotationResponse rejectQuotation(UUID id, UUID requestCompanyId, String reason) {
+        UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
+        CrmQuotation quotation = quotationRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Quotation not found with id: " + id));
+
+        quotation.setStatus(QuotationStatus.REJECTED);
+        quotation.setApprovalStatus(QuotationApprovalStatus.REJECTED);
+        if (reason != null && !reason.isBlank()) {
+            quotation.setInternalNotes(
+                    (quotation.getInternalNotes() != null ? quotation.getInternalNotes() + "\n" : "") + "Rejection Reason: " + reason);
+        }
+
+        CrmQuotation saved = quotationRepository.save(quotation);
+        outboxService.publishEvent(companyId, "QUOTATION", quotation.getId(),
+                "QUOTATION_REJECTED", "{\"quotationId\":\"" + quotation.getId() + "\",\"reason\":\"" + (reason != null ? reason : "") + "\"}");
+
+        return enrichResponse(saved);
     }
 
     @Override
