@@ -28,6 +28,8 @@ public interface CrmOpportunityRepository extends JpaRepository<CrmOpportunity, 
 
     Page<CrmOpportunity> findByCompanyIdAndIsDeletedFalse(UUID companyId, Pageable pageable);
 
+    List<CrmOpportunity> findByCompanyIdAndIsDeletedFalse(UUID companyId);
+
     @Query("SELECT COUNT(o) FROM CrmOpportunity o WHERE o.companyId = :companyId AND o.dealStatus = :status AND o.isDeleted = false")
     long countByCompanyIdAndDealStatus(@Param("companyId") UUID companyId, @Param("status") OpportunityDealStatus status);
 

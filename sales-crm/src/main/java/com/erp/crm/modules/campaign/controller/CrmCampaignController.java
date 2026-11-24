@@ -89,5 +89,14 @@ public class CrmCampaignController {
         CampaignAttributionResponse response = campaignService.getCampaignAttribution(id, companyId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @GetMapping({"/attribution/overview", "/attribution"})
+    @Operation(summary = "Get Cross-Campaign Multi-Touch Attribution Overview")
+    public ResponseEntity<ApiResponse<MultiTouchAttributionResponse>> getMultiTouchAttributionOverview(
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false, defaultValue = "U_SHAPED") String model) {
+        MultiTouchAttributionResponse response = campaignService.getMultiTouchAttributionOverview(companyId, model);
+        return ResponseEntity.ok(ApiResponse.success(response, "Multi-touch attribution calculated successfully"));
+    }
 }
 

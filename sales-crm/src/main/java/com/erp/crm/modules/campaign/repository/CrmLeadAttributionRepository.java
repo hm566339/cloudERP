@@ -11,5 +11,7 @@ import java.util.UUID;
 public interface CrmLeadAttributionRepository extends JpaRepository<CrmLeadAttribution, UUID> {
     List<CrmLeadAttribution> findByCompanyIdAndLeadIdOrderByTouchpointTimestampAsc(UUID companyId, UUID leadId);
     List<CrmLeadAttribution> findByCompanyIdAndCampaignId(UUID companyId, UUID campaignId);
+    List<CrmLeadAttribution> findByCompanyIdOrderByTouchpointTimestampAsc(UUID companyId);
+    List<CrmLeadAttribution> findByCompanyId(UUID companyId);
 }
 

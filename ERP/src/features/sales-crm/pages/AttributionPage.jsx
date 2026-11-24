@@ -7,7 +7,8 @@ import {
   Layers,
   ArrowRight,
   Sparkles,
-  Info
+  Info,
+  RefreshCw
 } from 'lucide-react';
 import {
   BarChart,
@@ -22,6 +23,7 @@ import PageHeader from '../../../components/common/PageHeader';
 import IntegrationsCampaignsHeader from '../components/IntegrationsCampaignsHeader';
 import { Select } from '../../../components/common';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
+import { useGetCrmMultiTouchAttributionQuery } from '../../../api/sales-crm/crm.api';
 
 const ATTRIBUTION_MODELS = [
   { id: 'FIRST_TOUCH', name: 'First Touch (100% to Acquisition)' },
@@ -30,7 +32,7 @@ const ATTRIBUTION_MODELS = [
   { id: 'U_SHAPED', name: 'U-Shaped (40% First, 40% Last, 20% Middle)' },
 ];
 
-const ATTRIBUTION_DATA = [
+const ATTRIBUTION_FALLBACK_DATA = [
   { id: '1', channel: 'IndiaMART Portal', firstTouch: 420000, lastTouch: 280000, linear: 340000, uShaped: 360000, share: '32%' },
   { id: '2', channel: 'Google Search Ads', firstTouch: 350000, lastTouch: 410000, linear: 380000, uShaped: 390000, share: '28%' },
   { id: '3', channel: 'Meta / Instagram B2B', firstTouch: 180000, lastTouch: 90000, linear: 130000, uShaped: 140000, share: '14%' },
@@ -42,6 +44,24 @@ export default function AttributionPage() {
   const { companyId } = useParams();
   const [selectedModel, setSelectedModel] = useState('U_SHAPED');
   const [selectedRows, setSelectedRows] = useState([]);
+
+  const {
+    data: attributionRes,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetCrmMultiTouchAttributionQuery({
+    companyId,
+    model: selectedModel,
+  });
+
+  const channelsData = useMemo(() => {
+    const raw = attributionRes?.data || attributionRes;
+    if (Array.isArray(raw?.channels) && raw.channels.length > 0) {
+      return raw.channels;
+    }
+    return ATTRIBUTION_FALLBACK_DATA;
+  }, [attributionRes]);
 
   const columns = useMemo(() => [
     {
@@ -132,48 +152,60 @@ export default function AttributionPage() {
             </Select>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[11px] text-zinc-500">
-            <Info size={13} />
-            <span>Calculated against closed-won deals and CRM touchpoint logs</span>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => refetch()}
+                disabled={isLoading || isFetching}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-50"
+                title="Refresh Attribution Metrics"
+              >
+                <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
+                <span>Refresh</span>
+              </button>
+              <div className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+                <Info size={13} />
+                <span>Calculated against closed-won deals and CRM touchpoint logs</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Comparative Bar Chart */}
-        <div className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm space-y-4 shrink-0">
-          <h2 className="text-sm font-bold text-zinc-900 dark:text-white">Channel Revenue Comparison Across Models</h2>
-          <div className="w-full h-64 min-w-0" style={{ minHeight: '260px' }}>
-            <ResponsiveContainer width="100%" height={260} minWidth={0} minHeight={260}>
-              <BarChart data={ATTRIBUTION_DATA} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
-                <XAxis dataKey="channel" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(val) => `₹${val / 1000}k`} />
-                <RechartsTooltip
-                  formatter={(val) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Attributed Revenue']}
-                  contentStyle={{ backgroundColor: '#1C202B', borderColor: '#2A2F3D', color: '#fff', fontSize: '12px' }}
-                />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                <Bar dataKey="firstTouch" name="First Touch" fill="#6366F1" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="lastTouch" name="Last Touch" fill="#EC4899" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="uShaped" name="U-Shaped (Hybrid)" fill="#10B981" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          {/* Comparative Bar Chart */}
+          <div className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm space-y-4 shrink-0">
+            <h2 className="text-sm font-bold text-zinc-900 dark:text-white">Channel Revenue Comparison Across Models</h2>
+            <div className="w-full h-64 min-w-0" style={{ minHeight: '260px' }}>
+              <ResponsiveContainer width="100%" height={260} minWidth={0} minHeight={260}>
+                  <BarChart data={channelsData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                    <XAxis dataKey="channel" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(val) => (val >= 1000 ? `₹${Math.round(val / 1000)}k` : `₹${val}`)} />
+                    <RechartsTooltip
+                      formatter={(val) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Attributed Revenue']}
+                      contentStyle={{ backgroundColor: '#1C202B', borderColor: '#2A2F3D', color: '#fff', fontSize: '12px' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                    <Bar dataKey="firstTouch" name="First Touch" fill="#6366F1" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="lastTouch" name="Last Touch" fill="#EC4899" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="uShaped" name="U-Shaped (Hybrid)" fill="#10B981" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
 
-        {/* Breakdown Table */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <DataTable
-            permissionFeature="CRM"
-            selectable
-            selectedRows={selectedRows}
-            onSelectionChange={setSelectedRows}
-            columns={columns}
-            data={ATTRIBUTION_DATA}
-            rowKey="id"
-            loading={false}
-            itemName="channels"
-          />
+          {/* Breakdown Table */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <DataTable
+              permissionFeature="CRM"
+              selectable
+              selectedRows={selectedRows}
+              onSelectionChange={setSelectedRows}
+              columns={columns}
+              data={channelsData}
+              rowKey="id"
+              loading={isLoading || isFetching}
+              itemName="channels"
+            />
+          </div>
         </div>
       </div>
-    </div>
-  );
+      );
 }

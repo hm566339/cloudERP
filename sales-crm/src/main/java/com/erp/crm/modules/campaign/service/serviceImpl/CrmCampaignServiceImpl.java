@@ -178,6 +178,13 @@ public class CrmCampaignServiceImpl implements CrmCampaignService {
         return attributionService.getCampaignAttribution(effectiveCompanyId, id);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public MultiTouchAttributionResponse getMultiTouchAttributionOverview(UUID companyId, String model) {
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
+        return attributionService.getMultiTouchAttributionOverview(effectiveCompanyId, model);
+    }
+
     private UUID resolveCompanyId(UUID explicitCompanyId) {
         return CurrentUserContext.resolveCompanyId(explicitCompanyId);
     }

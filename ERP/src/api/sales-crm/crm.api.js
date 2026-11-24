@@ -581,6 +581,21 @@ export const crmApiSlice = baseApi.injectEndpoints({
       providesTags: (result, error, { id }) => [{ type: 'CRM_CAMPAIGNS', id }],
     }),
 
+    getCrmMultiTouchAttribution: builder.query({
+      query: (params = {}) => {
+        const { companyId, model } = params || {};
+        return {
+          url: '/api/crm/campaigns/attribution/overview',
+          params: {
+            ...(companyId ? { companyId } : {}),
+            ...(model ? { model } : {}),
+          },
+          headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+        };
+      },
+      providesTags: ['CRM_CAMPAIGNS'],
+    }),
+
     // -------------------------------------------------------------------------
     // 8. Integrations (/api/crm/integrations & /api/admin/integrations)
     // -------------------------------------------------------------------------
@@ -880,6 +895,7 @@ export const {
   useCreateCrmCampaignMutation,
   useGetCrmCampaignPerformanceQuery,
   useGetCrmCampaignAttributionQuery,
+  useGetCrmMultiTouchAttributionQuery,
 
   // Integrations
   useGetCrmAvailableProvidersQuery,

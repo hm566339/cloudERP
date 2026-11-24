@@ -4,6 +4,7 @@ import com.erp.crm.modules.campaign.dto.CampaignAttributionResponse;
 import com.erp.crm.modules.campaign.dto.CampaignPerformanceResponse;
 import com.erp.crm.modules.campaign.dto.CampaignRequest;
 import com.erp.crm.modules.campaign.dto.CampaignResponse;
+import com.erp.crm.modules.campaign.dto.MultiTouchAttributionResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,5 +19,6 @@ public interface CrmCampaignService {
     void deleteCampaign(UUID id, UUID companyId);
     CampaignPerformanceResponse getCampaignPerformance(UUID id, UUID companyId);
     CampaignAttributionResponse getCampaignAttribution(UUID id, UUID companyId);
+    MultiTouchAttributionResponse getMultiTouchAttributionOverview(UUID companyId, String model);
 }
 
