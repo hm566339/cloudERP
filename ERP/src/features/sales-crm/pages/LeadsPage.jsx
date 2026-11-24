@@ -32,6 +32,7 @@ import LeadFormModal from '../components/LeadFormModal';
 import LeadConvertModal from '../components/LeadConvertModal';
 import LeadAssignModal from '../components/LeadAssignModal';
 import LeadImportModal from '../components/LeadImportModal';
+import useCrmPermissions from '../hooks/useCrmPermissions';
 
 const DEFAULT_SOURCES = [
   { id: '1', sourceName: 'Direct / Inbound' },
@@ -280,48 +281,62 @@ export default function LeadsPage() {
     }
   ], [crmBase, navigate]);
 
-  const rowActions = useMemo(() => [
-    {
-      key: 'view',
-      label: 'View Details',
-      icon: Eye,
-      onClick: (row) => navigate(`${crmBase}/leads/${row.id}`),
-      tooltip: 'View Details',
-      className: 'hover:text-blue-600 hover:bg-blue-50'
-    },
-    {
-      key: 'assign',
-      label: 'Assign Lead',
-      icon: UserCheck,
-      onClick: (row) => setAssigningLead(row),
-      tooltip: 'Assign Lead',
-      className: 'hover:text-primary hover:bg-primary/10'
-    },
-    {
-      key: 'convert',
-      label: 'Convert to Account & Deal',
-      icon: ArrowRightLeft,
-      onClick: (row) => setConvertingLead(row),
-      tooltip: 'Convert to Account & Deal',
-      className: 'hover:text-emerald-600 hover:bg-emerald-50'
-    },
-    {
-      key: 'edit',
-      label: 'Edit Lead',
-      icon: Edit2,
-      onClick: (row) => setEditingLead(row),
-      tooltip: 'Edit Lead',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
-    },
-    {
-      key: 'delete',
-      label: 'Delete Lead',
-      icon: Trash2,
-      danger: true,
-      onClick: (row) => setDeletingLead(row),
-      tooltip: 'Delete Lead'
+  const { leads: leadsPerms } = useCrmPermissions();
+
+  const rowActions = useMemo(() => {
+    const actions = [];
+    if (leadsPerms.canRead) {
+      actions.push({
+        key: 'view',
+        label: 'View Details',
+        icon: Eye,
+        onClick: (row) => navigate(`${crmBase}/leads/${row.id}`),
+        tooltip: 'View Details',
+        className: 'hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40',
+      });
     }
-  ], [crmBase, navigate]);
+    if (leadsPerms.canAssign) {
+      actions.push({
+        key: 'assign',
+        label: 'Assign Lead',
+        icon: UserCheck,
+        onClick: (row) => setAssigningLead(row),
+        tooltip: 'Assign Lead',
+        className: 'hover:text-primary hover:bg-primary/10',
+      });
+    }
+    if (leadsPerms.canConvert) {
+      actions.push({
+        key: 'convert',
+        label: 'Convert to Account & Deal',
+        icon: ArrowRightLeft,
+        onClick: (row) => setConvertingLead(row),
+        tooltip: 'Convert to Account & Deal',
+        className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40',
+      });
+    }
+    if (leadsPerms.canUpdate) {
+      actions.push({
+        key: 'edit',
+        label: 'Edit Lead',
+        icon: Edit2,
+        onClick: (row) => setEditingLead(row),
+        tooltip: 'Edit Lead',
+        className: 'hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40',
+      });
+    }
+    if (leadsPerms.canDelete) {
+      actions.push({
+        key: 'delete',
+        label: 'Delete Lead',
+        icon: Trash2,
+        danger: true,
+        onClick: (row) => setDeletingLead(row),
+        tooltip: 'Delete Lead',
+      });
+    }
+    return actions;
+  }, [crmBase, navigate, leadsPerms.canRead, leadsPerms.canAssign, leadsPerms.canConvert, leadsPerms.canUpdate, leadsPerms.canDelete]);
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
@@ -329,26 +344,30 @@ export default function LeadsPage() {
         title="Lead Management"
         description={`Tracking, scoring and converting ${totalElements} commercial leads.`}
       >
-        <button
-          onClick={() => setIsImportOpen(true)}
-          className="btn-secondary flex items-center gap-2 text-xs"
-        >
-          <Upload size={14} />
-          <span>Import CSV</span>
-        </button>
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="btn-primary flex items-center gap-2 text-xs"
-        >
-          <Plus size={14} />
-          <span>New Lead</span>
-        </button>
+        {leadsPerms.canImport && (
+          <button
+            onClick={() => setIsImportOpen(true)}
+            className="btn-secondary flex items-center gap-2 text-xs"
+          >
+            <Upload size={14} />
+            <span>Import CSV</span>
+          </button>
+        )}
+        {leadsPerms.canCreate && (
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="btn-primary flex items-center gap-2 text-xs"
+          >
+            <Plus size={14} />
+            <span>New Lead</span>
+          </button>
+        )}
       </PageHeader>
 
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
-          permissionFeature="LEADS"
+          permissionFeature="CRM_LEADS"
           selectable
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}

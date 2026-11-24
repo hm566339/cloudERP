@@ -164,22 +164,93 @@ class CrmLeadServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw ConflictException when attempting to convert an already-converted lead")
+    @DisplayName("Should throw ConflictException when attempting to convert an already-converted lead with active account")
     void testConvertLead_AlreadyConverted_Conflict() {
         UUID leadId = UUID.randomUUID();
+        UUID accountId = UUID.randomUUID();
         CrmLead lead = CrmLead.builder()
                 .id(leadId)
                 .firstName("Vikram")
                 .isConverted(true)
+                .convertedAccountId(accountId)
                 .build();
         lead.setCompanyId(companyId);
 
         when(leadRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, leadId)).thenReturn(Optional.of(lead));
+        when(accountRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, accountId))
+                .thenReturn(Optional.of(CrmAccount.builder().id(accountId).build()));
 
         LeadConvertRequest convertReq = LeadConvertRequest.builder().build();
 
-        assertThrows(ConflictException.class, () -> leadService.convertLead(leadId, convertReq, companyId));
+        ConflictException ex = assertThrows(ConflictException.class, () -> leadService.convertLead(leadId, convertReq, companyId));
+        assertEquals("Lead has already been converted.", ex.getMessage());
         verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should allow reconversion when previously converted records are missing or soft-deleted")
+    void testConvertLead_AlreadyConverted_AllowsReconversionWhenRecordsDeletedOrMissing() {
+        UUID leadId = UUID.randomUUID();
+        UUID staleAccountId = UUID.randomUUID();
+        UUID staleContactId = UUID.randomUUID();
+        UUID staleOppId = UUID.randomUUID();
+
+        CrmLead lead = CrmLead.builder()
+                .id(leadId)
+                .firstName("Vikram")
+                .lastName("Mehta")
+                .displayName("Vikram Mehta")
+                .organizationName("Mehta Enterprises")
+                .email("vikram@mehta.com")
+                .phone("+919876543210")
+                .isConverted(true)
+                .convertedAccountId(staleAccountId)
+                .convertedContactId(staleContactId)
+                .convertedOpportunityId(staleOppId)
+                .convertedAt(java.time.LocalDateTime.now().minusDays(10))
+                .convertedByUserId(UUID.randomUUID())
+                .build();
+        lead.setCompanyId(companyId);
+
+        when(leadRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, leadId)).thenReturn(Optional.of(lead));
+        when(accountRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, staleAccountId)).thenReturn(Optional.empty());
+        when(contactRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, staleContactId)).thenReturn(Optional.empty());
+        when(opportunityRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, staleOppId)).thenReturn(Optional.empty());
+
+        UUID newAccountId = UUID.randomUUID();
+        CrmAccount newAccount = CrmAccount.builder()
+                .id(newAccountId)
+                .accountName("Mehta Enterprises")
+                .accountCode("ACC-NEW")
+                .build();
+        newAccount.setCompanyId(companyId);
+        when(accountRepository.save(any(CrmAccount.class))).thenReturn(newAccount);
+
+        UUID newContactId = UUID.randomUUID();
+        CrmContact newContact = CrmContact.builder()
+                .id(newContactId)
+                .firstName("Vikram")
+                .lastName("Mehta")
+                .build();
+        newContact.setCompanyId(companyId);
+        when(contactRepository.save(any(CrmContact.class))).thenReturn(newContact);
+
+        LeadConvertRequest convertReq = LeadConvertRequest.builder()
+                .createOpportunity(false)
+                .build();
+
+        LeadConvertResponse result = leadService.convertLead(leadId, convertReq, companyId);
+
+        assertNotNull(result);
+        assertEquals(leadId, result.getLeadId());
+        assertEquals(newAccountId, result.getAccountId());
+        assertEquals(newContactId, result.getContactId());
+        assertTrue(lead.getIsConverted());
+        assertEquals(newAccountId, lead.getConvertedAccountId());
+        assertEquals(newContactId, lead.getConvertedContactId());
+        assertNull(lead.getConvertedOpportunityId());
+        assertNotNull(lead.getConvertedAt());
+        verify(leadRepository, times(1)).save(lead);
     }
 
     @Test

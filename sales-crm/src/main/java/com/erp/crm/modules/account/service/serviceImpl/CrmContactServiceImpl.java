@@ -72,6 +72,72 @@ public class CrmContactServiceImpl implements CrmContactService {
     }
 
     @Override
+    public ContactResponse updateContact(UUID id, ContactCreateRequest request, UUID requestCompanyId) {
+        UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
+        log.info("Updating Contact: {} (id: {}) for companyId: {}", request.getFirstName(), id, companyId);
+
+        CrmContact contact = contactRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
+
+        contact.setFirstName(request.getFirstName());
+        contact.setLastName(request.getLastName());
+        String display = (request.getFirstName() + " " + (request.getLastName() != null ? request.getLastName() : "")).trim();
+        contact.setDisplayName(display);
+        contact.setSalutation(request.getSalutation());
+        contact.setDesignation(request.getDesignation());
+        contact.setDepartmentName(request.getDepartmentName());
+        contact.setEmail(request.getEmail());
+        if (request.getEmail() != null) {
+            contact.setNormalizedEmail(request.getEmail().trim().toLowerCase());
+        }
+        contact.setPhone(request.getPhone());
+        if (request.getPhone() != null) {
+            contact.setNormalizedPhone(PhoneUtils.normalizePhone(request.getPhone()));
+        }
+        contact.setMobile(request.getMobile());
+        if (request.getDecisionMakerRole() != null) {
+            contact.setDecisionMakerRole(request.getDecisionMakerRole());
+        }
+        if (request.getIsPrimaryContact() != null) {
+            contact.setIsPrimaryContact(request.getIsPrimaryContact());
+        }
+        if (request.getLinkedinUrl() != null) {
+            contact.setLinkedinUrl(request.getLinkedinUrl());
+        }
+        if (request.getAccountId() != null) {
+            contact.setAccountId(request.getAccountId());
+        }
+
+        CrmContact savedContact = contactRepository.save(contact);
+
+        if (request.getAccountId() != null) {
+            boolean exists = relationRepository.findByCompanyIdAndAccountIdAndContactId(companyId, request.getAccountId(), savedContact.getId()).isPresent();
+            if (!exists) {
+                CrmAccountContactRelation relation = CrmAccountContactRelation.builder()
+                        .companyId(companyId)
+                        .accountId(request.getAccountId())
+                        .contactId(savedContact.getId())
+                        .relationshipTitle(request.getDesignation() != null ? request.getDesignation() : "Contact")
+                        .isActive(true)
+                        .build();
+                relationRepository.save(relation);
+            }
+        }
+
+        return contactMapper.toResponse(savedContact);
+    }
+
+    @Override
+    public void deleteContact(UUID id, UUID requestCompanyId) {
+        UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
+        log.info("Deleting Contact: {} for companyId: {}", id, companyId);
+        CrmContact contact = contactRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
+        contact.setIsDeleted(true);
+        contactRepository.save(contact);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public ContactResponse getContactById(UUID id, UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);

@@ -32,7 +32,11 @@ export default function QuotationDetailsPage() {
   const { data: quoteRes, isLoading, refetch } = useGetCrmQuotationByIdQuery({ id, companyId });
   const [convertToOrder, { isLoading: isConverting }] = useConvertQuotationToOrderMutation();
 
-  const quotation = quoteRes?.data || null;
+  const quotation = quoteRes?.id
+    ? quoteRes
+    : quoteRes?.data?.id
+    ? quoteRes.data
+    : quoteRes?.data || null;
 
   if (isLoading) {
     return <div className="p-8 text-center text-xs text-zinc-400">Loading quotation details...</div>;

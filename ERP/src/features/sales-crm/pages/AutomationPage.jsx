@@ -360,7 +360,7 @@ export default function AutomationPage() {
           <div className="flex-1 min-h-[300px]">
             {activeTab === 'rules' && (
               <DataTable
-                permissionFeature="CRM"
+                permissionFeature="CRM_AUTOMATION"
                 selectable={false}
                 showIndex={true}
                 searchable={true}
@@ -398,7 +398,7 @@ export default function AutomationPage() {
 
             {activeTab === 'pools' && (
               <DataTable
-                permissionFeature="CRM"
+                permissionFeature="CRM_AUTOMATION"
                 selectable={false}
                 showIndex={true}
                 searchable={true}
@@ -435,7 +435,7 @@ export default function AutomationPage() {
 
             {activeTab === 'logs' && (
               <DataTable
-                permissionFeature="CRM"
+                permissionFeature="CRM_AUTOMATION"
                 selectable={false}
                 showIndex={true}
                 searchable={true}

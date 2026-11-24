@@ -19,6 +19,7 @@ import {
   useCompleteCrmTaskMutation,
 } from '../../../api/sales-crm/crm.api';
 import TaskFormModal from '../components/TaskFormModal';
+import useCrmPermissions from '../hooks/useCrmPermissions';
 
 const DEFAULT_COLUMNS = [
   'title',
@@ -230,31 +231,39 @@ export default function TasksPage() {
     },
   ], []);
 
-  const rowActions = useMemo(() => [
-    {
-      key: 'complete',
-      label: 'Complete Task',
-      icon: CheckCircle2,
-      tooltip: 'Mark Completed',
-      hidden: (row) => row.status === 'COMPLETED',
-      className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20',
-      onClick: (row) => handleToggleComplete(row.id),
-    },
-  ], []);
+  const { activities: actPerms } = useCrmPermissions();
+
+  const rowActions = useMemo(() => {
+    const actions = [];
+    if (actPerms.canComplete) {
+      actions.push({
+        key: 'complete',
+        label: 'Complete Task',
+        icon: CheckCircle2,
+        tooltip: 'Mark Completed',
+        hidden: (row) => row.status === 'COMPLETED',
+        className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20',
+        onClick: (row) => handleToggleComplete(row.id),
+      });
+    }
+    return actions;
+  }, [actPerms.canComplete]);
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <TasksActivitiesHeader
         activeTab="tasks"
         actions={
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="btn-primary flex items-center gap-1.5 text-xs font-semibold h-8 px-3.5 cursor-pointer rounded-lg shadow-sm"
-          >
-            <Plus size={15} />
-            <span>New Task</span>
-          </button>
+          actPerms.canCreate ? (
+            <button
+              type="button"
+              onClick={() => setIsCreateOpen(true)}
+              className="btn-primary flex items-center gap-1.5 text-xs font-semibold h-8 px-3.5 cursor-pointer rounded-lg shadow-sm"
+            >
+              <Plus size={15} />
+              <span>New Task</span>
+            </button>
+          ) : null
         }
       />
 
@@ -262,7 +271,7 @@ export default function TasksPage() {
         <div className="flex-1 flex flex-col min-h-[300px]">
           <div className="flex-1 min-h-[300px]">
             <DataTable
-              permissionFeature="CRM"
+              permissionFeature="CRM_ACTIVITIES"
               selectable={false}
               showIndex={true}
               columns={columns}

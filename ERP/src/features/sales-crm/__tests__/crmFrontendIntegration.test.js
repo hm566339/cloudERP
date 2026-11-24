@@ -28,13 +28,12 @@ describe('Sales & CRM Frontend Architecture & Navigation Suite', () => {
     assert.equal(PATHS.CRM.SETTINGS, '/sales-crm/settings');
   });
 
-  it('2. CRM_SIDEBAR configuration contains all 15 operational items with required metadata', () => {
-    assert.equal(CRM_SIDEBAR.length, 15);
+  it('2. CRM_SIDEBAR configuration contains all 11 operational items with required metadata', () => {
+    assert.equal(CRM_SIDEBAR.length, 11);
     const expectedModules = [
       'crm-dashboard', 'crm-leads', 'crm-accounts', 'crm-contacts',
-      'crm-opportunities', 'crm-pipelines', 'crm-quotations', 'crm-tasks',
-      'crm-activities', 'crm-campaigns', 'crm-attribution', 'crm-communications',
-      'crm-automation', 'crm-integrations', 'crm-settings'
+      'crm-opportunities', 'crm-quotations', 'crm-tasks-activities',
+      'crm-communications', 'crm-automation', 'crm-integrations-campaigns', 'crm-settings'
     ];
 
     expectedModules.forEach((modId) => {
@@ -50,18 +49,18 @@ describe('Sales & CRM Frontend Architecture & Navigation Suite', () => {
     // Scenario A: Admin with full CRM access
     const adminAccess = () => true;
     const adminSidebar = buildFilteredCrmSidebar(CRM_SIDEBAR, adminAccess);
-    assert.equal(adminSidebar.length, 15);
+    assert.equal(adminSidebar.length, 11);
 
     // Scenario B: Sales Rep with access only to Leads, Opportunities, and Quotations
     const salesRepPermissions = new Set(['CRM', 'CRM_LEADS', 'CRM_OPPORTUNITIES', 'CRM_QUOTATIONS']);
     const repAccess = (module) => salesRepPermissions.has(module);
     const repSidebar = buildFilteredCrmSidebar(CRM_SIDEBAR, repAccess);
-    assert.equal(repSidebar.length, 5); // Dashboard, Leads, Opportunities, Pipelines, Quotations
+    assert.equal(repSidebar.length, 4); // Dashboard, Leads, Opportunities, Quotations
     assert.ok(repSidebar.some((i) => i.id === 'crm-leads'));
     assert.ok(repSidebar.some((i) => i.id === 'crm-quotations'));
     assert.ok(!repSidebar.some((i) => i.id === 'crm-automation'), 'Sales Rep must not see Automation');
     assert.ok(!repSidebar.some((i) => i.id === 'crm-settings'), 'Sales Rep must not see CRM Settings');
-    assert.ok(!repSidebar.some((i) => i.id === 'crm-integrations'), 'Sales Rep must not see Integrations');
+    assert.ok(!repSidebar.some((i) => i.id === 'crm-integrations-campaigns'), 'Sales Rep must not see Integrations');
 
     // Scenario C: User without CRM module access
     const noAccess = () => false;

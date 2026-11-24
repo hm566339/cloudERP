@@ -125,7 +125,7 @@ export default function CrmKanbanBoard({
                   >
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <span className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] line-clamp-1 group-hover:text-primary dark:group-hover:text-[#4C8DFF] transition-colors">
-                        {opp.opportunityName}
+                        {opp.opportunityName || opp.title || 'Untitled Deal'}
                       </span>
                       {opp.dealStatus && (
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]">
@@ -134,9 +134,9 @@ export default function CrmKanbanBoard({
                       )}
                     </div>
 
-                    {opp.accountName && (
+                    {(opp.accountName || opp.contactName) && (
                       <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] mb-2 truncate">
-                        {opp.accountName}
+                        {opp.accountName || opp.contactName}
                       </p>
                     )}
 

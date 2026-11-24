@@ -20,11 +20,19 @@ export const crmApiSlice = baseApi.injectEndpoints({
     }),
 
     getLeadById: builder.query({
-      query: ({ id, companyId }) => ({
-        url: `/api/crm/leads/${id}`,
-        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
-      }),
-      providesTags: (result, error, { id }) => [{ type: 'CRM_LEADS', id }],
+      query: (arg) => {
+        const id = typeof arg === 'object' && arg !== null ? arg.id : arg;
+        const companyId = typeof arg === 'object' && arg !== null ? arg.companyId : undefined;
+        return {
+          url: `/api/crm/leads/${id}`,
+          params: companyId ? { companyId } : undefined,
+          headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+        };
+      },
+      providesTags: (result, error, arg) => {
+        const id = typeof arg === 'object' && arg !== null ? arg.id : arg;
+        return [{ type: 'CRM_LEADS', id }];
+      },
     }),
 
     createLead: builder.mutation({
@@ -140,11 +148,19 @@ export const crmApiSlice = baseApi.injectEndpoints({
     }),
 
     getCrmAccountById: builder.query({
-      query: ({ id, companyId }) => ({
-        url: `/api/crm/accounts/${id}`,
-        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
-      }),
-      providesTags: (result, error, { id }) => [{ type: 'CRM_ACCOUNTS', id }],
+      query: (arg) => {
+        const id = typeof arg === 'object' && arg !== null ? arg.id : arg;
+        const companyId = typeof arg === 'object' && arg !== null ? arg.companyId : undefined;
+        return {
+          url: `/api/crm/accounts/${id}`,
+          params: companyId ? { companyId } : undefined,
+          headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+        };
+      },
+      providesTags: (result, error, arg) => {
+        const id = typeof arg === 'object' && arg !== null ? arg.id : arg;
+        return [{ type: 'CRM_ACCOUNTS', id }];
+      },
     }),
 
     onboardAccountToErp: builder.mutation({
@@ -170,6 +186,25 @@ export const crmApiSlice = baseApi.injectEndpoints({
         url: '/api/crm/contacts',
         method: 'POST',
         data: { data },
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_CONTACTS'],
+    }),
+
+    updateCrmContact: builder.mutation({
+      query: ({ id, data, companyId }) => ({
+        url: `/api/crm/contacts/${id}`,
+        method: 'PUT',
+        data: { data },
+        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+      }),
+      invalidatesTags: ['CRM_CONTACTS'],
+    }),
+
+    deleteCrmContact: builder.mutation({
+      query: ({ id, companyId }) => ({
+        url: `/api/crm/contacts/${id}`,
+        method: 'DELETE',
         headers: companyId ? { 'X-Company-Id': companyId } : undefined,
       }),
       invalidatesTags: ['CRM_CONTACTS'],
@@ -207,12 +242,18 @@ export const crmApiSlice = baseApi.injectEndpoints({
     }),
 
     updateOpportunityStage: builder.mutation({
-      query: ({ id, targetStageId, reason, companyId }) => ({
-        url: `/api/crm/opportunities/${id}/stage`,
-        method: 'PATCH',
-        data: { data: { targetStageId, reason } },
-        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
-      }),
+      query: (arg) => {
+        const id = arg?.id;
+        const targetStageId = arg?.targetStageId || arg?.stageId || arg?.data?.targetStageId || arg?.data?.stageId;
+        const reason = arg?.reason || arg?.data?.reason;
+        const companyId = arg?.companyId;
+        return {
+          url: `/api/crm/opportunities/${id}/stage`,
+          method: 'PATCH',
+          data: { data: { targetStageId, reason } },
+          headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+        };
+      },
       invalidatesTags: ['CRM_OPPORTUNITIES', 'CRM_DASHBOARD'],
     }),
 
@@ -267,11 +308,19 @@ export const crmApiSlice = baseApi.injectEndpoints({
     }),
 
     getCrmQuotationById: builder.query({
-      query: ({ id, companyId }) => ({
-        url: `/api/crm/quotations/${id}`,
-        headers: companyId ? { 'X-Company-Id': companyId } : undefined,
-      }),
-      providesTags: (result, error, { id }) => [{ type: 'CRM_QUOTATIONS', id }],
+      query: (arg) => {
+        const id = typeof arg === 'object' && arg !== null ? arg.id : arg;
+        const companyId = typeof arg === 'object' && arg !== null ? arg.companyId : undefined;
+        return {
+          url: `/api/crm/quotations/${id}`,
+          params: companyId ? { companyId } : undefined,
+          headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+        };
+      },
+      providesTags: (result, error, arg) => {
+        const id = typeof arg === 'object' && arg !== null ? arg.id : arg;
+        return [{ type: 'CRM_QUOTATIONS', id }];
+      },
     }),
 
     createCrmQuotation: builder.mutation({
@@ -763,6 +812,8 @@ export const {
   useOnboardAccountToErpMutation,
   useGetCrmContactsQuery,
   useCreateCrmContactMutation,
+  useUpdateCrmContactMutation,
+  useDeleteCrmContactMutation,
 
   // Pipelines & Deals
   useGetCrmKanbanQuery,

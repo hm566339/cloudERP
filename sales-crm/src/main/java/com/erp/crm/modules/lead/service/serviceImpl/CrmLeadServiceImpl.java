@@ -389,8 +389,35 @@ public class CrmLeadServiceImpl implements CrmLeadService {
         CrmLead lead = leadRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found: " + id));
 
-        if (lead.getIsConverted()) {
-            throw new ConflictException("Lead has already been converted.");
+        if (Boolean.TRUE.equals(lead.getIsConverted())) {
+            UUID targetCompanyId = companyId != null ? companyId : lead.getCompanyId();
+
+            boolean hasActiveConvertedAccount = lead.getConvertedAccountId() != null &&
+                    (targetCompanyId != null
+                            ? accountRepository.findByCompanyIdAndIdAndIsDeletedFalse(targetCompanyId, lead.getConvertedAccountId()).isPresent()
+                            : accountRepository.findById(lead.getConvertedAccountId()).filter(a -> !Boolean.TRUE.equals(a.getIsDeleted())).isPresent());
+
+            boolean hasActiveConvertedContact = lead.getConvertedContactId() != null &&
+                    (targetCompanyId != null
+                            ? contactRepository.findByCompanyIdAndIdAndIsDeletedFalse(targetCompanyId, lead.getConvertedContactId()).isPresent()
+                            : contactRepository.findById(lead.getConvertedContactId()).filter(c -> !Boolean.TRUE.equals(c.getIsDeleted())).isPresent());
+
+            boolean hasActiveConvertedOpportunity = lead.getConvertedOpportunityId() != null &&
+                    (targetCompanyId != null
+                            ? opportunityRepository.findByCompanyIdAndIdAndIsDeletedFalse(targetCompanyId, lead.getConvertedOpportunityId()).isPresent()
+                            : opportunityRepository.findById(lead.getConvertedOpportunityId()).filter(o -> !Boolean.TRUE.equals(o.getIsDeleted())).isPresent());
+
+            if (hasActiveConvertedAccount || hasActiveConvertedContact || hasActiveConvertedOpportunity) {
+                throw new ConflictException("Lead has already been converted.");
+            }
+
+            log.info("Resetting stale conversion state for lead id: {} as previously converted records are missing or soft-deleted", id);
+            lead.setConvertedAccountId(null);
+            lead.setConvertedContactId(null);
+            lead.setConvertedOpportunityId(null);
+            lead.setConvertedAt(null);
+            lead.setConvertedByUserId(null);
+            lead.setIsConverted(false);
         }
 
         UUID accountId = null;

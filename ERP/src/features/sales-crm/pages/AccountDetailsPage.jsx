@@ -37,7 +37,11 @@ export default function AccountDetailsPage() {
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
   const { data: accountRes, isLoading: isAccLoading, refetch: refetchAcc } = useGetCrmAccountByIdQuery({ id, companyId });
-  const account = accountRes?.data || null;
+  const account = accountRes?.id
+    ? accountRes
+    : accountRes?.data?.id
+    ? accountRes.data
+    : accountRes?.data || null;
 
   const toArray = (res) => {
     if (Array.isArray(res)) return res;
@@ -95,7 +99,7 @@ export default function AccountDetailsPage() {
       label: 'Role',
       render: (val, row) => (
         <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-100 dark:bg-[#1C202B] text-zinc-700 dark:text-[#E6E8EE]">
-          {row?.decisionRole || val || 'DECISION_MAKER'}
+          {(row?.decisionMakerRole || row?.decisionRole || val || 'DECISION_MAKER').replace(/_/g, ' ')}
         </span>
       ),
     },

@@ -12,10 +12,13 @@ public interface CrmContactService {
 
     ContactResponse createContact(ContactCreateRequest request, UUID requestCompanyId);
 
+    ContactResponse updateContact(UUID id, ContactCreateRequest request, UUID requestCompanyId);
+
+    void deleteContact(UUID id, UUID requestCompanyId);
+
     ContactResponse getContactById(UUID id, UUID requestCompanyId);
 
     List<ContactResponse> getContactsByAccountId(UUID accountId, UUID requestCompanyId);
 
     Page<ContactResponse> getAllContacts(UUID requestCompanyId, Pageable pageable);
 }
-

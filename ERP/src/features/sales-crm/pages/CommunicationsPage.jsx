@@ -301,7 +301,7 @@ export default function CommunicationsPage() {
           <div className="flex-1 flex flex-col min-h-[300px]">
             <div className="flex-1 min-h-[300px]">
               <DataTable
-                permissionFeature="CRM"
+                permissionFeature="CRM_COMMUNICATION"
                 selectable={false}
                 showIndex={true}
                 searchable={true}

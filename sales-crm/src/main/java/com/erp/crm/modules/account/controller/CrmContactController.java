@@ -36,6 +36,25 @@ public class CrmContactController {
                 .body(ApiResponse.success(response, "Contact created successfully"));
     }
 
+    @RequestMapping(value = "/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.POST})
+    @Operation(summary = "Update Contact")
+    public ResponseEntity<ApiResponse<ContactResponse>> updateContact(
+            @PathVariable UUID id,
+            @RequestBody @Valid ApiRequest<ContactCreateRequest> apiRequest,
+            @RequestParam(required = false) UUID companyId) {
+        ContactResponse response = contactService.updateContact(id, apiRequest.getData(), companyId);
+        return ResponseEntity.ok(ApiResponse.success(response, "Contact updated successfully"));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete Contact")
+    public ResponseEntity<ApiResponse<Void>> deleteContact(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId) {
+        contactService.deleteContact(id, companyId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Contact deleted successfully"));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get Contact Details by ID")
     public ResponseEntity<ApiResponse<ContactResponse>> getContactById(

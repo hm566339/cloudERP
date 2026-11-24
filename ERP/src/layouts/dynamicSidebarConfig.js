@@ -416,14 +416,6 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
           action: 'READ',
         },
         {
-          id: 'crm-pipelines',
-          label: 'Pipelines',
-          path: `${base}/sales-crm/pipelines`,
-          icon: Layers,
-          featureCode: 'CRM_OPPORTUNITIES',
-          action: 'READ',
-        },
-        {
           id: 'crm-quotations',
           label: 'Quotations',
           path: `${base}/sales-crm/quotations`,

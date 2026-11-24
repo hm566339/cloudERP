@@ -22,6 +22,7 @@ import {
   useOnboardAccountToErpMutation,
 } from '../../../api/sales-crm/crm.api';
 import AccountFormModal from '../components/AccountFormModal';
+import useCrmPermissions from '../hooks/useCrmPermissions';
 
 const DEFAULT_COLUMNS = [
   'accountName',
@@ -193,32 +194,42 @@ export default function AccountsPage() {
     }
   ], [crmBase, navigate]);
 
-  const rowActions = useMemo(() => [
-    {
-      key: 'view',
-      label: 'View Dossier',
-      icon: Eye,
-      onClick: (row) => navigate(`${crmBase}/accounts/${row.id}`),
-      tooltip: 'View Account Dossier',
-      className: 'hover:text-blue-600 hover:bg-blue-50'
-    },
-    {
-      key: 'sync',
-      label: 'Sync to ERP',
-      icon: UserCheck,
-      onClick: (row) => setOnboardingAccount(row),
-      tooltip: 'Sync and create Customer Ledger in ERP',
-      className: 'hover:text-emerald-600 hover:bg-emerald-50'
-    },
-    {
-      key: 'edit',
-      label: 'Edit Account',
-      icon: Edit2,
-      onClick: (row) => setEditingAccount(row),
-      tooltip: 'Edit Account',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
+  const { accounts: accountPerms } = useCrmPermissions();
+
+  const rowActions = useMemo(() => {
+    const actions = [];
+    if (accountPerms.canRead) {
+      actions.push({
+        key: 'view',
+        label: 'View Dossier',
+        icon: Eye,
+        onClick: (row) => navigate(`${crmBase}/accounts/${row.id}`),
+        tooltip: 'View Account Dossier',
+        className: 'hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40',
+      });
     }
-  ], [crmBase, navigate]);
+    if (accountPerms.canOnboard) {
+      actions.push({
+        key: 'sync',
+        label: 'Sync to ERP',
+        icon: UserCheck,
+        onClick: (row) => setOnboardingAccount(row),
+        tooltip: 'Sync and create Customer Ledger in ERP',
+        className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40',
+      });
+    }
+    if (accountPerms.canUpdate) {
+      actions.push({
+        key: 'edit',
+        label: 'Edit Account',
+        icon: Edit2,
+        onClick: (row) => setEditingAccount(row),
+        tooltip: 'Edit Account',
+        className: 'hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40',
+      });
+    }
+    return actions;
+  }, [crmBase, navigate, accountPerms.canRead, accountPerms.canOnboard, accountPerms.canUpdate]);
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
@@ -226,19 +237,21 @@ export default function AccountsPage() {
         title="Account Management"
         description={`Managing ${totalElements} corporate accounts, credit limits, and client profiles.`}
       >
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="btn-primary flex items-center gap-2 text-xs"
-        >
-          <Plus size={16} />
-          <span>New Account</span>
-        </button>
+        {accountPerms.canCreate && (
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="btn-primary flex items-center gap-2 text-xs"
+          >
+            <Plus size={16} />
+            <span>New Account</span>
+          </button>
+        )}
       </PageHeader>
 
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
-          permissionFeature="CUSTOMERS"
+          permissionFeature="CRM_ACCOUNTS"
           selectable
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}

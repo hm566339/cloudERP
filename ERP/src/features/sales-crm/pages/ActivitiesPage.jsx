@@ -16,6 +16,7 @@ import TasksActivitiesHeader from '../components/TasksActivitiesHeader';
 import { Select } from '../../../components/common';
 import { useGetCrmActivitiesQuery } from '../../../api/sales-crm/crm.api';
 import ActivityFormModal from '../components/ActivityFormModal';
+import useCrmPermissions from '../hooks/useCrmPermissions';
 
 export default function ActivitiesPage() {
   const { companyId } = useParams();
@@ -36,19 +37,23 @@ export default function ActivitiesPage() {
 
   const activities = toArray(activitiesRes);
 
+  const { activities: actPerms } = useCrmPermissions();
+
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <TasksActivitiesHeader
         activeTab="activities"
         actions={
-          <button
-            type="button"
-            onClick={() => setIsLogOpen(true)}
-            className="btn-primary flex items-center gap-1.5 text-xs font-semibold h-8 px-3.5 cursor-pointer rounded-lg shadow-sm"
-          >
-            <Plus size={15} />
-            <span>Log Activity</span>
-          </button>
+          actPerms.canCreate ? (
+            <button
+              type="button"
+              onClick={() => setIsLogOpen(true)}
+              className="btn-primary flex items-center gap-1.5 text-xs font-semibold h-8 px-3.5 cursor-pointer rounded-lg shadow-sm"
+            >
+              <Plus size={15} />
+              <span>Log Activity</span>
+            </button>
+          ) : null
         }
       />
 

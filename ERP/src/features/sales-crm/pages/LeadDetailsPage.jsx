@@ -1,48 +1,110 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
-  Building2,
+  LayoutDashboard,
+  Flame,
+  Activity,
+  CheckSquare,
+  MessageSquare,
+  Share2,
+  ArrowRightLeft,
+  User,
+  Building,
   Phone,
   Mail,
-  Calendar,
+  MapPin,
   Clock,
+  Hash,
   UserCheck,
-  ArrowRightLeft,
   Edit2,
-  CheckSquare,
+  Trash2,
   Plus,
-  MessageSquare,
-  Flame,
-  Globe,
-  FileText
+  ExternalLink,
+  TrendingUp,
+  CheckCircle,
 } from 'lucide-react';
-import { PageHeader, Tabs } from '../../../components/common';
+
+import KPICard from '../../../components/common/KPICard';
+import InfoCard, { InfoField } from '../../../components/common/InfoCard';
+import QuickActionsCard from '../../../components/common/QuickActionsCard';
+import { useAppDispatch } from '../../../app/hooks';
+import { addAlert } from '../../notifications/notificationSlice';
+import { confirmDialog } from '../../../utils/confirmDialog';
+
 import {
-  useGetLeadByIdQuery,
-  useGetCrmActivitiesQuery,
-  useGetCrmTasksQuery,
-  useGetCrmConversationMessagesQuery,
-} from '../../../api/sales-crm/crm.api';
+  CrmDetailShell,
+  LeadOverviewSection,
+  LeadAttributionSection,
+  LeadActivitiesSection,
+  LeadTasksSection,
+  LeadCommunicationsSection,
+  LeadConversionSection,
+} from '../components/detail';
+
+import LeadFormModal from '../components/LeadFormModal';
+import LeadAssignModal from '../components/LeadAssignModal';
+import LeadConvertModal from '../components/LeadConvertModal';
 import ActivityFormModal from '../components/ActivityFormModal';
 import TaskFormModal from '../components/TaskFormModal';
-import LeadConvertModal from '../components/LeadConvertModal';
-import LeadFormModal from '../components/LeadFormModal';
+
+import {
+  useGetLeadByIdQuery,
+  useUpdateLeadStatusMutation,
+  useDeleteLeadMutation,
+  useGetCrmActivitiesQuery,
+  useGetCrmTasksQuery,
+  useCompleteCrmTaskMutation,
+  useGetCrmConversationMessagesQuery,
+} from '../../../api/sales-crm/crm.api';
+
+/* ─────────────────────────────────────────────────────────────────
+   Lead Detail Tabs Definition
+───────────────────────────────────────────────────────────────── */
+const TABS = [
+  { id: 'overview',       label: 'Overview',       icon: LayoutDashboard },
+  { id: 'activities',     label: 'Timeline',       icon: Activity },
+  { id: 'tasks',          label: 'Tasks',          icon: CheckSquare },
+  { id: 'communications', label: 'Communications', icon: MessageSquare },
+  { id: 'attribution',    label: 'Attribution',    icon: Share2 },
+  { id: 'conversion',     label: 'Deal Conversion',icon: ArrowRightLeft },
+];
 
 export default function LeadDetailsPage() {
   const { id, companyId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const crmBase = companyId ? `/company/${companyId}/sales-crm` : '/sales-crm';
 
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Modal open states
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [isConvertOpen, setIsConvertOpen] = useState(false);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [isTaskOpen, setIsTaskOpen] = useState(false);
-  const [isConvertOpen, setIsConvertOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const { data: leadRes, isLoading: isLeadLoading, refetch: refetchLead } = useGetLeadByIdQuery({ id, companyId });
-  const lead = leadRes?.data || null;
+  /* ── 1. Fetch Lead Data (with multi-tenant header & param resolution) ── */
+  const {
+    data: leadRes,
+    isLoading: isLeadLoading,
+    error: leadError,
+    refetch: refetchLead,
+  } = useGetLeadByIdQuery({ id, companyId });
 
+  // Safe unwrapping: baseApi unwraps standard ApiResponse so leadRes might be the lead directly
+  const lead = leadRes?.id
+    ? leadRes
+    : leadRes?.data?.id
+    ? leadRes.data
+    : leadRes?.data || null;
+
+  /* ── Mutations ── */
+  const [deleteLead] = useDeleteLeadMutation();
+  const [updateLeadStatus] = useUpdateLeadStatusMutation();
+  const [completeTask] = useCompleteCrmTaskMutation();
+
+  /* ── 2. Child Entity Queries ── */
   const toArray = (res) => {
     if (Array.isArray(res)) return res;
     if (Array.isArray(res?.data)) return res.data;
@@ -50,294 +112,365 @@ export default function LeadDetailsPage() {
     return [];
   };
 
-  const { data: activitiesRes } = useGetCrmActivitiesQuery({
-    entityType: 'LEAD',
-    entityId: id,
-    companyId,
-  });
+  const {
+    data: activitiesRes,
+    refetch: refetchActivities,
+  } = useGetCrmActivitiesQuery(
+    { entityType: 'LEAD', entityId: id, companyId },
+    { skip: !id }
+  );
   const activities = toArray(activitiesRes);
 
-  const { data: tasksRes } = useGetCrmTasksQuery({
-    entityType: 'LEAD',
-    entityId: id,
-    companyId,
-  });
+  const {
+    data: tasksRes,
+    refetch: refetchTasks,
+  } = useGetCrmTasksQuery(
+    { entityType: 'LEAD', entityId: id, companyId },
+    { skip: !id }
+  );
   const tasks = toArray(tasksRes);
 
-  const { data: messagesRes } = useGetCrmConversationMessagesQuery({
-    entityType: 'LEAD',
-    entityId: id,
-    companyId,
-  });
+  const { data: messagesRes } = useGetCrmConversationMessagesQuery(
+    { entityType: 'LEAD', entityId: id, companyId },
+    { skip: !id }
+  );
   const messages = toArray(messagesRes);
 
-  if (isLeadLoading) {
+  /* ── Handlers ── */
+  const handleDelete = async () => {
+    const confirmed = await confirmDialog({
+      title: 'Delete Lead',
+      message: 'Are you sure you want to permanently delete this lead? This action cannot be undone.',
+    });
+    if (!confirmed) return;
+
+    try {
+      await deleteLead({ id, companyId }).unwrap();
+      dispatch(
+        addAlert({
+          type: 'success',
+          message: 'Lead deleted successfully.',
+        })
+      );
+      navigate(`${crmBase}/leads`);
+    } catch (err) {
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: err?.data?.message || err.message || 'Failed to delete lead.',
+        })
+      );
+    }
+  };
+
+  const handleToggleTask = async (task) => {
+    if (!task?.id) return;
+    try {
+      await completeTask({ id: task.id, companyId }).unwrap();
+      refetchTasks();
+      dispatch(
+        addAlert({
+          type: 'success',
+          message: 'Task marked as completed.',
+        })
+      );
+    } catch (err) {
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: err?.data?.message || err.message || 'Failed to update task status.',
+        })
+      );
+    }
+  };
+
+  /* ── If not found / error ── */
+  if (!isLeadLoading && (!lead || leadError)) {
     return (
-      <div className="p-8 text-center text-xs text-zinc-400">
-        Loading lead dossier...
-      </div>
+      <CrmDetailShell
+        loading={false}
+        notFound={true}
+        notFoundTitle="Lead Record Not Found"
+        notFoundMessage="The requested lead does not exist, has been removed, or is inaccessible in the current company context."
+        onBack={() => navigate(`${crmBase}/leads`)}
+        backLabel="Return to Leads Directory"
+      />
     );
   }
 
-  if (!lead) {
-    return (
-      <div className="p-8 text-center text-xs text-zinc-400 space-y-2">
-        <p>Lead record not found.</p>
-        <button onClick={() => navigate(`${crmBase}/leads`)} className="text-primary hover:underline">
-          Return to Leads
-        </button>
-      </div>
-    );
+  /* ── Loading Skeleton ── */
+  if (isLeadLoading || !lead) {
+    return <CrmDetailShell loading={true} />;
   }
 
-  const leadName = lead.displayName || `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Lead Details';
+  /* ── Derived Lead Identity ── */
+  const leadName =
+    lead.displayName ||
+    `${lead.firstName || ''} ${lead.lastName || ''}`.trim() ||
+    lead.organizationName ||
+    'Lead Dossier';
 
-  const tabList = [
-    { id: 'overview', label: 'Lead Overview' },
-    { id: 'timeline', label: `Activity Timeline (${activities.length})` },
-    { id: 'tasks', label: `Tasks (${tasks.length})` },
-    { id: 'messages', label: `Communications (${messages.length})` },
+  const score = Number(lead.leadScore) || 50;
+  const isHot = score >= 80;
+  const isWarm = score >= 50 && score < 80;
+  const scoreClass = isHot
+    ? 'text-rose-600'
+    : isWarm
+    ? 'text-amber-600'
+    : 'text-blue-600';
+
+  const updatedDateStr = lead.updatedAt
+    ? new Date(lead.updatedAt).toLocaleDateString()
+    : 'Recently';
+
+  /* ── Header Metadata Chips ── */
+  const headerMetadata = [
+    { icon: Hash, label: lead.leadCode || lead.id?.slice(0, 8) || 'N/A' },
+    { icon: Building, label: lead.organizationName || 'Individual Contact' },
+    { icon: Clock, label: `Updated ${updatedDateStr}` },
+    { icon: User, label: `Owner: ${lead.ownerUsername || 'Unassigned'}` },
   ];
 
-  return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] overflow-auto p-6 space-y-4">
-      {/* Top Navigation */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => navigate(`${crmBase}/leads`)}
-          className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1C202B]"
-        >
-          <ArrowLeft size={14} />
-        </button>
-        <span className="text-xs text-zinc-500 font-semibold">Back to Leads Directory</span>
-      </div>
+  /* ── Header Actions ── */
+  const headerActions = [
+    {
+      label: 'Edit',
+      icon: Edit2,
+      variant: 'secondary',
+      permission: { module: 'CRM_LEADS', action: 'UPDATE', behavior: 'disable' },
+      onClick: () => setIsEditOpen(true),
+    },
+    {
+      label: 'Assign',
+      icon: UserCheck,
+      variant: 'secondary',
+      permission: { module: 'CRM_LEADS', action: 'ASSIGN', behavior: 'disable' },
+      onClick: () => setIsAssignOpen(true),
+    },
+    {
+      label: lead.isConverted ? 'Converted' : 'Convert',
+      icon: ArrowRightLeft,
+      variant: 'primary',
+      disabled: lead.isConverted,
+      permission: { module: 'CRM_LEADS', action: 'CONVERT', behavior: 'disable' },
+      onClick: () => setIsConvertOpen(true),
+    },
+    {
+      label: 'More Actions',
+      type: 'dropdown',
+      variant: 'secondary',
+      items: [
+        {
+          label: 'Log Activity',
+          icon: MessageSquare,
+          onClick: () => setIsActivityOpen(true),
+        },
+        {
+          label: 'Add Task',
+          icon: CheckSquare,
+          onClick: () => setIsTaskOpen(true),
+        },
+        { type: 'divider' },
+        {
+          label: 'Delete Lead',
+          icon: Trash2,
+          permission: { module: 'CRM_LEADS', action: 'DELETE' },
+          onClick: handleDelete,
+        },
+      ],
+    },
+  ];
 
-      {/* Header Profile Card */}
-      <div className="p-5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg font-bold text-zinc-900 dark:text-white">{leadName}</h1>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-primary/10 text-primary">
-                Score: {lead.leadScore || 50}/100
-              </span>
-              <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-500">
-                {lead.leadStatus?.statusName || 'NEW'}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
-              <span className="flex items-center gap-1">
-                <Building2 size={13} /> {lead.organizationName || 'Individual Contact'}
-              </span>
-              {lead.normalizedPhone && (
-                <span className="flex items-center gap-1 font-mono">
-                  <Phone size={13} /> {lead.normalizedPhone}
-                </span>
-              )}
-              {lead.email && (
-                <span className="flex items-center gap-1">
-                  <Mail size={13} /> {lead.email}
-                </span>
-              )}
-              {lead.state && <span>State: {lead.state}</span>}
-            </div>
-          </div>
+  /* ── KPI Card Strip (rendered inside EntityHeader's bottomSlot) ── */
+  const pendingTasksCount = tasks.filter((t) => t.status !== 'COMPLETED' && !t.isCompleted).length;
+  const kpiStrip = (
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 xl:gap-4 pb-6">
+      <KPICard
+        title="Lead Score"
+        value={`${score}/100`}
+        valueClass={scoreClass}
+        subtitle={isHot ? '🔥 High Intent' : isWarm ? '⚡ Active Prospect' : '❄️ Nurture Stage'}
+        icon={Flame}
+      />
+      <KPICard
+        title="Pipeline Stage"
+        value={lead.leadStage || 'RAW'}
+        valueClass="text-zinc-900 dark:text-[#E6E8EE]"
+        icon={TrendingUp}
+      />
+      <KPICard
+        title="Status"
+        value={lead.leadStatus?.statusName || 'New / Open'}
+        valueClass="text-emerald-600"
+        icon={CheckCircle}
+      />
+      <KPICard
+        title="Lead Source"
+        value={lead.leadSource?.sourceName || lead.leadSourceId || 'Direct'}
+        subtitle={lead.externalLeadId ? 'External Ad / Portal' : 'Direct Inbound'}
+        icon={Share2}
+      />
+      <KPICard
+        title="Activities"
+        value={`${activities.length}`}
+        subtitle={`Total interactions`}
+        icon={Activity}
+      />
+      <KPICard
+        title="Pending Tasks"
+        value={`${pendingTasksCount}`}
+        valueClass={pendingTasksCount > 0 ? 'text-amber-600' : 'text-zinc-900 dark:text-[#E6E8EE]'}
+        subtitle={`Total tasks: ${tasks.length}`}
+        icon={CheckSquare}
+      />
+    </div>
+  );
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsActivityOpen(true)}
-              className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
-            >
-              <Phone size={13} /> Log Activity
-            </button>
-            <button
-              onClick={() => setIsTaskOpen(true)}
-              className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5"
-            >
-              <CheckSquare size={13} /> Add Task
-            </button>
-            <button
-              onClick={() => setIsConvertOpen(true)}
-              className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5"
-            >
-              <ArrowRightLeft size={13} /> Convert Deal
-            </button>
-          </div>
-        </div>
+  /* ── Quick Actions (Sidebar) ── */
+  const quickActions = [
+    {
+      label: 'Convert to Deal',
+      icon: ArrowRightLeft,
+      iconBg: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      trailingIcon: Plus,
+      disabled: lead.isConverted,
+      onClick: () => setIsConvertOpen(true),
+    },
+    {
+      label: 'Log Activity',
+      icon: Activity,
+      iconBg: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+      trailingIcon: Plus,
+      onClick: () => setIsActivityOpen(true),
+    },
+    {
+      label: 'Add Task',
+      icon: CheckSquare,
+      iconBg: 'bg-purple-50',
+      iconColor: 'text-purple-600',
+      trailingIcon: Plus,
+      onClick: () => setIsTaskOpen(true),
+    },
+    {
+      label: 'Assign Owner',
+      icon: UserCheck,
+      iconBg: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+      trailingIcon: ExternalLink,
+      onClick: () => setIsAssignOpen(true),
+    },
+  ];
 
-        {/* Tab Navigation */}
-        <div className="border-t border-zinc-100 dark:border-[#2A2F3D] pt-3">
-          <Tabs
-            tabs={tabList}
-            activeTab={activeTab}
-            onChange={setActiveTab}
+  /* ── Sidebar (30%) ── */
+  const sidebar = (
+    <>
+      {/* Lead Contact Info Card */}
+      <InfoCard
+        title="Lead Contact Info"
+        icon={User}
+        iconBg="bg-blue-50"
+        iconColor="text-blue-600"
+      >
+        <div className="space-y-4">
+          <InfoField
+            label="Full Name"
+            value={`${lead.firstName || ''} ${lead.lastName || ''}`.trim() || lead.displayName}
           />
-        </div>
-      </div>
+          <InfoField label="Organization" value={lead.organizationName} />
+          <InfoField label="Designation" value={lead.designation} />
+          <InfoField label="Email Address" value={lead.email} />
+          <InfoField
+            label="Primary Phone"
+            value={lead.normalizedPhone || lead.phone}
+            mono
+          />
+          {lead.alternatePhone && (
+            <InfoField label="Alternate Phone" value={lead.alternatePhone} mono />
+          )}
 
-      {/* Tab Panels */}
-      {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 space-y-4">
-            <div className="p-4 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Qualification & Inquiry Notes</h2>
-              <p className="text-xs text-zinc-700 dark:text-[#E6E8EE] whitespace-pre-line leading-relaxed">
-                {lead.rawInquiryText || lead.notes || 'No specific notes recorded on inbound inquiry.'}
-              </p>
-            </div>
-
-            <div className="p-4 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Attribution & Channel Data</h2>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <span className="text-zinc-500 block">Lead Source:</span>
-                  <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{lead.leadSource?.sourceName || 'Direct'}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block">UTM Source / Campaign:</span>
-                  <span className="font-mono text-zinc-800 dark:text-[#E6E8EE]">{lead.utmSource || 'N/A'} / {lead.utmCampaign || 'N/A'}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block">External Lead ID:</span>
-                  <span className="font-mono text-zinc-800 dark:text-[#E6E8EE]">{lead.externalLeadId || 'None'}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block">Created At:</span>
-                  <span className="text-zinc-800 dark:text-[#E6E8EE]">{new Date(lead.createdAt || Date.now()).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="p-4 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Corporate Compliance</h2>
-              <div className="space-y-2 text-xs">
-                <div>
-                  <span className="text-zinc-500 block">GSTIN:</span>
-                  <span className="font-mono font-semibold text-zinc-800 dark:text-[#E6E8EE]">{lead.gstin || 'Not Provided'}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block">Assigned Owner:</span>
-                  <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{lead.assignedUserName || 'Round-Robin Pool'}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block">Consent Source:</span>
-                  <span className="text-zinc-800 dark:text-[#E6E8EE]">{lead.consentSource || 'Opt-in Web Form'}</span>
-                </div>
-              </div>
+          {/* Lead Qualification Status */}
+          <div>
+            <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] mb-1.5">
+              Qualification Status
+            </p>
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                  lead.isQualified
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400'
+                    : 'bg-zinc-100 text-zinc-700 dark:bg-[#1D212C] dark:text-[#A0A6B5]'
+                }`}
+              >
+                {lead.isQualified ? '✓ Qualified Prospect' : 'Pending Qualification'}
+              </span>
             </div>
           </div>
         </div>
-      )}
+      </InfoCard>
 
-      {activeTab === 'timeline' && (
-        <div className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-zinc-900 dark:text-white">Customer Activity Trail</h2>
-            <button
-              onClick={() => setIsActivityOpen(true)}
-              className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
-            >
-              <Plus size={13} /> Log Activity
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {activities.length === 0 ? (
-              <p className="text-xs text-zinc-400 py-6 text-center">No logged activities for this lead yet.</p>
-            ) : (
-              activities.map((a) => (
-                <div key={a.id} className="p-3 bg-zinc-50 dark:bg-[#1C202B] rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-zinc-900 dark:text-white">{a.subject}</span>
-                    <span className="text-[10px] uppercase font-semibold text-primary">{a.activityType}</span>
-                  </div>
-                  <p className="text-zinc-600 dark:text-[#A0A6B5]">{a.description}</p>
-                  <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1">
-                    <span>Outcome: {a.outcome || 'Logged'}</span>
-                    <span>{new Date(a.createdAt || Date.now()).toLocaleString()}</span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+      {/* Location & Territory Card */}
+      <InfoCard
+        title="Location & Territory"
+        icon={MapPin}
+        iconBg="bg-amber-50"
+        iconColor="text-amber-600"
+      >
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">
+            {lead.addressLine1 || 'No street address recorded'}
+          </p>
+          {lead.addressLine2 && (
+            <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">
+              {lead.addressLine2}
+            </p>
+          )}
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">
+            {[lead.city, lead.state, lead.postalCode].filter(Boolean).join(', ') || 'City/State not specified'}
+          </p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">
+            {lead.country || 'India'}
+          </p>
         </div>
-      )}
+      </InfoCard>
 
-      {activeTab === 'tasks' && (
-        <div className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-zinc-900 dark:text-white">Lead Follow-Up Tasks</h2>
-            <button
-              onClick={() => setIsTaskOpen(true)}
-              className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
-            >
-              <Plus size={13} /> New Task
-            </button>
-          </div>
+      {/* Quick Actions Card */}
+      <QuickActionsCard title="Quick Actions" actions={quickActions} />
+    </>
+  );
 
-          <div className="space-y-2">
-            {tasks.length === 0 ? (
-              <p className="text-xs text-zinc-400 py-6 text-center">No tasks assigned to this lead.</p>
-            ) : (
-              tasks.map((t) => (
-                <div key={t.id} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-[#1C202B] rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-xs">
-                  <div>
-                    <p className="font-semibold text-zinc-900 dark:text-white">{t.title}</p>
-                    <p className="text-zinc-500 text-[11px]">{t.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/10 text-amber-500">
-                      {t.priority}
-                    </span>
-                    <p className="text-[11px] text-zinc-400 mt-1">Due: {t.dueDate ? new Date(t.dueDate).toLocaleDateString() : 'N/A'}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+  /* ── Tab List with Counts ── */
+  const tabsWithCounts = TABS.map((tab) => {
+    if (tab.id === 'activities') return { ...tab, count: activities.length };
+    if (tab.id === 'tasks') return { ...tab, count: tasks.length };
+    if (tab.id === 'communications') return { ...tab, count: messages.length };
+    return tab;
+  });
 
-      {activeTab === 'messages' && (
-        <div className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm space-y-4">
-          <h2 className="text-sm font-bold text-zinc-900 dark:text-white">Omnichannel Message Thread</h2>
-          <div className="space-y-2">
-            {messages.length === 0 ? (
-              <p className="text-xs text-zinc-400 py-6 text-center">No message history with this lead.</p>
-            ) : (
-              messages.map((m) => (
-                <div key={m.id} className="p-3 bg-zinc-50 dark:bg-[#1C202B] rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-xs space-y-1">
-                  <div className="flex justify-between font-semibold text-zinc-800 dark:text-[#E6E8EE]">
-                    <span>{m.channel} ({m.direction})</span>
-                    <span className="text-[11px] text-zinc-400">{new Date(m.createdAt).toLocaleString()}</span>
-                  </div>
-                  <p className="text-zinc-600 dark:text-[#A0A6B5]">{m.content}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Modals */}
-      <ActivityFormModal
-        isOpen={isActivityOpen}
-        onClose={() => setIsActivityOpen(false)}
+  /* ── Modals Slot ── */
+  const modals = (
+    <>
+      <LeadFormModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        initialData={lead}
         companyId={companyId}
-        entityType="LEAD"
-        entityId={id}
-        onSuccess={() => refetchLead()}
+        onSuccess={() => {
+          refetchLead();
+          dispatch(addAlert({ type: 'success', message: 'Lead updated successfully.' }));
+        }}
       />
 
-      <TaskFormModal
-        isOpen={isTaskOpen}
-        onClose={() => setIsTaskOpen(false)}
+      <LeadAssignModal
+        isOpen={isAssignOpen}
+        onClose={() => setIsAssignOpen(false)}
+        lead={lead}
         companyId={companyId}
-        entityType="LEAD"
-        entityId={id}
-        onSuccess={() => refetchLead()}
+        onSuccess={() => {
+          refetchLead();
+          dispatch(addAlert({ type: 'success', message: 'Lead assigned successfully.' }));
+        }}
       />
 
       <LeadConvertModal
@@ -345,17 +478,97 @@ export default function LeadDetailsPage() {
         onClose={() => setIsConvertOpen(false)}
         lead={lead}
         companyId={companyId}
-        onSuccess={() => navigate(`${crmBase}/opportunities`)}
+        onSuccess={() => {
+          refetchLead();
+          dispatch(addAlert({ type: 'success', message: 'Lead converted into Deal successfully.' }));
+        }}
       />
 
-      <LeadFormModal
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        initialData={lead}
+      <ActivityFormModal
+        isOpen={isActivityOpen}
+        onClose={() => setIsActivityOpen(false)}
+        entityType="LEAD"
+        entityId={lead.id}
         companyId={companyId}
-        onSuccess={() => refetchLead()}
+        onSuccess={() => {
+          refetchActivities();
+          dispatch(addAlert({ type: 'success', message: 'Activity logged successfully.' }));
+        }}
       />
-    </div>
+
+      <TaskFormModal
+        isOpen={isTaskOpen}
+        onClose={() => setIsTaskOpen(false)}
+        entityType="LEAD"
+        entityId={lead.id}
+        companyId={companyId}
+        onSuccess={() => {
+          refetchTasks();
+          dispatch(addAlert({ type: 'success', message: 'Task created successfully.' }));
+        }}
+      />
+    </>
+  );
+
+  return (
+    <CrmDetailShell
+      loading={false}
+      onBack={() => navigate(`${crmBase}/leads`)}
+      title={leadName}
+      badge={{
+        label: lead.leadStage || lead.leadStatus?.statusName || 'NEW',
+        status: lead.leadStage || 'RAW',
+      }}
+      metadata={headerMetadata}
+      actions={headerActions}
+      kpiStrip={kpiStrip}
+      sidebar={sidebar}
+      tabs={tabsWithCounts}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      modals={modals}
+    >
+      {/* ── Active Tab Content Panel ── */}
+      {activeTab === 'overview' && (
+        <LeadOverviewSection
+          lead={lead}
+          onEditInquiry={() => setIsEditOpen(true)}
+        />
+      )}
+
+      {activeTab === 'activities' && (
+        <LeadActivitiesSection
+          activities={activities}
+          onLogActivity={() => setIsActivityOpen(true)}
+        />
+      )}
+
+      {activeTab === 'tasks' && (
+        <LeadTasksSection
+          tasks={tasks}
+          onNewTask={() => setIsTaskOpen(true)}
+          onToggleTask={handleToggleTask}
+        />
+      )}
+
+      {activeTab === 'communications' && (
+        <LeadCommunicationsSection
+          messages={messages}
+          lead={lead}
+        />
+      )}
+
+      {activeTab === 'attribution' && (
+        <LeadAttributionSection lead={lead} />
+      )}
+
+      {activeTab === 'conversion' && (
+        <LeadConversionSection
+          lead={lead}
+          companyId={companyId}
+          onOpenConvert={() => setIsConvertOpen(true)}
+        />
+      )}
+    </CrmDetailShell>
   );
 }
-

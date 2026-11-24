@@ -58,3 +58,5 @@ export const ConfirmDialogContainer = () => {
     />
   );
 };
+
+export default confirmDialog;

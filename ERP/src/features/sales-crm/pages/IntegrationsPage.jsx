@@ -540,7 +540,7 @@ export default function IntegrationsPage() {
         <div className="flex-1 flex flex-col min-h-[300px]">
           <div className="flex-1 min-h-[300px]">
             <DataTable
-              permissionFeature="CRM"
+              permissionFeature="CRM_INTEGRATIONS"
               selectable={false}
               showIndex={true}
               columns={columns}

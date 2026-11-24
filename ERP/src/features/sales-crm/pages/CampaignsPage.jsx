@@ -17,6 +17,7 @@ import DataTable, { DataTableStatusBadge } from '../../../components/data-table'
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import { useGetCrmCampaignsQuery } from '../../../api/sales-crm/crm.api';
 import CampaignFormModal from '../components/CampaignFormModal';
+import useCrmPermissions from '../hooks/useCrmPermissions';
 
 const DEFAULT_COLUMNS = [
   'name',
@@ -142,6 +143,8 @@ export default function CampaignsPage() {
     },
   ], []);
 
+  const { campaigns: campPerms } = useCrmPermissions();
+
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <IntegrationsCampaignsHeader
@@ -149,13 +152,15 @@ export default function CampaignsPage() {
         title="Marketing Campaigns & Spend"
         description="Monitoring campaigns across digital, search, and marketplace channels"
         actions={
-          <button
-            onClick={() => setIsCreateOpen(true)}
-            className="btn-primary flex items-center gap-2 text-xs font-semibold"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Campaign</span>
-          </button>
+          campPerms.canCreate ? (
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="btn-primary flex items-center gap-2 text-xs font-semibold"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Campaign</span>
+            </button>
+          ) : null
         }
       />
 
@@ -188,7 +193,7 @@ export default function CampaignsPage() {
         {/* DataTable Container */}
         <div className="flex-1 overflow-hidden flex flex-col">
           <DataTable
-            permissionFeature="CRM"
+            permissionFeature="CRM_CAMPAIGNS"
             selectable
             selectedRows={selectedRows}
             onSelectionChange={setSelectedRows}

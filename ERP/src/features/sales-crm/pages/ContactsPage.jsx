@@ -8,6 +8,7 @@ import {
   Mail,
   Phone,
   Edit2,
+  Trash2,
   ExternalLink
 } from 'lucide-react';
 import PageHeader from '../../../components/common/PageHeader';
@@ -16,8 +17,11 @@ import useUrlFilters from '../../../hooks/useUrlFilters';
 import {
   useGetCrmContactsQuery,
   useGetCrmAccountsQuery,
+  useDeleteCrmContactMutation,
 } from '../../../api/sales-crm/crm.api';
 import ContactFormModal from '../components/ContactFormModal';
+import useCrmPermissions from '../hooks/useCrmPermissions';
+import confirmDialog from '../../../utils/confirmDialog';
 
 const DEFAULT_COLUMNS = [
   'name',
@@ -116,15 +120,23 @@ export default function ContactsPage() {
       label: 'Decision Role',
       sortable: true,
       render: (val, c) => {
-        const role = c.decisionRole || 'DECISION_MAKER';
-        let color = 'bg-zinc-100 text-zinc-600';
-        if (role === 'DECISION_MAKER') color = 'bg-primary/10 text-primary';
-        else if (role === 'CHAMPION') color = 'bg-emerald-500/10 text-emerald-600';
-        else if (role === 'INFLUENCER') color = 'bg-blue-500/10 text-blue-600';
+        const role = c.decisionMakerRole || c.decisionRole || val || 'DECISION_MAKER';
+        let color = 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400';
+        if (role === 'DECISION_MAKER' || role === 'ECONOMIC_BUYER') {
+          color = 'bg-primary/10 text-primary';
+        } else if (role === 'CHAMPION') {
+          color = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+        } else if (role === 'INFLUENCER') {
+          color = 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
+        } else if (role === 'TECHNICAL_EVALUATOR' || role === 'EVALUATOR') {
+          color = 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+        } else if (role === 'GATEKEEPER') {
+          color = 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+        }
 
         return (
           <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${color}`}>
-            {role}
+            {role.replace(/_/g, ' ')}
           </span>
         );
       }
@@ -153,16 +165,48 @@ export default function ContactsPage() {
     }
   ], [crmBase, navigate]);
 
-  const rowActions = useMemo(() => [
-    {
-      key: 'edit',
-      label: 'Edit Contact',
-      icon: Edit2,
-      onClick: (row) => setEditingContact(row),
-      tooltip: 'Edit Contact',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
+  const { contacts: contactPerms } = useCrmPermissions();
+  const [deleteContact] = useDeleteCrmContactMutation();
+
+  const handleDeleteContact = async (contact) => {
+    const confirmed = await confirmDialog({
+      title: 'Delete Contact',
+      message: `Are you sure you want to delete ${contact.firstName} ${contact.lastName || ''}? This action cannot be undone.`,
+    });
+    if (confirmed) {
+      try {
+        await deleteContact({ id: contact.id, companyId }).unwrap();
+        refetch();
+      } catch (err) {
+        console.error('Failed to delete contact:', err);
+      }
     }
-  ], []);
+  };
+
+  const rowActions = useMemo(() => {
+    const actions = [];
+    if (contactPerms.canUpdate) {
+      actions.push({
+        key: 'edit',
+        label: 'Edit Contact',
+        icon: Edit2,
+        onClick: (row) => setEditingContact(row),
+        tooltip: 'Edit Contact',
+        className: 'hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40',
+      });
+    }
+    if (contactPerms.canDelete) {
+      actions.push({
+        key: 'delete',
+        label: 'Delete Contact',
+        icon: Trash2,
+        onClick: handleDeleteContact,
+        tooltip: 'Delete Contact',
+        className: 'hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40',
+      });
+    }
+    return actions;
+  }, [contactPerms.canUpdate, contactPerms.canDelete, companyId]);
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
@@ -170,19 +214,21 @@ export default function ContactsPage() {
         title="Contact Management"
         description={`Central directory of ${totalElements} business stakeholders and decision-makers.`}
       >
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="btn-primary flex items-center gap-2 text-xs"
-        >
-          <Plus size={16} />
-          <span>New Contact</span>
-        </button>
+        {contactPerms.canCreate && (
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="btn-primary flex items-center gap-2 text-xs"
+          >
+            <Plus size={16} />
+            <span>New Contact</span>
+          </button>
+        )}
       </PageHeader>
 
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
-          permissionFeature="CUSTOMERS"
+          permissionFeature="CRM_ACCOUNTS"
           selectable
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}

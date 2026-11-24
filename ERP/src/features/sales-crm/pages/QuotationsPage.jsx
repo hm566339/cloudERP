@@ -21,6 +21,7 @@ import {
 } from '../../../api/sales-crm/crm.api';
 import QuotationFormModal from '../components/QuotationFormModal';
 import QuotationApprovalModal from '../components/QuotationApprovalModal';
+import useCrmPermissions from '../hooks/useCrmPermissions';
 import QuotationPrintModal from '../components/QuotationPrintModal';
 
 const DEFAULT_COLUMNS = [
@@ -175,40 +176,50 @@ export default function QuotationsPage() {
     },
   ], [crmBase, navigate]);
 
-  const rowActions = useMemo(() => [
-    {
-      key: 'submit',
-      label: 'Submit for Approval',
-      icon: Send,
-      tooltip: 'Submit',
-      hidden: (row) => row.status !== 'DRAFT' && row.status !== 'REJECTED',
-      className: 'hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20',
-      onClick: (row) => setApprovingQuote(row),
-    },
-    {
-      key: 'convert',
-      label: 'Convert to Order',
-      icon: ArrowRightLeft,
-      tooltip: 'Convert PO',
-      hidden: (row) => row.status !== 'APPROVED',
-      className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20',
-      onClick: (row) => setConvertingQuote(row),
-    },
-    {
+  const { quotations: quotePerms } = useCrmPermissions();
+
+  const rowActions = useMemo(() => {
+    const actions = [];
+    if (quotePerms.canSubmitApproval) {
+      actions.push({
+        key: 'submit',
+        label: 'Submit for Approval',
+        icon: Send,
+        tooltip: 'Submit',
+        hidden: (row) => row.status !== 'DRAFT' && row.status !== 'REJECTED',
+        className: 'hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20',
+        onClick: (row) => setApprovingQuote(row),
+      });
+    }
+    if (quotePerms.canConvertOrder) {
+      actions.push({
+        key: 'convert',
+        label: 'Convert to Order',
+        icon: ArrowRightLeft,
+        tooltip: 'Convert PO',
+        hidden: (row) => row.status !== 'APPROVED',
+        className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20',
+        onClick: (row) => setConvertingQuote(row),
+      });
+    }
+    actions.push({
       key: 'print',
       label: 'Print',
       icon: Printer,
       tooltip: 'Print Quotation',
       onClick: (row) => setPrintingQuote(row),
-    },
-    {
-      key: 'view',
-      label: 'View Dossier',
-      icon: ExternalLink,
-      tooltip: 'View Details',
-      onClick: (row) => navigate(`${crmBase}/quotations/${row.id}`),
-    },
-  ], [crmBase, navigate]);
+    });
+    if (quotePerms.canRead) {
+      actions.push({
+        key: 'view',
+        label: 'View Dossier',
+        icon: ExternalLink,
+        tooltip: 'View Details',
+        onClick: (row) => navigate(`${crmBase}/quotations/${row.id}`),
+      });
+    }
+    return actions;
+  }, [crmBase, navigate, quotePerms.canSubmitApproval, quotePerms.canConvertOrder, quotePerms.canRead]);
 
   return (
     <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
@@ -216,18 +227,20 @@ export default function QuotationsPage() {
         title="Commercial Quotations"
         description="Managing quotations, GST tax computations, and workflow approvals"
       >
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="btn-primary flex items-center gap-2 text-xs font-semibold"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>New Quotation</span>
-        </button>
+        {quotePerms.canCreate && (
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="btn-primary flex items-center gap-2 text-xs font-semibold"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Quotation</span>
+          </button>
+        )}
       </PageHeader>
 
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
-          permissionFeature="CRM"
+          permissionFeature="CRM_QUOTATIONS"
           selectable
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}
