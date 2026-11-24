@@ -89,7 +89,8 @@ public class CrmLeadServiceImpl implements CrmLeadService {
         lead.setNormalizedPhone(normalizedPhone);
         lead.setNormalizedEmail(normalizedEmail);
 
-        String displayName = (request.getFirstName() + " " + (request.getLastName() != null ? request.getLastName() : "")).trim();
+        String displayName = (request.getFirstName() + " "
+                + (request.getLastName() != null ? request.getLastName() : "")).trim();
         lead.setDisplayName(displayName);
 
         // Resolve or default lead status
@@ -102,7 +103,8 @@ public class CrmLeadServiceImpl implements CrmLeadService {
         }
 
         // Calculate initial lead score
-        int score = calculateLeadScore(lead, request.getInquiredProducts() != null && !request.getInquiredProducts().isEmpty());
+        int score = calculateLeadScore(lead,
+                request.getInquiredProducts() != null && !request.getInquiredProducts().isEmpty());
         lead.setLeadScore(score);
         lead.setScoreGrade(score >= 70 ? LeadRating.HOT : (score >= 40 ? LeadRating.WARM : LeadRating.COLD));
         lead.setLeadStage(LeadStage.RAW);
@@ -204,8 +206,7 @@ public class CrmLeadServiceImpl implements CrmLeadService {
             Map.entry("code", "leadCode"),
             Map.entry("leadcode", "leadCode"),
             Map.entry("followupdate", "nextFollowUpDate"),
-            Map.entry("nextfollowupdate", "nextFollowUpDate")
-    );
+            Map.entry("nextfollowupdate", "nextFollowUpDate"));
 
     private static final Set<String> VALID_LEAD_ENTITY_FIELDS = Set.of(
             "id", "companyId", "leadCode", "salutation", "firstName", "lastName", "displayName",
@@ -218,15 +219,15 @@ public class CrmLeadServiceImpl implements CrmLeadService {
             "convertedAccountId", "convertedContactId", "convertedOpportunityId", "isLost",
             "lostReasonId", "lostDetails", "lostAt", "isRecycled", "recycledAt", "isDuplicate",
             "primaryLeadId", "dedupFingerprint", "consentGiven", "consentTimestamp", "consentSource",
-            "optOutEmail", "optOutWhatsapp", "optOutSms", "optOutCall", "createdAt", "updatedAt", "isDeleted"
-    );
+            "optOutEmail", "optOutWhatsapp", "optOutSms", "optOutCall", "createdAt", "updatedAt", "isDeleted");
 
     private Pageable sanitizeLeadPageable(Pageable pageable) {
         if (pageable == null) {
             return PageRequest.of(0, 15, Sort.by(Sort.Direction.DESC, "createdAt"));
         }
         if (pageable.getSort().isUnsorted()) {
-            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "createdAt"));
         }
 
         List<Sort.Order> sanitizedOrders = new ArrayList<>();
@@ -291,7 +292,8 @@ public class CrmLeadServiceImpl implements CrmLeadService {
         CrmLead lead = leadRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found with id: " + id));
 
-        CrmLeadStatus newStatus = statusRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, request.getStatusId())
+        CrmLeadStatus newStatus = statusRepository
+                .findByCompanyIdAndIdAndIsDeletedFalse(companyId, request.getStatusId())
                 .orElseThrow(() -> new ResourceNotFoundException("Lead status not found: " + request.getStatusId()));
 
         lead.setLeadStatusId(newStatus.getId());
@@ -319,7 +321,8 @@ public class CrmLeadServiceImpl implements CrmLeadService {
                         com.erp.crm.modules.automation.enums.AutomationTrigger.LEAD_STATUS_CHANGED,
                         updatedLead, updatedLead.getId(), "LEAD");
             } catch (Exception e) {
-                log.warn("Automation execution failed on lead status change [{}]: {}", updatedLead.getId(), e.getMessage());
+                log.warn("Automation execution failed on lead status change [{}]: {}", updatedLead.getId(),
+                        e.getMessage());
             }
         }
 
@@ -352,8 +355,10 @@ public class CrmLeadServiceImpl implements CrmLeadService {
     @Override
     public LeadResponse mergeLeads(LeadMergeRequest request, UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
-        CrmLead primaryLead = leadRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, request.getPrimaryLeadId())
-                .orElseThrow(() -> new ResourceNotFoundException("Primary lead not found: " + request.getPrimaryLeadId()));
+        CrmLead primaryLead = leadRepository
+                .findByCompanyIdAndIdAndIsDeletedFalse(companyId, request.getPrimaryLeadId())
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Primary lead not found: " + request.getPrimaryLeadId()));
 
         for (UUID dupId : request.getDuplicateLeadIds()) {
             CrmLead dupLead = leadRepository.findByCompanyIdAndIdAndIsDeletedFalse(companyId, dupId)
@@ -368,7 +373,8 @@ public class CrmLeadServiceImpl implements CrmLeadService {
                     .companyId(companyId)
                     .primaryLeadId(primaryLead.getId())
                     .mergedLeadId(dupId)
-                    .mergedLeadSnapshotJson("{\"code\":\"" + dupLead.getLeadCode() + "\",\"phone\":\"" + dupLead.getPhone() + "\"}")
+                    .mergedLeadSnapshotJson(
+                            "{\"code\":\"" + dupLead.getLeadCode() + "\",\"phone\":\"" + dupLead.getPhone() + "\"}")
                     .mergedByUserId(TenantUtils.getCurrentUserId())
                     .mergeReason(request.getMergeReason())
                     .build());
@@ -414,7 +420,8 @@ public class CrmLeadServiceImpl implements CrmLeadService {
         }
 
         // Create Contact
-        String contactCode = "CON-" + LocalDate.now().getYear() + "-" + ThreadLocalRandom.current().nextInt(10000, 99999);
+        String contactCode = "CON-" + LocalDate.now().getYear() + "-"
+                + ThreadLocalRandom.current().nextInt(10000, 99999);
         CrmContact contact = CrmContact.builder()
                 .accountId(accountId)
                 .contactCode(contactCode)
@@ -455,14 +462,16 @@ public class CrmLeadServiceImpl implements CrmLeadService {
             if (pipelineId != null && stageId != null) {
                 CrmOpportunity opp = CrmOpportunity.builder()
                         .opportunityCode(oppCode)
-                        .opportunityName(request.getOpportunityName() != null ? request.getOpportunityName() : lead.getDisplayName() + " Deal")
+                        .opportunityName(request.getOpportunityName() != null ? request.getOpportunityName()
+                                : lead.getDisplayName() + " Deal")
                         .pipelineId(pipelineId)
                         .currentStageId(stageId)
                         .accountId(accountId)
                         .primaryContactId(savedContact.getId())
                         .originLeadId(lead.getId())
                         .dealValue(request.getDealValue() != null ? request.getDealValue() : java.math.BigDecimal.ZERO)
-                        .expectedCloseDate(request.getExpectedCloseDate() != null ? request.getExpectedCloseDate() : LocalDate.now().plusDays(30))
+                        .expectedCloseDate(request.getExpectedCloseDate() != null ? request.getExpectedCloseDate()
+                                : LocalDate.now().plusDays(30))
                         .ownerUserId(lead.getOwnerUserId())
                         .dealType(OpportunityDealType.NEW_BUSINESS)
                         .dealStatus(OpportunityDealStatus.OPEN)
@@ -504,17 +513,24 @@ public class CrmLeadServiceImpl implements CrmLeadService {
 
     private int calculateLeadScore(CrmLead lead, boolean hasProducts) {
         int score = 0;
-        if (lead.getEmail() != null && !lead.getEmail().isBlank()) score += 15;
-        if (lead.getPhone() != null && !lead.getPhone().isBlank()) score += 20;
-        if (lead.getOrganizationName() != null && !lead.getOrganizationName().isBlank()) score += 15;
-        if (lead.getGstin() != null && !lead.getGstin().isBlank()) score += 20;
-        if (lead.getAnnualRevenue() != null) score += 15;
-        if (hasProducts) score += 15;
+        if (lead.getEmail() != null && !lead.getEmail().isBlank())
+            score += 15;
+        if (lead.getPhone() != null && !lead.getPhone().isBlank())
+            score += 20;
+        if (lead.getOrganizationName() != null && !lead.getOrganizationName().isBlank())
+            score += 15;
+        if (lead.getGstin() != null && !lead.getGstin().isBlank())
+            score += 20;
+        if (lead.getAnnualRevenue() != null)
+            score += 15;
+        if (hasProducts)
+            score += 15;
         return Math.min(score, 100);
     }
 
     private String generateLeadCode() {
-        return "LD-" + LocalDate.now().getYear() + "-" + String.format("%05d", ThreadLocalRandom.current().nextInt(1, 99999));
+        return "LD-" + LocalDate.now().getYear() + "-"
+                + String.format("%05d", ThreadLocalRandom.current().nextInt(1, 99999));
     }
 
     private LeadResponse enrichResponse(CrmLead lead) {
@@ -530,7 +546,8 @@ public class CrmLeadServiceImpl implements CrmLeadService {
             sourceRepository.findByCompanyIdAndIdAndIsDeletedFalse(lead.getCompanyId(), lead.getLeadSourceId())
                     .ifPresent(src -> response.setLeadSourceName(src.getSourceName()));
         }
-        List<CrmLeadProductInterest> interests = productInterestRepository.findByCompanyIdAndLeadIdAndIsDeletedFalse(lead.getCompanyId(), lead.getId());
+        List<CrmLeadProductInterest> interests = productInterestRepository
+                .findByCompanyIdAndLeadIdAndIsDeletedFalse(lead.getCompanyId(), lead.getId());
         response.setInquiredProducts(interests.stream().map(leadMapper::toProductInterestResponse).toList());
         return response;
     }
@@ -549,8 +566,7 @@ public class CrmLeadServiceImpl implements CrmLeadService {
                             cb.like(cb.lower(root.get("organizationName")), pattern),
                             cb.like(cb.lower(root.get("leadCode")), pattern),
                             cb.like(cb.lower(root.get("phone")), pattern),
-                            cb.like(cb.lower(root.get("email")), pattern)
-                    ));
+                            cb.like(cb.lower(root.get("email")), pattern)));
                 }
                 if (filter.getStatusId() != null) {
                     predicates.add(cb.equal(root.get("leadStatusId"), filter.getStatusId()));

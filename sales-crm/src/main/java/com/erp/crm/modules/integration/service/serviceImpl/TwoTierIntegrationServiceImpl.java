@@ -112,8 +112,10 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             if (formData != null && !formData.isEmpty()) {
                 StringBuilder postData = new StringBuilder();
                 for (Map.Entry<String, String> param : formData.entrySet()) {
-                    if (param.getValue() == null) continue;
-                    if (postData.length() != 0) postData.append('&');
+                    if (param.getValue() == null)
+                        continue;
+                    if (postData.length() != 0)
+                        postData.append('&');
                     postData.append(URLEncoder.encode(param.getKey(), StandardCharsets.UTF_8));
                     postData.append('=');
                     postData.append(URLEncoder.encode(param.getValue(), StandardCharsets.UTF_8));
@@ -520,7 +522,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         Map<String, Object> config = parseJsonToMap(provider.getGlobalConfigJson());
         String clientId = String.valueOf(config.getOrDefault("clientId", ""));
         String clientSecret = String.valueOf(config.getOrDefault("clientSecret", ""));
-        String stateRedirectUri = stateData.get("redirectUri") != null ? String.valueOf(stateData.get("redirectUri")) : null;
+        String stateRedirectUri = stateData.get("redirectUri") != null ? String.valueOf(stateData.get("redirectUri"))
+                : null;
         String redirectUri = (stateRedirectUri != null && !stateRedirectUri.isBlank())
                 ? stateRedirectUri
                 : ((config.get("redirectUri") != null && !String.valueOf(config.get("redirectUri")).isBlank())
@@ -1023,7 +1026,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             default -> {
                 log.info("[TwoTierIntegration] [Sync] Triggering sync for provider [{}]", entity.getProviderCode());
                 queuedRecords = syncDynamicPullInquiries(entity, tenantId);
-                syncMessage = "Integration sync completed for " + entity.getProviderCode() + ". " + queuedRecords + " record(s) processed.";
+                syncMessage = "Integration sync completed for " + entity.getProviderCode() + ". " + queuedRecords
+                        + " record(s) processed.";
             }
         }
 
@@ -1077,67 +1081,54 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             case INDIAMART -> List.of(
                     Map.of(
                             "key", "crmKey",
-                            "label", "IndiaMART CRM API Key",                 "required", true,
+                            "label", "IndiaMART CRM API Key", "required", true,
                             "placeholder", "Paste your IndiaMART CRM API Key here",
-                            "helpText", "Found in IndiaMART Seller Panel > Settings > CRM Integration"
-                    )
-            );
+                            "helpText", "Found in IndiaMART Seller Panel > Settings > CRM Integration"));
             case TRADEINDIA -> List.of(
                     Map.of(
                             "key", "userid",
-                            "label", "TradeIndia User ID (userid)",        "type", "text",
+                            "label", "TradeIndia User ID (userid)", "type", "text",
                             "required", true,
                             "placeholder", "e.g. 31914156",
-                            "helpText", "Your TradeIndia member profile numeric userid"
-                    ),
+                            "helpText", "Your TradeIndia member profile numeric userid"),
                     Map.of(
                             "key", "profile_id",
-                            "label", "TradeIndia Profile ID (profile_id)",        "type", "text",
+                            "label", "TradeIndia Profile ID (profile_id)", "type", "text",
                             "required", true,
                             "placeholder", "e.g. 173150148",
-                            "helpText", "Your company profile_id in TradeIndia"
-                    ),
+                            "helpText", "Your company profile_id in TradeIndia"),
                     Map.of(
                             "key", "key",
-                            "label", "TradeIndia Inquiry Key (key)",        "type", "password",
+                            "label", "TradeIndia Inquiry Key (key)", "type", "password",
                             "required", true,
                             "placeholder", "e.g. 0826fdde3c5cc99ac4fb2390f5ffeffa",
-                            "helpText", "Secret API key generated in TradeIndia Inquiry API settings"
-                    ),
+                            "helpText", "Secret API key generated in TradeIndia Inquiry API settings"),
                     Map.of(
                             "key", "webhookSecret",
-                            "label", "Webhook Security Secret (Optional)",                 "required", false,
+                            "label", "Webhook Security Secret (Optional)", "required", false,
                             "placeholder", "Optional shared secret token",
-                            "helpText", "Verify inbound webhook signatures"
-                    )
-            );
+                            "helpText", "Verify inbound webhook signatures"));
             case CUSTOM_WEBHOOK -> List.of(
                     Map.of(
                             "key", "webhookSecret",
-                            "label", "Webhook Security Secret (Optional)",                 "required", false,
+                            "label", "Webhook Security Secret (Optional)", "required", false,
                             "placeholder", "Optional shared secret token",
-                            "helpText", "Used to authenticate incoming POST webhook payloads"
-                    )
-            );
+                            "helpText", "Used to authenticate incoming POST webhook payloads"));
             default -> {
                 if (authType == IntegrationAuthType.OAUTH2) {
                     yield Collections.emptyList();
                 } else if (authType == IntegrationAuthType.API_KEY) {
                     yield List.of(
                             Map.of(
-                                    "key", "apiKey",                 "type", "password",
+                                    "key", "apiKey", "type", "password",
                                     "required", true,
-                                    "placeholder", "Enter API key or token"
-                            )
-                    );
+                                    "placeholder", "Enter API key or token"));
                 } else {
                     yield List.of(
                             Map.of(
-                                    "key", "webhookSecret",                 "type", "password",
+                                    "key", "webhookSecret", "type", "password",
                                     "required", false,
-                                    "placeholder", "Optional validation secret token"
-                            )
-                    );
+                                    "placeholder", "Optional validation secret token"));
                 }
             }
         };
@@ -1153,11 +1144,12 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
 
         LocalDateTime end = LocalDateTime.now();
         LocalDateTime start = entity.getLastSyncedAt() != null
-                
+
                 ? entity.getLastSyncedAt().minusHours(1)
                 : end.minusDays(7);
 
-        java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd-MMM-yyyyHH:mm:ss", Locale.ENGLISH);
+        java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd-MMM-yyyyHH:mm:ss",
+                Locale.ENGLISH);
         String startStr = start.format(dtf);
         String endStr = end.format(dtf);
 
@@ -1228,11 +1220,12 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     private int syncTradeIndiaInquiries(TenantIntegrationEntity entity, UUID tenantId) {
         Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
         String userid = String.valueOf(creds.getOrDefault("userid", ""));
-                
+
         String profileId = String.valueOf(creds.getOrDefault("profile_id", ""));
         String key = String.valueOf(creds.getOrDefault("key", ""));
 
-        if (userid.isBlank() || profileId.isBlank() || key.isBlank() || key.startsWith("mock_") || key.contains("••••")) {
+        if (userid.isBlank() || profileId.isBlank() || key.isBlank() || key.startsWith("mock_")
+                || key.contains("••••")) {
             log.info("TradeIndia pull sync skipped: missing or mock credentials");
             return 0;
         }
@@ -1294,7 +1287,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                     }
 
                     String name = getFieldIgnoreCase(item, "sender_name", "senderName", "name", "contact_person");
-                    String phone = getFieldIgnoreCase(item, "sender_mobile", "senderMobile", "mobile_no", "mobile", "phone");
+                    String phone = getFieldIgnoreCase(item, "sender_mobile", "senderMobile", "mobile_no", "mobile",
+                            "phone");
                     String email = getFieldIgnoreCase(item, "sender_email", "senderEmail", "email");
                     String company = getFieldIgnoreCase(item, "sender_co", "sender_company", "company_name", "company");
                     String city = getFieldIgnoreCase(item, "sender_city", "city");
@@ -1331,21 +1325,22 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         }
         return count;
     }
-            
 
     private int syncDynamicPullInquiries(TenantIntegrationEntity entity, UUID tenantId) {
         IntegrationProviderEntity provider = providerRepository.findByCode(entity.getProviderCode()).orElse(null);
-        if (provider == null) return 0;
+        if (provider == null)
+            return 0;
         Map<String, Object> globalCfg = parseJsonToMap(provider.getGlobalConfigJson());
         String pullUrl = globalCfg.get("pullApiUrl") != null ? String.valueOf(globalCfg.get("pullApiUrl"))
                 : String.valueOf(globalCfg.getOrDefault("apiBaseUrl", ""));
         if (pullUrl.isBlank() || !pullUrl.startsWith("http")) {
             return 0;
-            
+
         }
 
         Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
-        if (creds.isEmpty()) return 0;
+        if (creds.isEmpty())
+            return 0;
 
         if (creds.containsKey("userid") && creds.containsKey("key")) {
             return syncTradeIndiaInquiries(entity, tenantId);
@@ -1360,7 +1355,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     }
 
     private int syncFacebookLeadAds(TenantIntegrationEntity entity, UUID tenantId) {
-        log.info("[TwoTierIntegration] [Facebook Sync] Starting manual sync for Facebook Lead Ads integration [{}] (tenant: {})",
+        log.info(
+                "[TwoTierIntegration] [Facebook Sync] Starting manual sync for Facebook Lead Ads integration [{}] (tenant: {})",
                 entity.getId(), tenantId);
 
         Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
@@ -1407,14 +1403,15 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             } else if (creds.containsKey("formId")) {
                 flatPage.put("forms", List.of(Map.of(
                         "formId", creds.get("formId"),
-                        "formName", creds.getOrDefault("formName", "Lead Form")
-                )));
+                        "formName", creds.getOrDefault("formName", "Lead Form"))));
             }
             pagesToScan.add(flatPage);
         }
 
         if (pagesToScan.isEmpty()) {
-            log.warn("[TwoTierIntegration] [Facebook Sync] No connected pages found in credentials for integration [{}]", entity.getId());
+            log.warn(
+                    "[TwoTierIntegration] [Facebook Sync] No connected pages found in credentials for integration [{}]",
+                    entity.getId());
             return 0;
         }
 
@@ -1428,13 +1425,18 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
 
             Object syncEnabledObj = page.get("isSyncEnabled");
             if (Boolean.FALSE.equals(syncEnabledObj) || "false".equalsIgnoreCase(String.valueOf(syncEnabledObj))) {
-                log.info("[TwoTierIntegration] [Facebook Sync] Skipping page [{}] because sync is disabled (isSyncEnabled=false)", pageId);
+                log.info(
+                        "[TwoTierIntegration] [Facebook Sync] Skipping page [{}] because sync is disabled (isSyncEnabled=false)",
+                        pageId);
                 continue;
             }
 
-            String pageAccessToken = page.get("pageAccessToken") != null ? String.valueOf(page.get("pageAccessToken")).trim() : null;
+            String pageAccessToken = page.get("pageAccessToken") != null
+                    ? String.valueOf(page.get("pageAccessToken")).trim()
+                    : null;
             if (pageAccessToken == null || pageAccessToken.isBlank() || pageAccessToken.startsWith("mock_")) {
-                log.info("[TwoTierIntegration] [Facebook Sync] Skipping page [{}] with blank or mock page access token", pageId);
+                log.info("[TwoTierIntegration] [Facebook Sync] Skipping page [{}] with blank or mock page access token",
+                        pageId);
                 continue;
             }
 
@@ -1463,9 +1465,11 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                 }
             }
 
-            // b) Also fetch live/test forms directly from Meta Graph API to merge any newly created forms
+            // b) Also fetch live/test forms directly from Meta Graph API to merge any newly
+            // created forms
             try {
-                String formsUrl = String.format("https://graph.facebook.com/v19.0/%s/leadgen_forms?fields=id,name,status&access_token=%s",
+                String formsUrl = String.format(
+                        "https://graph.facebook.com/v19.0/%s/leadgen_forms?fields=id,name,status&access_token=%s",
                         URLEncoder.encode(pageId, StandardCharsets.UTF_8),
                         URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
                 String formsBody = httpGet(formsUrl, 10);
@@ -1486,13 +1490,17 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                         }
                     }
                 } else if (formsBody != null && formsBody.contains("\"error\":")) {
-                    log.warn("[TwoTierIntegration] [Facebook Sync] Graph API returned error when fetching forms for page [{}]: {}", pageId, formsBody);
+                    log.warn(
+                            "[TwoTierIntegration] [Facebook Sync] Graph API returned error when fetching forms for page [{}]: {}",
+                            pageId, formsBody);
                 }
             } catch (Exception e) {
-                log.warn("[TwoTierIntegration] [Facebook Sync] Exception fetching forms for page [{}]: {}", pageId, e.getMessage());
+                log.warn("[TwoTierIntegration] [Facebook Sync] Exception fetching forms for page [{}]: {}", pageId,
+                        e.getMessage());
             }
 
-            log.info("[TwoTierIntegration] [Facebook Sync] Found {} form(s) to scan for page [{}]", formIdToName.size(), pageId);
+            log.info("[TwoTierIntegration] [Facebook Sync] Found {} form(s) to scan for page [{}]", formIdToName.size(),
+                    pageId);
 
             // Fetch leads for each form
             for (Map.Entry<String, String> formEntry : formIdToName.entrySet()) {
@@ -1514,7 +1522,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                     if (leadsRoot.has("error")) {
                         JsonNode errNode = leadsRoot.path("error");
                         String errMsg = errNode.path("message").asText(leadsBody);
-                        log.warn("[TwoTierIntegration] [Facebook Sync] Graph API returned error for form [{}]: {}", formId, errMsg);
+                        log.warn("[TwoTierIntegration] [Facebook Sync] Graph API returned error for form [{}]: {}",
+                                formId, errMsg);
                         continue;
                     }
 
@@ -1524,7 +1533,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                         continue;
                     }
 
-                    log.info("[TwoTierIntegration] [Facebook Sync] Processing {} lead(s) from form [{}]", data.size(), formId);
+                    log.info("[TwoTierIntegration] [Facebook Sync] Processing {} lead(s) from form [{}]", data.size(),
+                            formId);
 
                     for (JsonNode leadNode : data) {
                         String leadgenId = leadNode.path("id").asText(null);
@@ -1534,7 +1544,9 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
 
                         // Deduplicate against existing CRM leads
                         if (leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(tenantId, leadgenId)) {
-                            log.info("[TwoTierIntegration] [Facebook Sync] Skipping already ingested lead [{}] for company [{}]", leadgenId, tenantId);
+                            log.info(
+                                    "[TwoTierIntegration] [Facebook Sync] Skipping already ingested lead [{}] for company [{}]",
+                                    leadgenId, tenantId);
                             continue;
                         }
 
@@ -1559,23 +1571,28 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                             LeadResponse created = leadService.createLead(leadReq, tenantId);
                             if (created != null && created.getId() != null) {
                                 totalIngestedLeads++;
-                                log.info("[TwoTierIntegration] [Facebook Sync] Ingested lead [{}] (leadgenId: {}) for company [{}] from form [{}]",
+                                log.info(
+                                        "[TwoTierIntegration] [Facebook Sync] Ingested lead [{}] (leadgenId: {}) for company [{}] from form [{}]",
                                         created.getId(), leadgenId, tenantId, formId);
                             }
                         } catch (Exception ex) {
-                            log.warn("[TwoTierIntegration] [Facebook Sync] Failed to create lead for leadgenId [{}]: {}", leadgenId, ex.getMessage());
+                            log.warn(
+                                    "[TwoTierIntegration] [Facebook Sync] Failed to create lead for leadgenId [{}]: {}",
+                                    leadgenId, ex.getMessage());
                         } finally {
                             CurrentUserContext.clearCompanyId();
                             CurrentUserContext.clearUserId();
                         }
                     }
                 } catch (Exception e) {
-                    log.warn("[TwoTierIntegration] [Facebook Sync] Error fetching leads for form [{}]: {}", formId, e.getMessage());
+                    log.warn("[TwoTierIntegration] [Facebook Sync] Error fetching leads for form [{}]: {}", formId,
+                            e.getMessage());
                 }
             }
         }
 
-        log.info("[TwoTierIntegration] [Facebook Sync] Manual sync completed for integration [{}]. Total new leads ingested: {}",
+        log.info(
+                "[TwoTierIntegration] [Facebook Sync] Manual sync completed for integration [{}]. Total new leads ingested: {}",
                 entity.getId(), totalIngestedLeads);
         return totalIngestedLeads;
     }
@@ -1615,7 +1632,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         for (String fn : fieldNames) {
             if (node.has(fn) && !node.get(fn).isNull()) {
                 String v = node.get(fn).asText(null);
-                if (v != null && !v.isBlank()) return v.trim();
+                if (v != null && !v.isBlank())
+                    return v.trim();
             }
         }
         return null;
@@ -1630,11 +1648,11 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             String url = String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps", pageId);
             Map<String, String> form = Map.of(
                     "subscribed_fields", "leadgen",
-                    "access_token", pageAccessToken
-            );
+                    "access_token", pageAccessToken);
             HttpResponseData resp = httpPostForm(url, form, 10);
             if (resp.isSuccess()) {
-                log.info("[Meta Page Subscribe] Facebook page [{}] auto-subscribed successfully to leadgen webhooks: {}",
+                log.info(
+                        "[Meta Page Subscribe] Facebook page [{}] auto-subscribed successfully to leadgen webhooks: {}",
                         pageId, resp.body());
             } else {
                 log.warn("[Meta Page Subscribe] Facebook page [{}] auto-subscription returned status [{}]: {}",
@@ -1766,7 +1784,6 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                 .build();
     }
 
-                
     private String encodeOAuthState(UUID tenantId, UUID userId, String returnUrl) {
         return encodeOAuthState(tenantId, userId, returnUrl, null);
     }
@@ -1774,10 +1791,14 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     private String encodeOAuthState(UUID tenantId, UUID userId, String returnUrl, String redirectUri) {
         try {
             Map<String, Object> stateMap = new HashMap<>();
-            if (tenantId != null) stateMap.put("tenantId", tenantId.toString());
-            if (userId != null) stateMap.put("userId", userId.toString());
-            if (returnUrl != null && !returnUrl.isBlank()) stateMap.put("returnUrl", returnUrl);
-            if (redirectUri != null && !redirectUri.isBlank()) stateMap.put("redirectUri", redirectUri);
+            if (tenantId != null)
+                stateMap.put("tenantId", tenantId.toString());
+            if (userId != null)
+                stateMap.put("userId", userId.toString());
+            if (returnUrl != null && !returnUrl.isBlank())
+                stateMap.put("returnUrl", returnUrl);
+            if (redirectUri != null && !redirectUri.isBlank())
+                stateMap.put("redirectUri", redirectUri);
             stateMap.put("ts", System.currentTimeMillis());
             byte[] bytes = objectMapper.writeValueAsBytes(stateMap);
             return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -1790,11 +1811,12 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     private Map<String, Object> decodeOAuthState(String state) {
         if (state == null || state.isBlank()) {
             return Collections.emptyMap();
-            
+
         }
         try {
             byte[] decoded = Base64.getUrlDecoder().decode(state);
-            return objectMapper.readValue(decoded, new TypeReference<Map<String, Object>>() {});
+            return objectMapper.readValue(decoded, new TypeReference<Map<String, Object>>() {
+            });
         } catch (Exception e) {
             log.warn("Failed to decode OAuth state: {}", e.getMessage());
             return Collections.emptyMap();
@@ -1825,8 +1847,10 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
 
         Map<String, Object> creds = new HashMap<>();
         creds.put("userAccessToken", token);
-        if (fbUserId != null) creds.put("facebookUserId", fbUserId);
-        if (fbUserName != null) creds.put("facebookUserName", fbUserName);
+        if (fbUserId != null)
+            creds.put("facebookUserId", fbUserId);
+        if (fbUserName != null)
+            creds.put("facebookUserName", fbUserName);
         creds.put("pages", pages);
 
         String credentialsJson = objectMapper.writeValueAsString(creds);
@@ -1916,7 +1940,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         if (pageAccessToken == null || pageAccessToken.isBlank()) {
             String flatPageId = creds.get("pageId") != null ? String.valueOf(creds.get("pageId")) : null;
             if (pageId == null || pageId.isBlank() || pageId.equals(flatPageId)) {
-                pageAccessToken = creds.get("pageAccessToken") != null ? String.valueOf(creds.get("pageAccessToken")) : null;
+                pageAccessToken = creds.get("pageAccessToken") != null ? String.valueOf(creds.get("pageAccessToken"))
+                        : null;
                 creds.put("isSyncEnabled", subscribe);
                 creds.put("isSubscribed", subscribe);
             }
@@ -1924,11 +1949,13 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
 
         // Fallback to userAccessToken / longLivedToken
         if (pageAccessToken == null || pageAccessToken.isBlank()) {
-            pageAccessToken = creds.get("userAccessToken") != null ? String.valueOf(creds.get("userAccessToken")) : null;
+            pageAccessToken = creds.get("userAccessToken") != null ? String.valueOf(creds.get("userAccessToken"))
+                    : null;
         }
 
         boolean metaSuccess = true;
-        String metaMessage = subscribe ? "Subscribed page to leadgen webhooks" : "Unsubscribed page from leadgen webhooks";
+        String metaMessage = subscribe ? "Subscribed page to leadgen webhooks"
+                : "Unsubscribed page from leadgen webhooks";
         String metaRawResponse = null;
 
         if (pageAccessToken != null && !pageAccessToken.startsWith("mock_") && !pageAccessToken.isBlank()) {
@@ -1937,25 +1964,27 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                     String subUrl = String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps", pageId);
                     Map<String, String> form = Map.of(
                             "subscribed_fields", "leadgen",
-                            "access_token", pageAccessToken
-                    );
+                            "access_token", pageAccessToken);
                     HttpResponseData resp = httpPostForm(subUrl, form, 10);
                     metaRawResponse = resp.isSuccess() ? resp.body() : resp.errorBody();
                     if (!resp.isSuccess()) {
                         metaSuccess = false;
-                        metaMessage = "Meta API rejected subscription (HTTP " + resp.statusCode() + "): " + resp.errorBody();
+                        metaMessage = "Meta API rejected subscription (HTTP " + resp.statusCode() + "): "
+                                + resp.errorBody();
                         log.warn("Meta Webhook Subscription API call for page {} failed: {}", pageId, metaMessage);
                     } else {
                         log.info("Meta Webhook Subscription API call for page {} succeeded: {}", pageId, resp.body());
                     }
                 } else {
-                    String unsubUrl = String.format("https://graph.facebook.com/v19.0/%s/subscribed_apps?access_token=%s",
+                    String unsubUrl = String.format(
+                            "https://graph.facebook.com/v19.0/%s/subscribed_apps?access_token=%s",
                             pageId, URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
                     HttpResponseData resp = httpDeleteDetailed(unsubUrl, 10);
                     metaRawResponse = resp.isSuccess() ? resp.body() : resp.errorBody();
                     if (!resp.isSuccess()) {
                         metaSuccess = false;
-                        metaMessage = "Meta API rejected unsubscription (HTTP " + resp.statusCode() + "): " + resp.errorBody();
+                        metaMessage = "Meta API rejected unsubscription (HTTP " + resp.statusCode() + "): "
+                                + resp.errorBody();
                         log.warn("Meta Webhook Unsubscription API call for page {} failed: {}", pageId, metaMessage);
                     }
                 }
@@ -2109,8 +2138,10 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         // If nested page list was empty, synthesize from flat credentials
         if (pageDtos.isEmpty() && creds.get("pageId") != null) {
             String pId = String.valueOf(creds.get("pageId"));
-            String pName = creds.get("pageName") != null ? String.valueOf(creds.get("pageName")) : "Connected Facebook Page";
-            String rawPageToken = creds.get("pageAccessToken") != null ? String.valueOf(creds.get("pageAccessToken")) : "";
+            String pName = creds.get("pageName") != null ? String.valueOf(creds.get("pageName"))
+                    : "Connected Facebook Page";
+            String rawPageToken = creds.get("pageAccessToken") != null ? String.valueOf(creds.get("pageAccessToken"))
+                    : "";
             String maskedPageToken = rawPageToken.length() > 6
                     ? "••••••••" + rawPageToken.substring(rawPageToken.length() - 4)
                     : "••••••••";
@@ -2122,7 +2153,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             if (creds.get("formId") != null) {
                 formDtos.add(OAuthCallbackResponse.FacebookFormDto.builder()
                         .formId(String.valueOf(creds.get("formId")))
-                        .formName(creds.get("formName") != null ? String.valueOf(creds.get("formName")) : "All Lead Forms")
+                        .formName(creds.get("formName") != null ? String.valueOf(creds.get("formName"))
+                                : "All Lead Forms")
                         .status("ACTIVE")
                         .build());
             }
@@ -2162,7 +2194,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             throw new IllegalArgumentException("hub.challenge parameter is required");
         }
 
-        IntegrationProviderEntity provider = providerRepository.findByCode(IntegrationProviderCode.FACEBOOK).orElse(null);
+        IntegrationProviderEntity provider = providerRepository.findByCode(IntegrationProviderCode.FACEBOOK)
+                .orElse(null);
         String expectedToken = null;
         if (provider != null) {
             Map<String, Object> cfg = parseJsonToMap(provider.getGlobalConfigJson());
@@ -2175,7 +2208,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
 
         if (expectedToken != null && !expectedToken.isBlank()) {
             if (!expectedToken.equals(verifyToken)) {
-                log.warn("[Meta Webhook] Verification token mismatch. Expected: {}, Received: {}", expectedToken, verifyToken);
+                log.warn("[Meta Webhook] Verification token mismatch. Expected: {}, Received: {}", expectedToken,
+                        verifyToken);
                 throw new SecurityException("Meta webhook verify token mismatch");
             }
         }
@@ -2244,14 +2278,17 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
 
                                 UUID companyId = matchedTenant.getTenantId();
                                 if (companyId == null) {
-                                    log.warn("[Meta Webhook] Matched integration [{}] has no companyId. Event ignored.", matchedTenant.getId());
+                                    log.warn("[Meta Webhook] Matched integration [{}] has no companyId. Event ignored.",
+                                            matchedTenant.getId());
                                     continue;
                                 }
 
                                 if (leadgenId != null && !leadgenId.isBlank()) {
                                     if (processedLeadgenIds.contains(leadgenId)
-                                            || leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId, leadgenId)) {
-                                        log.info("[Meta Webhook] Duplicate lead [{}] skipped for company [{}]", leadgenId, companyId);
+                                            || leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(
+                                                    companyId, leadgenId)) {
+                                        log.info("[Meta Webhook] Duplicate lead [{}] skipped for company [{}]",
+                                                leadgenId, companyId);
                                         continue;
                                     }
                                     processedLeadgenIds.add(leadgenId);
@@ -2261,7 +2298,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
 
                                 LeadCreateRequest leadReq = null;
                                 if (leadgenId != null && !leadgenId.isBlank()
-                                        && pageAccessToken != null && !pageAccessToken.isBlank() && !pageAccessToken.startsWith("mock_")) {
+                                        && pageAccessToken != null && !pageAccessToken.isBlank()
+                                        && !pageAccessToken.startsWith("mock_")) {
                                     leadReq = fetchAndParseMetaLead(leadgenId, pageAccessToken, formId, adId);
                                 }
 
@@ -2284,7 +2322,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                                     LeadResponse created = leadService.createLead(leadReq, companyId);
                                     if (created != null && created.getId() != null) {
                                         createdLeadIds.add(created.getId());
-                                        log.info("[Meta Webhook] Successfully created lead [{}] for company [{}] from Facebook leadgen_id [{}]",
+                                        log.info(
+                                                "[Meta Webhook] Successfully created lead [{}] for company [{}] from Facebook leadgen_id [{}]",
                                                 created.getId(), companyId, leadgenId);
                                     }
 
@@ -2292,15 +2331,18 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                                     if (tenantIntegrationRepository.existsById(matchedTenant.getId())) {
                                         tenantIntegrationRepository.save(matchedTenant);
                                     } else if (legacyTenantIntegrationRepository.existsById(matchedTenant.getId())) {
-                                        legacyTenantIntegrationRepository.findById(matchedTenant.getId()).ifPresent(leg -> {
-                                            leg.setLastSyncAt(LocalDateTime.now());
-                                            legacyTenantIntegrationRepository.save(leg);
-                                        });
+                                        legacyTenantIntegrationRepository.findById(matchedTenant.getId())
+                                                .ifPresent(leg -> {
+                                                    leg.setLastSyncAt(LocalDateTime.now());
+                                                    legacyTenantIntegrationRepository.save(leg);
+                                                });
                                     }
 
                                     if (webhookLogRepository != null) {
                                         try {
-                                            String headersJson = headers != null ? objectMapper.writeValueAsString(headers) : "{}";
+                                            String headersJson = headers != null
+                                                    ? objectMapper.writeValueAsString(headers)
+                                                    : "{}";
                                             CrmIntegrationWebhookLog webhookLog = CrmIntegrationWebhookLog.builder()
                                                     .companyId(companyId)
                                                     .tenantIntegrationId(matchedTenant.getId())
@@ -2310,7 +2352,9 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                                                     .rawPayload(rawPayload)
                                                     .idempotencyHash(idempotencyHash)
                                                     .processingStatus(WebhookProcessingStatus.PROCESSED)
-                                                    .leadId(!createdLeadIds.isEmpty() ? createdLeadIds.get(createdLeadIds.size() - 1) : null)
+                                                    .leadId(!createdLeadIds.isEmpty()
+                                                            ? createdLeadIds.get(createdLeadIds.size() - 1)
+                                                            : null)
                                                     .processedAt(LocalDateTime.now())
                                                     .retryCount(0)
                                                     .build();
@@ -2355,8 +2399,10 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                         boolean duplicate = false;
                         if (leadgenId != null && !leadgenId.isBlank()) {
                             if (processedLeadgenIds.contains(leadgenId)
-                                    || leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId, leadgenId)) {
-                                log.info("[Meta Webhook] Duplicate lead [{}] skipped for company [{}]", leadgenId, companyId);
+                                    || leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId,
+                                            leadgenId)) {
+                                log.info("[Meta Webhook] Duplicate lead [{}] skipped for company [{}]", leadgenId,
+                                        companyId);
                                 duplicate = true;
                             } else {
                                 processedLeadgenIds.add(leadgenId);
@@ -2366,7 +2412,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                             String pageAccessToken = resolvePageAccessToken(matchedTenant, pageId);
                             LeadCreateRequest leadReq = null;
                             if (leadgenId != null && !leadgenId.isBlank()
-                                    && pageAccessToken != null && !pageAccessToken.isBlank() && !pageAccessToken.startsWith("mock_")) {
+                                    && pageAccessToken != null && !pageAccessToken.isBlank()
+                                    && !pageAccessToken.startsWith("mock_")) {
                                 leadReq = fetchAndParseMetaLead(leadgenId, pageAccessToken, formId, adId);
                             }
                             if (leadReq == null) {
@@ -2388,7 +2435,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                                 LeadResponse created = leadService.createLead(leadReq, companyId);
                                 if (created != null && created.getId() != null) {
                                     createdLeadIds.add(created.getId());
-                                    log.info("[Meta Webhook] Successfully created lead [{}] for company [{}] from Facebook leadgen_id [{}]",
+                                    log.info(
+                                            "[Meta Webhook] Successfully created lead [{}] for company [{}] from Facebook leadgen_id [{}]",
                                             created.getId(), companyId, leadgenId);
                                 }
 
@@ -2425,9 +2473,11 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                 .build();
     }
 
-    private LeadCreateRequest fetchAndParseMetaLead(String leadgenId, String pageAccessToken, String formId, String adId) {
+    private LeadCreateRequest fetchAndParseMetaLead(String leadgenId, String pageAccessToken, String formId,
+            String adId) {
         try {
-            String leadUrl = String.format("https://graph.facebook.com/v19.0/%s?fields=created_time,id,ad_id,form_id,field_data&access_token=%s",
+            String leadUrl = String.format(
+                    "https://graph.facebook.com/v19.0/%s?fields=created_time,id,ad_id,form_id,field_data&access_token=%s",
                     URLEncoder.encode(leadgenId, StandardCharsets.UTF_8),
                     URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
             log.info("[Meta Webhook] Fetching lead details from Graph API: leadgen_id={}", leadgenId);
@@ -2438,7 +2488,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                         leadNode.path("id").asText(), leadNode.has("field_data"));
                 return parseMetaLeadNode(leadNode);
             } else {
-                log.warn("[Meta Webhook] Graph API returned error or empty response for leadgen_id [{}]: {}", leadgenId, body);
+                log.warn("[Meta Webhook] Graph API returned error or empty response for leadgen_id [{}]: {}", leadgenId,
+                        body);
             }
         } catch (Exception e) {
             log.warn("[Meta Webhook] Failed to fetch lead details from Graph API: {}", e.getMessage());
@@ -2447,7 +2498,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     }
 
     private String cleanPageId(String s) {
-        if (s == null) return "";
+        if (s == null)
+            return "";
         String trimmed = s.trim();
         String lower = trimmed.toLowerCase();
         if (lower.startsWith("page_") || lower.startsWith("page-")) {
@@ -2463,18 +2515,22 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     }
 
     private boolean isTargetPageIdMatch(String candidate, String target) {
-        if (candidate == null || target == null) return false;
+        if (candidate == null || target == null)
+            return false;
         String c = candidate.trim();
         String t = target.trim();
-        if (c.isEmpty() || t.isEmpty()) return false;
-        if (c.equalsIgnoreCase(t)) return true;
+        if (c.isEmpty() || t.isEmpty())
+            return false;
+        if (c.equalsIgnoreCase(t))
+            return true;
         String cleanC = cleanPageId(c);
         String cleanT = cleanPageId(t);
         return !cleanC.isEmpty() && cleanC.equalsIgnoreCase(cleanT);
     }
 
     private boolean isPageIdentifierFieldName(String name) {
-        if (name == null) return false;
+        if (name == null)
+            return false;
         String lower = name.toLowerCase().replace("_", "").replace("-", "");
         return lower.equals("pageid")
                 || lower.equals("id")
@@ -2527,7 +2583,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                 String fieldName = field.getKey();
                 JsonNode child = field.getValue();
 
-                // 1. If key itself is the pageId (e.g., pageMappings: { "104928192": { ... } } or pages: { "104928192": { ... } })
+                // 1. If key itself is the pageId (e.g., pageMappings: { "104928192": { ... } }
+                // or pages: { "104928192": { ... } })
                 if (isTargetPageIdMatch(fieldName, target)) {
                     return true;
                 }
@@ -2566,7 +2623,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                     return true;
                 }
             } catch (Exception e) {
-                log.debug("[Meta Webhook] Error parsing credentialsJson for entity [{}]: {}", entity.getId(), e.getMessage());
+                log.debug("[Meta Webhook] Error parsing credentialsJson for entity [{}]: {}", entity.getId(),
+                        e.getMessage());
             }
         }
 
@@ -2577,7 +2635,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                     return true;
                 }
             } catch (Exception e) {
-                log.debug("[Meta Webhook] Error parsing routingConfigJson for entity [{}]: {}", entity.getId(), e.getMessage());
+                log.debug("[Meta Webhook] Error parsing routingConfigJson for entity [{}]: {}", entity.getId(),
+                        e.getMessage());
             }
         }
 
@@ -2597,7 +2656,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                     return true;
                 }
             } catch (Exception e) {
-                log.debug("[Meta Webhook] Error parsing legacy settingsJson for entity [{}]: {}", legacy.getId(), e.getMessage());
+                log.debug("[Meta Webhook] Error parsing legacy settingsJson for entity [{}]: {}", legacy.getId(),
+                        e.getMessage());
             }
         }
 
@@ -2616,12 +2676,14 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         List<TenantIntegrationEntity> fbIntegrations = tenantIntegrationRepository
                 .findAll()
                 .stream()
-                .filter(e -> e.getProviderCode() == IntegrationProviderCode.FACEBOOK && !Boolean.TRUE.equals(e.getIsDeleted()))
+                .filter(e -> e.getProviderCode() == IntegrationProviderCode.FACEBOOK
+                        && !Boolean.TRUE.equals(e.getIsDeleted()))
                 .toList();
 
         for (TenantIntegrationEntity entity : fbIntegrations) {
             if (matchesPageId(entity, target)) {
-                log.info("[Meta Webhook] Resolved tenant [{}] (company: [{}]) in tenant_integrations for Facebook Page ID [{}]",
+                log.info(
+                        "[Meta Webhook] Resolved tenant [{}] (company: [{}]) in tenant_integrations for Facebook Page ID [{}]",
                         entity.getId(), entity.getTenantId(), target);
                 return entity;
             }
@@ -2637,7 +2699,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         for (CrmTenantIntegration legacy : legacyIntegrations) {
             boolean isFacebook = false;
             if (legacy.getIntegrationChannelId() != null) {
-                CrmIntegrationChannel channel = channelRepository.findById(legacy.getIntegrationChannelId()).orElse(null);
+                CrmIntegrationChannel channel = channelRepository.findById(legacy.getIntegrationChannelId())
+                        .orElse(null);
                 if (channel != null && channel.getProviderCode() == IntegrationProvider.META_LEAD_ADS) {
                     isFacebook = true;
                 }
@@ -2650,20 +2713,23 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             }
             if (!isFacebook && legacy.getSettingsJson() != null) {
                 String sJson = legacy.getSettingsJson().toLowerCase();
-                if (sJson.contains("facebook") || sJson.contains("pageaccesstoken") || sJson.contains("page_id") || sJson.contains("leadgen")) {
+                if (sJson.contains("facebook") || sJson.contains("pageaccesstoken") || sJson.contains("page_id")
+                        || sJson.contains("leadgen")) {
                     isFacebook = true;
                 }
             }
 
             if (isFacebook && matchesLegacyPageId(legacy, target)) {
-                log.info("[Meta Webhook] Resolved company [{}] in legacy crm_tenant_integration [{}] for Facebook Page ID [{}]",
+                log.info(
+                        "[Meta Webhook] Resolved company [{}] in legacy crm_tenant_integration [{}] for Facebook Page ID [{}]",
                         legacy.getCompanyId(), legacy.getId(), target);
 
                 TenantIntegrationEntity bridged = TenantIntegrationEntity.builder()
                         .id(legacy.getId())
                         .tenantId(legacy.getCompanyId())
                         .providerCode(IntegrationProviderCode.FACEBOOK)
-                        .integrationName(legacy.getConnectionName() != null ? legacy.getConnectionName() : "Facebook Integration")
+                        .integrationName(legacy.getConnectionName() != null ? legacy.getConnectionName()
+                                : "Facebook Integration")
                         .credentialsJson(legacy.getSettingsJson())
                         .routingConfigJson(legacy.getSettingsJson())
                         .status(TenantIntegrationStatus.CONNECTED)
@@ -2674,7 +2740,9 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             }
         }
 
-        log.warn("[Meta Webhook] Unknown Facebook Page ID [{}]. No integration record matched. Rejecting webhook event.", target);
+        log.warn(
+                "[Meta Webhook] Unknown Facebook Page ID [{}]. No integration record matched. Rejecting webhook event.",
+                target);
         return null;
     }
 
@@ -2687,7 +2755,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         try {
             JsonNode root = objectMapper.readTree(entity.getCredentialsJson());
 
-            // 1. If target pageId is given, search for page-specific token in credentialsJson
+            // 1. If target pageId is given, search for page-specific token in
+            // credentialsJson
             if (target != null && !target.isBlank()) {
                 String token = findPageAccessTokenInNode(root, target, 0);
                 if (token != null && !token.isBlank()) {
@@ -2696,7 +2765,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             }
 
             // 2. Check top-level token fields in credentialsJson
-            for (String key : List.of("pageAccessToken", "accessToken", "page_access_token", "userAccessToken", "longLivedToken", "token")) {
+            for (String key : List.of("pageAccessToken", "accessToken", "page_access_token", "userAccessToken",
+                    "longLivedToken", "token")) {
                 if (root.hasNonNull(key)) {
                     String t = root.path(key).asText("").trim();
                     if (!t.isBlank()) {
@@ -2738,25 +2808,30 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             }
 
             if (thisObjectMatches) {
-                for (String tokenKey : List.of("pageAccessToken", "page_access_token", "accessToken", "access_token", "token")) {
+                for (String tokenKey : List.of("pageAccessToken", "page_access_token", "accessToken", "access_token",
+                        "token")) {
                     if (node.hasNonNull(tokenKey)) {
                         String t = node.path(tokenKey).asText("").trim();
-                        if (!t.isBlank()) return t;
+                        if (!t.isBlank())
+                            return t;
                     }
                 }
             }
 
-            // Also check if field key is the pageId (e.g. pages: { "104928192": { "access_token": "..." } })
+            // Also check if field key is the pageId (e.g. pages: { "104928192": {
+            // "access_token": "..." } })
             Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
                 if (isTargetPageIdMatch(field.getKey(), target)) {
                     JsonNode child = field.getValue();
                     if (child.isObject()) {
-                        for (String tokenKey : List.of("pageAccessToken", "page_access_token", "accessToken", "access_token", "token")) {
+                        for (String tokenKey : List.of("pageAccessToken", "page_access_token", "accessToken",
+                                "access_token", "token")) {
                             if (child.hasNonNull(tokenKey)) {
                                 String t = child.path(tokenKey).asText("").trim();
-                                if (!t.isBlank()) return t;
+                                if (!t.isBlank())
+                                    return t;
                             }
                         }
                     } else if (child.isTextual() && !child.asText().isBlank()) {
@@ -2766,13 +2841,15 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
 
                 if (field.getValue().isContainerNode()) {
                     String t = findPageAccessTokenInNode(field.getValue(), target, depth + 1);
-                    if (t != null && !t.isBlank()) return t;
+                    if (t != null && !t.isBlank())
+                        return t;
                 }
             }
         } else if (node.isArray()) {
             for (JsonNode item : node) {
                 String t = findPageAccessTokenInNode(item, target, depth + 1);
-                if (t != null && !t.isBlank()) return t;
+                if (t != null && !t.isBlank())
+                    return t;
             }
         }
 
@@ -2780,7 +2857,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     }
 
     private boolean isMetaPhoneField(String fName) {
-        if (fName == null) return false;
+        if (fName == null)
+            return false;
         String lower = fName.toLowerCase();
         return lower.equals("phone_number") || lower.equals("phone")
                 || lower.equals("mobile_number") || lower.equals("mobile")
@@ -2790,7 +2868,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     }
 
     private String cleanMetaPhone(String val) {
-        if (val == null) return null;
+        if (val == null)
+            return null;
         String trimmed = val.trim();
         if (trimmed.startsWith("<test lead:") || trimmed.contains("dummy data")) {
             String digits = trimmed.replaceAll("[^0-9+]", "");
@@ -2804,7 +2883,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     }
 
     private String cleanMetaPostalCode(String val) {
-        if (val == null) return null;
+        if (val == null)
+            return null;
         String trimmed = val.trim();
         if (trimmed.startsWith("<test lead:") || trimmed.contains("dummy data")) {
             String digits = trimmed.replaceAll("[^0-9]", "");
@@ -2818,9 +2898,11 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
     }
 
     private String cleanMetaString(String val, int maxLen) {
-        if (val == null) return null;
+        if (val == null)
+            return null;
         String trimmed = val.trim();
-        if (trimmed.length() <= maxLen) return trimmed;
+        if (trimmed.length() <= maxLen)
+            return trimmed;
         return trimmed.substring(0, maxLen);
     }
 
@@ -2866,19 +2948,22 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                     lastName = cleanMetaString(fVal, 100);
                 } else if (fName.contains("company") || fName.contains("org") || fName.contains("business")) {
                     company = cleanMetaString(fVal, 255);
-                } else if (fName.contains("full_name") || fName.equals("name") || fName.equals("contact_name") || fName.equals("person_name") || fName.equals("lead_name")) {
+                } else if (fName.contains("full_name") || fName.equals("name") || fName.equals("contact_name")
+                        || fName.equals("person_name") || fName.equals("lead_name")) {
                     fullName = cleanMetaString(fVal, 200);
                 } else if (fName.contains("email")) {
                     if (fVal.startsWith("<test lead:") || fVal.contains("dummy data")) {
                         email = "test-lead@facebook-test.com";
-                        if (notes.length() > 0) notes.append("; ");
+                        if (notes.length() > 0)
+                            notes.append("; ");
                         notes.append(f.path("name").asText()).append(": ").append(fVal);
                     } else {
                         email = cleanMetaString(fVal, 255);
                     }
                 } else if (isMetaPhoneField(fName)) {
                     if (fVal.startsWith("<test lead:") || fVal.contains("dummy data")) {
-                        if (notes.length() > 0) notes.append("; ");
+                        if (notes.length() > 0)
+                            notes.append("; ");
                         notes.append(f.path("name").asText()).append(": ").append(fVal);
                     }
                     phone = cleanMetaPhone(fVal);
@@ -2892,7 +2977,8 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                     country = cleanMetaString(fVal, 100);
                 } else if (fName.contains("zip") || fName.contains("postal")) {
                     if (fVal.startsWith("<test lead:") || fVal.contains("dummy data")) {
-                        if (notes.length() > 0) notes.append("; ");
+                        if (notes.length() > 0)
+                            notes.append("; ");
                         notes.append(f.path("name").asText()).append(": ").append(fVal);
                     }
                     postalCode = cleanMetaPostalCode(fVal);
@@ -2924,11 +3010,11 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
             phone = cleanMetaPhone(rawPhone);
         }
         if (company == null)
-            company = cleanMetaString(getFieldIgnoreCase(node, "company_name", "company"), 255);
+        company = cleanMetaString(getFieldIgnoreCase(node, "company_name", "company"), 255);
         if (city == null)
-            city = cleanMetaString(getFieldIgnoreCase(node, "city"), 100);
+        city = cleanMetaString(getFieldIgnoreCase(node, "city"), 100);
         if (state == null)
-            state = cleanMetaString(getFieldIgnoreCase(node, "state"), 100);
+        state = cleanMetaString(getFieldIgnoreCase(node, "state"), 100);
 
         if (firstName == null) {
             if (fullName != null && !fullName.isBlank()) {

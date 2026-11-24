@@ -13,8 +13,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "crm_lead", uniqueConstraints = {
-        @UniqueConstraint(name = "uq_crm_lead_company_code", columnNames = {"company_id", "lead_code"}),
-        @UniqueConstraint(name = "uq_crm_lead_company_id", columnNames = {"company_id", "id"})
+        @UniqueConstraint(name = "uq_crm_lead_company_code", columnNames = { "company_id", "lead_code" }),
+        @UniqueConstraint(name = "uq_crm_lead_company_id", columnNames = { "company_id", "id" })
 })
 @Getter
 @Setter
@@ -140,7 +140,7 @@ public class CrmLead extends BaseEntity {
     private UUID leadStatusId;
 
     @Enumerated(EnumType.STRING)
-        @Column(name = "lead_stage", nullable = false)
+    @Column(name = "lead_stage", nullable = false)
     @Builder.Default
     private LeadStage leadStage = LeadStage.RAW;
 
@@ -149,7 +149,7 @@ public class CrmLead extends BaseEntity {
     private Integer leadScore = 0;
 
     @Enumerated(EnumType.STRING)
-        @Column(name = "score_grade")
+    @Column(name = "score_grade")
     @Builder.Default
     private LeadRating scoreGrade = LeadRating.COLD;
 

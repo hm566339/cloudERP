@@ -97,7 +97,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         CrmTenantIntegration integration = tenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse(slug)
                 .orElseGet(() -> tenantIntegrationEntityRepository.findByWebhookSlugAndIsDeletedFalse(slug)
                         .map(this::bridgeTwoTierEntity)
-                        .orElseThrow(() -> new ResourceNotFoundException("No active integration found for webhook slug: " + slug)));
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "No active integration found for webhook slug: " + slug)));
 
         if (mode != null && !"subscribe".equalsIgnoreCase(mode)) {
             log.warn("Invalid webhook subscription mode: {}", mode);
@@ -123,7 +124,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
         CrmTenantIntegration integration = tenantIntegrationRepository.findByWebhookSlugAndIsDeletedFalse(slug)
                 .orElseGet(() -> tenantIntegrationEntityRepository.findByWebhookSlugAndIsDeletedFalse(slug)
                         .map(this::bridgeTwoTierEntity)
-                        .orElseThrow(() -> new ResourceNotFoundException("No active integration found for webhook slug: " + slug)));
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "No active integration found for webhook slug: " + slug)));
 
         UUID companyId = integration.getCompanyId();
         String idempotencyHash = computeSha256(companyId + ":" + slug + ":" + payload);
@@ -188,9 +190,11 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
             CurrentUserContext.setCompanyId(companyId);
             try {
                 for (LeadCreateRequest leadReq : leadRequests) {
-                    // Deduplicate external leads by externalLeadId (e.g. TradeIndia rfi_id, IndiaMART queryId)
+                    // Deduplicate external leads by externalLeadId (e.g. TradeIndia rfi_id,
+                    // IndiaMART queryId)
                     if (leadReq.getExternalLeadId() != null && !leadReq.getExternalLeadId().isBlank()
-                            && leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId, leadReq.getExternalLeadId())) {
+                            && leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(companyId,
+                                    leadReq.getExternalLeadId())) {
                         log.info("Skipping already ingested external lead [externalLeadId: {}] for company [{}]",
                                 leadReq.getExternalLeadId(), companyId);
                         continue;
@@ -571,13 +575,17 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                             String pageId = val.path("page_id").asText(entry.path("id").asText(null));
 
                             // If val doesn't have field_data, fetch from Graph API using integration token
-                            if (leadgenId != null && !leadgenId.isBlank() && !val.has("field_data") && integration != null) {
-                                String pageToken = extractPageAccessTokenFromSettings(integration.getSettingsJson(), pageId);
+                            if (leadgenId != null && !leadgenId.isBlank() && !val.has("field_data")
+                                    && integration != null) {
+                                String pageToken = extractPageAccessTokenFromSettings(integration.getSettingsJson(),
+                                        pageId);
                                 if (pageToken != null && !pageToken.isBlank() && !pageToken.startsWith("mock_")) {
                                     try {
-                                        String leadUrl = String.format("https://graph.facebook.com/v19.0/%s?fields=created_time,id,ad_id,form_id,field_data&access_token=%s",
+                                        String leadUrl = String.format(
+                                                "https://graph.facebook.com/v19.0/%s?fields=created_time,id,ad_id,form_id,field_data&access_token=%s",
                                                 leadgenId, URLEncoder.encode(pageToken, StandardCharsets.UTF_8));
-                                        log.info("[Meta Webhook] Fetching lead details from Graph API: leadgen_id={}", leadgenId);
+                                        log.info("[Meta Webhook] Fetching lead details from Graph API: leadgen_id={}",
+                                                leadgenId);
                                         String body = httpGet(leadUrl, 10);
                                         if (body != null && !body.isBlank() && body.contains("field_data")) {
                                             JsonNode leadNode = objectMapper.readTree(body);
@@ -585,7 +593,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
                                             continue;
                                         }
                                     } catch (Exception ex) {
-                                        log.warn("[Meta Webhook] Failed to fetch lead from Graph API: {}", ex.getMessage());
+                                        log.warn("[Meta Webhook] Failed to fetch lead from Graph API: {}",
+                                                ex.getMessage());
                                     }
                                 }
                             }
@@ -656,7 +665,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private boolean isMetaPhoneField(String fName) {
-        if (fName == null) return false;
+        if (fName == null)
+            return false;
         String lower = fName.toLowerCase();
         return lower.equals("phone_number") || lower.equals("phone")
                 || lower.equals("mobile_number") || lower.equals("mobile")
@@ -666,7 +676,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private String cleanMetaPhone(String val) {
-        if (val == null) return null;
+        if (val == null)
+            return null;
         String trimmed = val.trim();
         if (trimmed.startsWith("<test lead:") || trimmed.contains("dummy data")) {
             String digits = trimmed.replaceAll("[^0-9+]", "");
@@ -680,7 +691,8 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private String cleanMetaPostalCode(String val) {
-        if (val == null) return null;
+        if (val == null)
+            return null;
         String trimmed = val.trim();
         if (trimmed.startsWith("<test lead:") || trimmed.contains("dummy data")) {
             String digits = trimmed.replaceAll("[^0-9]", "");
@@ -694,9 +706,11 @@ public class CrmIntegrationServiceImpl implements CrmIntegrationService {
     }
 
     private String cleanMetaString(String val, int maxLen) {
-        if (val == null) return null;
+        if (val == null)
+            return null;
         String trimmed = val.trim();
-        if (trimmed.length() <= maxLen) return trimmed;
+        if (trimmed.length() <= maxLen)
+            return trimmed;
         return trimmed.substring(0, maxLen);
     }
 
