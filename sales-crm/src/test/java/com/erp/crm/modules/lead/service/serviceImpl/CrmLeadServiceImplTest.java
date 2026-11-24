@@ -264,4 +264,66 @@ class CrmLeadServiceImplTest {
         org.springframework.data.domain.Sort.Order order = captured.getSort().getOrderFor("createdAt");
         assertNotNull(order, "Expected sort to fall back safely to createdAt");
     }
+
+    @Test
+    @DisplayName("Should defensively sanitize and truncate oversized field values on lead creation")
+    void testCreateLead_SanitizesOversizedFields() {
+        String longPhone = "+1 (555) 019-2834 ext. 1234567890123456789012345";
+        String longAltPhone = "+91 98765 43210 (After 6 PM IST only please)";
+        String longPostal = "<test lead: dummy data for postal_code>";
+        String longName = "A".repeat(150);
+
+        LeadCreateRequest request = LeadCreateRequest.builder()
+                .firstName(longName)
+                .lastName(longName)
+                .salutation("Dr. Professor Emeritus Sir")
+                .organizationName("Very Long Organization Name Inc")
+                .email("test@example.com")
+                .phone(longPhone)
+                .alternatePhone(longAltPhone)
+                .postalCode(longPostal)
+                .stateCode("CALIFORNIA-WEST")
+                .pan("ABCDE1234F_EXTRA")
+                .gstin("22AAAAA0000A1Z5_EXTRA")
+                .build();
+
+        CrmLead mappedEntity = new CrmLead();
+        mappedEntity.setFirstName(request.getFirstName());
+        mappedEntity.setLastName(request.getLastName());
+        mappedEntity.setSalutation(request.getSalutation());
+        mappedEntity.setPhone(request.getPhone());
+        mappedEntity.setAlternatePhone(request.getAlternatePhone());
+        mappedEntity.setPostalCode(request.getPostalCode());
+        mappedEntity.setStateCode(request.getStateCode());
+        mappedEntity.setPan(request.getPan());
+        mappedEntity.setGstin(request.getGstin());
+        mappedEntity.setEmail(request.getEmail());
+
+        when(leadRepository.findByCompanyIdAndNormalizedPhoneAndIsDeletedFalse(eq(companyId), anyString())).thenReturn(Optional.empty());
+        when(leadMapper.toEntity(request)).thenReturn(mappedEntity);
+
+        org.mockito.ArgumentCaptor<CrmLead> leadCaptor = org.mockito.ArgumentCaptor.forClass(CrmLead.class);
+        when(leadRepository.save(leadCaptor.capture())).thenAnswer(invocation -> {
+            CrmLead saved = invocation.getArgument(0);
+            saved.setId(UUID.randomUUID());
+            return saved;
+        });
+
+        when(leadMapper.toResponse(any(CrmLead.class))).thenReturn(LeadResponse.builder().id(UUID.randomUUID()).build());
+
+        leadService.createLead(request, companyId);
+
+        CrmLead captured = leadCaptor.getValue();
+        assertNotNull(captured);
+        assertTrue(captured.getPhone().length() <= 30, "phone should be <= 30 chars");
+        assertTrue(captured.getAlternatePhone().length() <= 30, "alternatePhone should be <= 30 chars");
+        assertTrue(captured.getNormalizedPhone().length() <= 20, "normalizedPhone should be <= 20 chars");
+        assertTrue(captured.getPostalCode().length() <= 20, "postalCode should be <= 20 chars");
+        assertTrue(captured.getFirstName().length() <= 100, "firstName should be <= 100 chars");
+        assertTrue(captured.getLastName().length() <= 100, "lastName should be <= 100 chars");
+        assertTrue(captured.getSalutation().length() <= 20, "salutation should be <= 20 chars");
+        assertTrue(captured.getStateCode().length() <= 10, "stateCode should be <= 10 chars");
+        assertTrue(captured.getPan().length() <= 10, "pan should be <= 10 chars");
+        assertTrue(captured.getGstin().length() <= 15, "gstin should be <= 15 chars");
+    }
 }

@@ -48,13 +48,13 @@ public class CrmLead extends BaseEntity {
     @Column(name = "normalized_email", length = 255)
     private String normalizedEmail;
 
-    @Column(name = "phone", length = 30)
+    @Column(name = "phone", length = 50)
     private String phone;
 
-    @Column(name = "normalized_phone", length = 20)
+    @Column(name = "normalized_phone", length = 30)
     private String normalizedPhone;
 
-    @Column(name = "alternate_phone", length = 30)
+    @Column(name = "alternate_phone", length = 50)
     private String alternatePhone;
 
     @Column(name = "website", length = 255)
@@ -96,7 +96,7 @@ public class CrmLead extends BaseEntity {
     @Column(name = "state_code", length = 10)
     private String stateCode;
 
-    @Column(name = "postal_code", length = 20)
+    @Column(name = "postal_code", length = 50)
     private String postalCode;
 
     @Builder.Default

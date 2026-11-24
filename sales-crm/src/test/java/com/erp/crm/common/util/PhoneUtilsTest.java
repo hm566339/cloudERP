@@ -31,4 +31,21 @@ class PhoneUtilsTest {
         assertNull(PhoneUtils.normalizePhone(""));
         assertNull(PhoneUtils.normalizePhone(" "));
     }
+
+    @Test
+    @DisplayName("Should return null on non-digit dummy test strings")
+    void testNonDigitDummyData() {
+        assertNull(PhoneUtils.normalizePhone("<test lead: dummy data for phone_number>"));
+        assertNull(PhoneUtils.normalizePhone("+++"));
+        assertNull(PhoneUtils.normalizePhone("Not a phone number"));
+    }
+
+    @Test
+    @DisplayName("Should bound normalized phone to max 20 characters")
+    void testLongPhoneBounded() {
+        String longPhone = "+123456789012345678901234567890";
+        String normalized = PhoneUtils.normalizePhone(longPhone);
+        assertNotNull(normalized);
+        assertTrue(normalized.length() <= 20);
+    }
 }

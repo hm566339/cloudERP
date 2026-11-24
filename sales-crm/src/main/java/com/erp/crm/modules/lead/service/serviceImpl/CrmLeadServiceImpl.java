@@ -112,6 +112,8 @@ public class CrmLeadServiceImpl implements CrmLeadService {
             lead.setOwnerUserId(currentUserId);
         }
 
+        sanitizeLead(lead);
+
         CrmLead savedLead = leadRepository.save(lead);
 
         // Save product interests
@@ -120,10 +122,10 @@ public class CrmLeadServiceImpl implements CrmLeadService {
                 CrmLeadProductInterest interest = CrmLeadProductInterest.builder()
                         .leadId(savedLead.getId())
                         .productId(prod.getProductId())
-                        .productName(prod.getProductName())
-                        .productCode(prod.getProductCode())
+                        .productName(truncate(prod.getProductName(), 255))
+                        .productCode(truncate(prod.getProductCode(), 100))
                         .quantity(prod.getQuantity())
-                        .uom(prod.getUom() != null ? prod.getUom() : "PCS")
+                        .uom(prod.getUom() != null ? truncate(prod.getUom(), 50) : "PCS")
                         .estimatedBudget(prod.getEstimatedBudget())
                         .specifications(prod.getSpecifications())
                         .build();
@@ -270,11 +272,14 @@ public class CrmLeadServiceImpl implements CrmLeadService {
             lead.setNormalizedPhone(PhoneUtils.normalizePhone(request.getPhone()));
         }
         if (request.getEmail() != null) {
-            lead.setNormalizedEmail(request.getEmail().trim().toLowerCase());
+            String normEmail = request.getEmail().trim().toLowerCase();
+            lead.setNormalizedEmail(normEmail.length() > 255 ? normEmail.substring(0, 255) : normEmail);
         }
         String first = lead.getFirstName() != null ? lead.getFirstName() : "";
         String last = lead.getLastName() != null ? lead.getLastName() : "";
         lead.setDisplayName((first + " " + last).trim());
+
+        sanitizeLead(lead);
 
         CrmLead updated = leadRepository.save(lead);
         return enrichResponse(updated);
@@ -580,5 +585,59 @@ public class CrmLeadServiceImpl implements CrmLeadService {
             }
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
+    }
+
+    private void sanitizeLead(CrmLead lead) {
+        if (lead == null) {
+            return;
+        }
+        lead.setLeadCode(truncate(lead.getLeadCode(), 50));
+        lead.setSalutation(truncate(lead.getSalutation(), 20));
+        if (lead.getFirstName() == null || lead.getFirstName().isBlank()) {
+            lead.setFirstName("Lead");
+        } else {
+            lead.setFirstName(truncate(lead.getFirstName(), 100));
+        }
+        lead.setLastName(truncate(lead.getLastName(), 100));
+        if (lead.getDisplayName() == null || lead.getDisplayName().isBlank()) {
+            lead.setDisplayName(lead.getFirstName());
+        }
+        lead.setDisplayName(truncate(lead.getDisplayName(), 200));
+        lead.setEmail(truncate(lead.getEmail(), 255));
+        lead.setNormalizedEmail(truncate(lead.getNormalizedEmail(), 255));
+        lead.setPhone(truncate(lead.getPhone(), 30));
+        lead.setNormalizedPhone(truncate(lead.getNormalizedPhone(), 20));
+        lead.setAlternatePhone(truncate(lead.getAlternatePhone(), 30));
+        lead.setWebsite(truncate(lead.getWebsite(), 255));
+        lead.setOrganizationName(truncate(lead.getOrganizationName(), 255));
+        lead.setDesignation(truncate(lead.getDesignation(), 100));
+        lead.setIndustry(truncate(lead.getIndustry(), 100));
+        lead.setCompanySize(truncate(lead.getCompanySize(), 50));
+        lead.setGstin(truncate(lead.getGstin(), 15));
+        lead.setPan(truncate(lead.getPan(), 10));
+        lead.setAddressLine1(truncate(lead.getAddressLine1(), 255));
+        lead.setAddressLine2(truncate(lead.getAddressLine2(), 255));
+        lead.setCity(truncate(lead.getCity(), 100));
+        lead.setState(truncate(lead.getState(), 100));
+        lead.setStateCode(truncate(lead.getStateCode(), 10));
+        lead.setPostalCode(truncate(lead.getPostalCode(), 20));
+        lead.setCountry(truncate(lead.getCountry(), 100));
+        lead.setExternalLeadId(truncate(lead.getExternalLeadId(), 255));
+        lead.setExternalLeadUrl(truncate(lead.getExternalLeadUrl(), 500));
+        lead.setUtmSource(truncate(lead.getUtmSource(), 100));
+        lead.setUtmMedium(truncate(lead.getUtmMedium(), 100));
+        lead.setUtmCampaign(truncate(lead.getUtmCampaign(), 100));
+        lead.setUtmContent(truncate(lead.getUtmContent(), 100));
+        lead.setUtmTerm(truncate(lead.getUtmTerm(), 100));
+        lead.setDedupFingerprint(truncate(lead.getDedupFingerprint(), 64));
+        lead.setConsentSource(truncate(lead.getConsentSource(), 100));
+    }
+
+    private String truncate(String str, int maxLen) {
+        if (str == null) {
+            return null;
+        }
+        String trimmed = str.trim();
+        return trimmed.length() <= maxLen ? trimmed : trimmed.substring(0, maxLen);
     }
 }

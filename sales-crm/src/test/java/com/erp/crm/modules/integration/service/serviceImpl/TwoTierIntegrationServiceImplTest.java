@@ -1269,4 +1269,89 @@ class TwoTierIntegrationServiceImplTest {
         assertEquals(0, response.getQueuedRecords());
         assertEquals("Facebook Lead Ads sync completed. 0 record(s) processed.", response.getMessage());
     }
+
+    @Test
+    @DisplayName("33. Facebook: handleFacebookWebhook cleans Meta Lead Ads Testing Tool dummy phone and postal code without exceeding column limits")
+    void testHandleFacebookWebhook_CleansMetaDummyData() {
+        CurrentUserContext.clear();
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+
+        TenantIntegrationEntity fbEntity = TenantIntegrationEntity.builder()
+                .id(UUID.randomUUID())
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .credentialsJson("{\"pageId\":\"page_testing_tool\",\"pageAccessToken\":\"mock_page_token\",\"pageName\":\"Mohit CRM Testing\"}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findAll()).thenReturn(List.of(fbEntity));
+        when(leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(eq(companyId), anyString())).thenReturn(false);
+        when(leadSourceRepository.findByCompanyIdAndSourceCodeAndIsDeletedFalse(eq(companyId), anyString()))
+                .thenReturn(Optional.of(CrmLeadSource.builder().id(UUID.randomUUID()).build()));
+
+        org.mockito.ArgumentCaptor<LeadCreateRequest> reqCaptor = org.mockito.ArgumentCaptor.forClass(LeadCreateRequest.class);
+        UUID leadId = UUID.randomUUID();
+        when(leadService.createLead(reqCaptor.capture(), eq(companyId)))
+                .thenReturn(com.erp.crm.modules.lead.dto.response.LeadResponse.builder().id(leadId).firstName("Test").lastName("Lead").build());
+
+        String metaPayload = """
+                {
+                  "object": "page",
+                  "entry": [
+                    {
+                      "id": "page_testing_tool",
+                      "time": 1700000000,
+                      "changes": [
+                        {
+                          "field": "leadgen",
+                          "value": {
+                            "ad_id": "ad_111",
+                            "form_id": "form_222",
+                            "leadgen_id": "leadgen_dummy_test",
+                            "created_time": 1700000000,
+                            "page_id": "page_testing_tool",
+                            "field_data": [
+                              {
+                                "name": "phone_number",
+                                "values": ["<test lead: dummy data for phone_number>"]
+                              },
+                              {
+                                "name": "email",
+                                "values": ["<test lead: dummy data for email>"]
+                              },
+                              {
+                                "name": "postal_code",
+                                "values": ["<test lead: dummy data for postal_code>"]
+                              },
+                              {
+                                "name": "full_name",
+                                "values": ["<test lead: dummy data for full_name>"]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """;
+
+        WebhookAckResponse ack = integrationService.handleFacebookWebhook(metaPayload, "127.0.0.1", Map.of());
+
+        assertNotNull(ack);
+        assertEquals("ACCEPTED", ack.getStatus());
+        assertEquals("PROCESSED", ack.getProcessingStatus());
+        assertEquals(leadId, ack.getLeadId());
+
+        LeadCreateRequest captured = reqCaptor.getValue();
+        assertNotNull(captured);
+        assertNotNull(captured.getPhone());
+        assertTrue(captured.getPhone().length() <= 30, "Phone must be <= 30 chars, got: " + captured.getPhone());
+        assertEquals("+16505550100", captured.getPhone());
+        assertTrue(captured.getPostalCode().length() <= 20, "Postal code must be <= 20 chars, got: " + captured.getPostalCode());
+        assertEquals("94025", captured.getPostalCode());
+        assertEquals("test-lead@facebook-test.com", captured.getEmail());
+        assertTrue(captured.getRawInquiryText().contains("dummy data for phone_number"));
+    }
 }

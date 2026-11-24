@@ -2779,6 +2779,51 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         return null;
     }
 
+    private boolean isMetaPhoneField(String fName) {
+        if (fName == null) return false;
+        String lower = fName.toLowerCase();
+        return lower.equals("phone_number") || lower.equals("phone")
+                || lower.equals("mobile_number") || lower.equals("mobile")
+                || lower.equals("cell_phone") || lower.equals("work_phone")
+                || lower.equals("contact_number")
+                || lower.contains("phone") || lower.contains("mobile");
+    }
+
+    private String cleanMetaPhone(String val) {
+        if (val == null) return null;
+        String trimmed = val.trim();
+        if (trimmed.startsWith("<test lead:") || trimmed.contains("dummy data")) {
+            String digits = trimmed.replaceAll("[^0-9+]", "");
+            String result = digits.length() >= 7 ? digits : "+16505550100";
+            return result.length() <= 30 ? result : result.substring(0, 30);
+        }
+        if (trimmed.length() <= 30) {
+            return trimmed;
+        }
+        return trimmed.substring(0, 30);
+    }
+
+    private String cleanMetaPostalCode(String val) {
+        if (val == null) return null;
+        String trimmed = val.trim();
+        if (trimmed.startsWith("<test lead:") || trimmed.contains("dummy data")) {
+            String digits = trimmed.replaceAll("[^0-9]", "");
+            String result = digits.length() >= 3 ? digits : "94025";
+            return result.length() <= 20 ? result : result.substring(0, 20);
+        }
+        if (trimmed.length() <= 20) {
+            return trimmed;
+        }
+        return trimmed.substring(0, 20);
+    }
+
+    private String cleanMetaString(String val, int maxLen) {
+        if (val == null) return null;
+        String trimmed = val.trim();
+        if (trimmed.length() <= maxLen) return trimmed;
+        return trimmed.substring(0, maxLen);
+    }
+
     private LeadCreateRequest parseMetaLeadNode(JsonNode node) {
         String leadgenId = getFieldIgnoreCase(node, "leadgen_id", "id");
         String formId = getFieldIgnoreCase(node, "form_id");
@@ -2813,28 +2858,46 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                 if (fVal == null || fVal.isBlank())
                     continue;
 
+                fVal = fVal.trim();
+
                 if (fName.contains("first_name") || fName.contains("given_name")) {
-                    firstName = fVal;
+                    firstName = cleanMetaString(fVal, 100);
                 } else if (fName.contains("last_name") || fName.contains("family_name") || fName.contains("surname")) {
-                    lastName = fVal;
-                } else if (fName.contains("full_name") || fName.equals("name") || fName.endsWith("_name")) {
-                    fullName = fVal;
-                } else if (fName.contains("email")) {
-                    email = fVal;
-                } else if (fName.contains("phone") || fName.contains("mobile")) {
-                    phone = fVal;
+                    lastName = cleanMetaString(fVal, 100);
                 } else if (fName.contains("company") || fName.contains("org") || fName.contains("business")) {
-                    company = fVal;
+                    company = cleanMetaString(fVal, 255);
+                } else if (fName.contains("full_name") || fName.equals("name") || fName.equals("contact_name") || fName.equals("person_name") || fName.equals("lead_name")) {
+                    fullName = cleanMetaString(fVal, 200);
+                } else if (fName.contains("email")) {
+                    if (fVal.startsWith("<test lead:") || fVal.contains("dummy data")) {
+                        email = "test-lead@facebook-test.com";
+                        if (notes.length() > 0) notes.append("; ");
+                        notes.append(f.path("name").asText()).append(": ").append(fVal);
+                    } else {
+                        email = cleanMetaString(fVal, 255);
+                    }
+                } else if (isMetaPhoneField(fName)) {
+                    if (fVal.startsWith("<test lead:") || fVal.contains("dummy data")) {
+                        if (notes.length() > 0) notes.append("; ");
+                        notes.append(f.path("name").asText()).append(": ").append(fVal);
+                    }
+                    phone = cleanMetaPhone(fVal);
+                } else if (fName.contains("company") || fName.contains("org") || fName.contains("business")) {
+                    company = cleanMetaString(fVal, 255);
                 } else if (fName.equals("city")) {
-                    city = fVal;
+                    city = cleanMetaString(fVal, 100);
                 } else if (fName.equals("state")) {
-                    state = fVal;
+                    state = cleanMetaString(fVal, 100);
                 } else if (fName.contains("country")) {
-                    country = fVal;
+                    country = cleanMetaString(fVal, 100);
                 } else if (fName.contains("zip") || fName.contains("postal")) {
-                    postalCode = fVal;
+                    if (fVal.startsWith("<test lead:") || fVal.contains("dummy data")) {
+                        if (notes.length() > 0) notes.append("; ");
+                        notes.append(f.path("name").asText()).append(": ").append(fVal);
+                    }
+                    postalCode = cleanMetaPostalCode(fVal);
                 } else if (fName.contains("street") || fName.equals("address")) {
-                    address = fVal;
+                    address = cleanMetaString(fVal, 255);
                 } else {
                     if (notes.length() > 0)
                         notes.append("; ");
@@ -2844,20 +2907,28 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         }
 
         if (fullName == null && firstName == null) {
-            fullName = getFieldIgnoreCase(node, "full_name", "name");
-            firstName = getFieldIgnoreCase(node, "first_name");
-            lastName = getFieldIgnoreCase(node, "last_name");
+            fullName = cleanMetaString(getFieldIgnoreCase(node, "full_name", "name"), 200);
+            firstName = cleanMetaString(getFieldIgnoreCase(node, "first_name"), 100);
+            lastName = cleanMetaString(getFieldIgnoreCase(node, "last_name"), 100);
         }
-        if (email == null)
-            email = getFieldIgnoreCase(node, "email");
-        if (phone == null)
-            phone = getFieldIgnoreCase(node, "phone_number", "phone", "mobile");
+        if (email == null) {
+            String rawEmail = getFieldIgnoreCase(node, "email");
+            if (rawEmail != null && (rawEmail.startsWith("<test lead:") || rawEmail.contains("dummy data"))) {
+                email = "test-lead@facebook-test.com";
+            } else {
+                email = cleanMetaString(rawEmail, 255);
+            }
+        }
+        if (phone == null) {
+            String rawPhone = getFieldIgnoreCase(node, "phone_number", "phone", "mobile");
+            phone = cleanMetaPhone(rawPhone);
+        }
         if (company == null)
-            company = getFieldIgnoreCase(node, "company_name", "company");
+            company = cleanMetaString(getFieldIgnoreCase(node, "company_name", "company"), 255);
         if (city == null)
-            city = getFieldIgnoreCase(node, "city");
+            city = cleanMetaString(getFieldIgnoreCase(node, "city"), 100);
         if (state == null)
-            state = getFieldIgnoreCase(node, "state");
+            state = cleanMetaString(getFieldIgnoreCase(node, "state"), 100);
 
         if (firstName == null) {
             if (fullName != null && !fullName.isBlank()) {
