@@ -1011,6 +1011,11 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
                 queuedRecords = syncTradeIndiaInquiries(entity, tenantId);
                 syncMessage = "TradeIndia inquiries and RFQ sync completed. " + queuedRecords + " record(s) processed.";
             }
+            case FACEBOOK -> {
+                log.info("[TwoTierIntegration] [Sync] Executing sync for Facebook Lead Ads integration [{}]", id);
+                queuedRecords = syncFacebookLeadAds(entity, tenantId);
+                syncMessage = "Facebook Lead Ads sync completed. " + queuedRecords + " record(s) processed.";
+            }
             case CUSTOM_WEBHOOK -> {
                 log.info("[TwoTierIntegration] [Sync] Refreshing custom webhook listener status for [{}]", id);
                 syncMessage = "Webhook endpoint listener active and ready to receive payloads.";
@@ -1348,7 +1353,231 @@ public class TwoTierIntegrationServiceImpl implements TwoTierIntegrationService 
         if (creds.containsKey("crmKey") || creds.containsKey("apiKey")) {
             return syncIndiaMartInquiries(entity, tenantId);
         }
+        if (creds.containsKey("pages") || creds.containsKey("pageId") || creds.containsKey("userAccessToken")) {
+            return syncFacebookLeadAds(entity, tenantId);
+        }
         return 0;
+    }
+
+    private int syncFacebookLeadAds(TenantIntegrationEntity entity, UUID tenantId) {
+        log.info("[TwoTierIntegration] [Facebook Sync] Starting manual sync for Facebook Lead Ads integration [{}] (tenant: {})",
+                entity.getId(), tenantId);
+
+        Map<String, Object> creds = parseJsonToMap(entity.getCredentialsJson());
+        if (creds.isEmpty()) {
+            log.warn("[TwoTierIntegration] [Facebook Sync] Empty credentials for integration [{}]", entity.getId());
+            return 0;
+        }
+
+        // 1. Extract connected pages from credentials
+        List<Map<String, Object>> pagesToScan = new ArrayList<>();
+        Object pagesObj = creds.get("pages");
+        if (pagesObj instanceof List<?> list && !list.isEmpty()) {
+            for (Object item : list) {
+                if (item instanceof Map<?, ?> mapItem) {
+                    Map<String, Object> pageMap = new HashMap<>();
+                    mapItem.forEach((k, v) -> pageMap.put(String.valueOf(k), v));
+                    pagesToScan.add(pageMap);
+                }
+            }
+        } else if (pagesObj instanceof Map<?, ?> map) {
+            map.forEach((k, v) -> {
+                if (v instanceof Map<?, ?> inner) {
+                    Map<String, Object> pageMap = new HashMap<>();
+                    inner.forEach((ik, iv) -> pageMap.put(String.valueOf(ik), iv));
+                    if (!pageMap.containsKey("pageId")) {
+                        pageMap.put("pageId", k);
+                    }
+                    pagesToScan.add(pageMap);
+                }
+            });
+        }
+
+        // Fallback to flat credentials if pages list is empty
+        if (pagesToScan.isEmpty() && creds.get("pageId") != null) {
+            Map<String, Object> flatPage = new HashMap<>();
+            flatPage.put("pageId", creds.get("pageId"));
+            flatPage.put("pageAccessToken", creds.get("pageAccessToken") != null ? creds.get("pageAccessToken")
+                    : (creds.get("userAccessToken") != null ? creds.get("userAccessToken") : creds.get("token")));
+            if (creds.containsKey("isSyncEnabled")) {
+                flatPage.put("isSyncEnabled", creds.get("isSyncEnabled"));
+            }
+            if (creds.containsKey("forms")) {
+                flatPage.put("forms", creds.get("forms"));
+            } else if (creds.containsKey("formId")) {
+                flatPage.put("forms", List.of(Map.of(
+                        "formId", creds.get("formId"),
+                        "formName", creds.getOrDefault("formName", "Lead Form")
+                )));
+            }
+            pagesToScan.add(flatPage);
+        }
+
+        if (pagesToScan.isEmpty()) {
+            log.warn("[TwoTierIntegration] [Facebook Sync] No connected pages found in credentials for integration [{}]", entity.getId());
+            return 0;
+        }
+
+        int totalIngestedLeads = 0;
+
+        for (Map<String, Object> page : pagesToScan) {
+            String pageId = page.get("pageId") != null ? String.valueOf(page.get("pageId")).trim() : null;
+            if (pageId == null || pageId.isBlank()) {
+                continue;
+            }
+
+            Object syncEnabledObj = page.get("isSyncEnabled");
+            if (Boolean.FALSE.equals(syncEnabledObj) || "false".equalsIgnoreCase(String.valueOf(syncEnabledObj))) {
+                log.info("[TwoTierIntegration] [Facebook Sync] Skipping page [{}] because sync is disabled (isSyncEnabled=false)", pageId);
+                continue;
+            }
+
+            String pageAccessToken = page.get("pageAccessToken") != null ? String.valueOf(page.get("pageAccessToken")).trim() : null;
+            if (pageAccessToken == null || pageAccessToken.isBlank() || pageAccessToken.startsWith("mock_")) {
+                log.info("[TwoTierIntegration] [Facebook Sync] Skipping page [{}] with blank or mock page access token", pageId);
+                continue;
+            }
+
+            log.info("[TwoTierIntegration] [Facebook Sync] Scanning page [{}] (tenant: {})", pageId, tenantId);
+
+            // Collect forms for this page
+            Map<String, String> formIdToName = new LinkedHashMap<>();
+
+            // a) From saved forms list
+            Object formsObj = page.get("forms");
+            if (formsObj instanceof List<?> formList) {
+                for (Object f : formList) {
+                    if (f instanceof Map<?, ?> fm) {
+                        String status = fm.get("status") != null ? String.valueOf(fm.get("status")) : "ACTIVE";
+                        if ("ARCHIVED".equalsIgnoreCase(status) || "DELETED".equalsIgnoreCase(status)) {
+                            continue;
+                        }
+                        String fId = fm.get("formId") != null ? String.valueOf(fm.get("formId")).trim()
+                                : (fm.get("id") != null ? String.valueOf(fm.get("id")).trim() : null);
+                        String fName = fm.get("formName") != null ? String.valueOf(fm.get("formName")).trim()
+                                : (fm.get("name") != null ? String.valueOf(fm.get("name")).trim() : "Lead Form");
+                        if (fId != null && !fId.isBlank()) {
+                            formIdToName.put(fId, fName);
+                        }
+                    }
+                }
+            }
+
+            // b) Also fetch live/test forms directly from Meta Graph API to merge any newly created forms
+            try {
+                String formsUrl = String.format("https://graph.facebook.com/v19.0/%s/leadgen_forms?fields=id,name,status&access_token=%s",
+                        URLEncoder.encode(pageId, StandardCharsets.UTF_8),
+                        URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
+                String formsBody = httpGet(formsUrl, 10);
+                if (formsBody != null && !formsBody.isBlank() && !formsBody.contains("\"error\":")) {
+                    JsonNode formsRoot = objectMapper.readTree(formsBody);
+                    JsonNode data = formsRoot.path("data");
+                    if (data.isArray()) {
+                        for (JsonNode fn : data) {
+                            String fStatus = fn.path("status").asText("ACTIVE");
+                            if ("ARCHIVED".equalsIgnoreCase(fStatus) || "DELETED".equalsIgnoreCase(fStatus)) {
+                                continue;
+                            }
+                            String fId = fn.path("id").asText(null);
+                            String fName = fn.path("name").asText("Lead Form");
+                            if (fId != null && !fId.isBlank()) {
+                                formIdToName.putIfAbsent(fId.trim(), fName.trim());
+                            }
+                        }
+                    }
+                } else if (formsBody != null && formsBody.contains("\"error\":")) {
+                    log.warn("[TwoTierIntegration] [Facebook Sync] Graph API returned error when fetching forms for page [{}]: {}", pageId, formsBody);
+                }
+            } catch (Exception e) {
+                log.warn("[TwoTierIntegration] [Facebook Sync] Exception fetching forms for page [{}]: {}", pageId, e.getMessage());
+            }
+
+            log.info("[TwoTierIntegration] [Facebook Sync] Found {} form(s) to scan for page [{}]", formIdToName.size(), pageId);
+
+            // Fetch leads for each form
+            for (Map.Entry<String, String> formEntry : formIdToName.entrySet()) {
+                String formId = formEntry.getKey();
+                String formName = formEntry.getValue();
+
+                try {
+                    String leadsUrl = String.format(
+                            "https://graph.facebook.com/v19.0/%s/leads?fields=id,created_time,ad_id,form_id,field_data&limit=50&access_token=%s",
+                            URLEncoder.encode(formId, StandardCharsets.UTF_8),
+                            URLEncoder.encode(pageAccessToken, StandardCharsets.UTF_8));
+                    String leadsBody = httpGet(leadsUrl, 15);
+                    if (leadsBody == null || leadsBody.isBlank()) {
+                        log.warn("[TwoTierIntegration] [Facebook Sync] Empty response received for form [{}]", formId);
+                        continue;
+                    }
+
+                    JsonNode leadsRoot = objectMapper.readTree(leadsBody);
+                    if (leadsRoot.has("error")) {
+                        JsonNode errNode = leadsRoot.path("error");
+                        String errMsg = errNode.path("message").asText(leadsBody);
+                        log.warn("[TwoTierIntegration] [Facebook Sync] Graph API returned error for form [{}]: {}", formId, errMsg);
+                        continue;
+                    }
+
+                    JsonNode data = leadsRoot.path("data");
+                    if (!data.isArray() || data.isEmpty()) {
+                        log.info("[TwoTierIntegration] [Facebook Sync] No leads found for form [{}]", formId);
+                        continue;
+                    }
+
+                    log.info("[TwoTierIntegration] [Facebook Sync] Processing {} lead(s) from form [{}]", data.size(), formId);
+
+                    for (JsonNode leadNode : data) {
+                        String leadgenId = leadNode.path("id").asText(null);
+                        if (leadgenId == null || leadgenId.isBlank()) {
+                            continue;
+                        }
+
+                        // Deduplicate against existing CRM leads
+                        if (leadRepository.existsByCompanyIdAndExternalLeadIdAndIsDeletedFalse(tenantId, leadgenId)) {
+                            log.info("[TwoTierIntegration] [Facebook Sync] Skipping already ingested lead [{}] for company [{}]", leadgenId, tenantId);
+                            continue;
+                        }
+
+                        LeadCreateRequest leadReq = parseMetaLeadNode(leadNode);
+                        if (leadReq == null) {
+                            continue;
+                        }
+
+                        leadReq.setExternalLeadId(leadgenId);
+                        leadReq.setTenantIntegrationId(entity.getId());
+                        UUID sourceId = getOrCreateLeadSourceId(tenantId, "META_ADS", "Meta Ads");
+                        leadReq.setLeadSourceId(sourceId);
+                        if (leadReq.getUtmCampaign() == null || leadReq.getUtmCampaign().isBlank()) {
+                            leadReq.setUtmCampaign(formName != null && !formName.isBlank() ? formName : formId);
+                        }
+
+                        CurrentUserContext.setCompanyId(tenantId);
+                        if (entity.getCreatedBy() != null) {
+                            CurrentUserContext.setUserId(entity.getCreatedBy());
+                        }
+                        try {
+                            LeadResponse created = leadService.createLead(leadReq, tenantId);
+                            if (created != null && created.getId() != null) {
+                                totalIngestedLeads++;
+                                log.info("[TwoTierIntegration] [Facebook Sync] Ingested lead [{}] (leadgenId: {}) for company [{}] from form [{}]",
+                                        created.getId(), leadgenId, tenantId, formId);
+                            }
+                        } catch (Exception ex) {
+                            log.warn("[TwoTierIntegration] [Facebook Sync] Failed to create lead for leadgenId [{}]: {}", leadgenId, ex.getMessage());
+                        } finally {
+                            CurrentUserContext.clearCompanyId();
+                            CurrentUserContext.clearUserId();
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("[TwoTierIntegration] [Facebook Sync] Error fetching leads for form [{}]: {}", formId, e.getMessage());
+                }
+            }
+        }
+
+        log.info("[TwoTierIntegration] [Facebook Sync] Manual sync completed for integration [{}]. Total new leads ingested: {}",
+                entity.getId(), totalIngestedLeads);
+        return totalIngestedLeads;
     }
 
     private UUID getOrCreateLeadSourceId(UUID companyId, String sourceCode, String sourceName) {

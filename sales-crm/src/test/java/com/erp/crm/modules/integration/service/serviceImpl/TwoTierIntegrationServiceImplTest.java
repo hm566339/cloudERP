@@ -1186,4 +1186,87 @@ class TwoTierIntegrationServiceImplTest {
         assertEquals(1, ack.getLeadsCount());
         verify(leadService, times(1)).createLead(any(LeadCreateRequest.class), eq(companyId));
     }
+
+    @Test
+    @DisplayName("30. Facebook: triggerSync routes to explicit case FACEBOOK and executes syncFacebookLeadAds")
+    void testTriggerSyncFacebookLeadAds_ExplicitCaseFacebook() {
+        UUID integrationId = UUID.randomUUID();
+        TenantIntegrationEntity entity = TenantIntegrationEntity.builder()
+                .id(integrationId)
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .integrationName("Facebook Lead Ads Ingestion")
+                .credentialsJson("{\"pages\":[{\"pageId\":\"p100\",\"pageAccessToken\":\"mock_token_sync\",\"isSyncEnabled\":true}]}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .webhookSlug("fb-sync-slug")
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findByIdAndTenantIdAndIsDeletedFalse(integrationId, companyId))
+                .thenReturn(Optional.of(entity));
+        when(tenantIntegrationRepository.save(any(TenantIntegrationEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        SyncTriggerResponse response = integrationService.triggerSync(integrationId, companyId);
+
+        assertNotNull(response);
+        assertEquals(integrationId, response.getIntegrationId());
+        assertEquals("TRIGGERED", response.getSyncStatus());
+        assertEquals(0, response.getQueuedRecords());
+        assertTrue(response.getMessage().contains("Facebook Lead Ads sync completed"));
+        assertNotNull(entity.getLastSyncedAt());
+        verify(tenantIntegrationRepository, times(1)).save(entity);
+    }
+
+    @Test
+    @DisplayName("31. Facebook: syncFacebookLeadAds handles flat credentials fallback")
+    void testTriggerSyncFacebookLeadAds_FlatCredentialsFallback() {
+        UUID integrationId = UUID.randomUUID();
+        TenantIntegrationEntity entity = TenantIntegrationEntity.builder()
+                .id(integrationId)
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .integrationName("Facebook Lead Ads Flat")
+                .credentialsJson("{\"pageId\":\"flat_p1\",\"pageAccessToken\":\"mock_flat_token\",\"formId\":\"form_flat_1\"}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .webhookSlug("fb-flat-slug")
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findByIdAndTenantIdAndIsDeletedFalse(integrationId, companyId))
+                .thenReturn(Optional.of(entity));
+        when(tenantIntegrationRepository.save(any(TenantIntegrationEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        SyncTriggerResponse response = integrationService.triggerSync(integrationId, companyId);
+
+        assertNotNull(response);
+        assertEquals(integrationId, response.getIntegrationId());
+        assertEquals(0, response.getQueuedRecords());
+        assertEquals("Facebook Lead Ads sync completed. 0 record(s) processed.", response.getMessage());
+    }
+
+    @Test
+    @DisplayName("32. Facebook: syncFacebookLeadAds skips pages with isSyncEnabled=false")
+    void testTriggerSyncFacebookLeadAds_DisabledPage_Skipped() {
+        UUID integrationId = UUID.randomUUID();
+        TenantIntegrationEntity entity = TenantIntegrationEntity.builder()
+                .id(integrationId)
+                .tenantId(companyId)
+                .providerCode(IntegrationProviderCode.FACEBOOK)
+                .integrationName("Facebook Lead Ads Disabled Page")
+                .credentialsJson("{\"pages\":[{\"pageId\":\"disabled_p1\",\"pageAccessToken\":\"mock_disabled_token\",\"isSyncEnabled\":false}]}")
+                .status(TenantIntegrationStatus.CONNECTED)
+                .webhookSlug("fb-disabled-slug")
+                .isDeleted(false)
+                .build();
+
+        when(tenantIntegrationRepository.findByIdAndTenantIdAndIsDeletedFalse(integrationId, companyId))
+                .thenReturn(Optional.of(entity));
+        when(tenantIntegrationRepository.save(any(TenantIntegrationEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        SyncTriggerResponse response = integrationService.triggerSync(integrationId, companyId);
+
+        assertNotNull(response);
+        assertEquals(0, response.getQueuedRecords());
+        assertEquals("Facebook Lead Ads sync completed. 0 record(s) processed.", response.getMessage());
+    }
 }
