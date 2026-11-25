@@ -26,12 +26,17 @@ const resolveWsUrl = () => {
   // 1. Explicit environment variable if configured
   const envUrl = import.meta.env?.VITE_COMMUNICATION_WS_URL;
   if (envUrl) {
-    // If absolute URL pointing to localhost while running on non-localhost domain, disregard baked localhost
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && envUrl.includes('localhost')) {
+    // If absolute URL pointing to localhost while running on non-localhost domain, resolve dynamically to gateway path
+    if (
+      typeof window !== 'undefined' &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1' &&
+      envUrl.includes('localhost')
+    ) {
       const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-      return `${protocol}//${window.location.host}/ws-chat`;
+      return `${protocol}//${window.location.host}/api/communication/v1/ws-chat`;
     }
-    // If relative path like '/ws-chat', resolve against current origin
+    // If relative path like '/api/communication/v1/ws-chat' or '/ws-chat', resolve against current origin
     if (envUrl.startsWith('/') && typeof window !== 'undefined') {
       const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
       return `${protocol}//${window.location.host}${envUrl}`;
@@ -39,12 +44,12 @@ const resolveWsUrl = () => {
     return envUrl;
   }
 
-  // 2. Gateway/host routed WebSocket endpoint (/ws-chat)
+  // 2. Gateway/host routed WebSocket endpoint (/api/communication/v1/ws-chat)
   if (typeof window !== 'undefined') {
     const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-    return `${protocol}//${window.location.host}/ws-chat`;
+    return `${protocol}//${window.location.host}/api/communication/v1/ws-chat`;
   }
-  return 'http://localhost:8080/ws-chat';
+  return 'http://localhost:8080/api/communication/v1/ws-chat';
 };
 
 /**

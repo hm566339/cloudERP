@@ -103,6 +103,8 @@ public class JwtAuthenticationFilter
                         // Internal Chat WebSocket (STOMP handshake & SockJS fallback authenticated at frame level)
                         "/ws-chat/**",
                         "/ws-chat",
+                        "/api/communication/v1/ws-chat/**",
+                        "/api/communication/v1/ws-chat",
 
                         // Swagger / OpenAPI
                         "/swagger-ui/**",
