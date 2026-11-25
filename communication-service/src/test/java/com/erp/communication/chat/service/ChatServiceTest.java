@@ -209,4 +209,68 @@ class ChatServiceTest {
         String expectedTopic = String.format("/topic/company.%s.channel.%s", companyId, channelId);
         verify(messagingTemplate, times(1)).convertAndSend(eq(expectedTopic), any(ChatMessageResponse.class));
     }
+
+    @Test
+    @DisplayName("getChannel should query countByCompanyIdAndChannelId when lastReadAt is null")
+    void testGetChannelUnreadCountWhenLastReadIsNull() {
+        ChatChannel channel = ChatChannel.builder()
+                .id(channelId)
+                .companyId(companyId)
+                .name("Support")
+                .type(ChatChannelType.GROUP)
+                .build();
+
+        when(channelRepository.findByIdAndCompanyId(channelId, companyId)).thenReturn(Optional.of(channel));
+        when(memberRepository.existsByCompanyIdAndChannelIdAndUserId(companyId, channelId, userId)).thenReturn(true);
+
+        // Member exists but has null lastReadAt (e.g. freshly created or never opened)
+        ChatChannelMember member = ChatChannelMember.builder()
+                .channel(channel)
+                .userId(userId)
+                .companyId(companyId)
+                .role(ChatMemberRole.MEMBER)
+                .lastReadAt(null)
+                .build();
+        when(memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, userId)).thenReturn(Optional.of(member));
+        when(messageRepository.countByCompanyIdAndChannelId(companyId, channelId)).thenReturn(7L);
+
+        ChatChannelResponse response = chatService.getChannel(channelId, companyId, userId);
+
+        assertNotNull(response);
+        assertEquals(7L, response.getUnreadCount());
+        verify(messageRepository, times(1)).countByCompanyIdAndChannelId(companyId, channelId);
+        verify(messageRepository, never()).countByCompanyIdAndChannelIdAndCreatedAtAfter(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("getChannel should query countByCompanyIdAndChannelIdAndCreatedAtAfter when lastReadAt is present")
+    void testGetChannelUnreadCountWhenLastReadIsPresent() {
+        ChatChannel channel = ChatChannel.builder()
+                .id(channelId)
+                .companyId(companyId)
+                .name("Support")
+                .type(ChatChannelType.GROUP)
+                .build();
+
+        LocalDateTime lastRead = LocalDateTime.now().minusHours(2);
+        when(channelRepository.findByIdAndCompanyId(channelId, companyId)).thenReturn(Optional.of(channel));
+        when(memberRepository.existsByCompanyIdAndChannelIdAndUserId(companyId, channelId, userId)).thenReturn(true);
+
+        ChatChannelMember member = ChatChannelMember.builder()
+                .channel(channel)
+                .userId(userId)
+                .companyId(companyId)
+                .role(ChatMemberRole.MEMBER)
+                .lastReadAt(lastRead)
+                .build();
+        when(memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, userId)).thenReturn(Optional.of(member));
+        when(messageRepository.countByCompanyIdAndChannelIdAndCreatedAtAfter(companyId, channelId, lastRead)).thenReturn(3L);
+
+        ChatChannelResponse response = chatService.getChannel(channelId, companyId, userId);
+
+        assertNotNull(response);
+        assertEquals(3L, response.getUnreadCount());
+        verify(messageRepository, times(1)).countByCompanyIdAndChannelIdAndCreatedAtAfter(companyId, channelId, lastRead);
+        verify(messageRepository, never()).countByCompanyIdAndChannelId(any(), any());
+    }
 }

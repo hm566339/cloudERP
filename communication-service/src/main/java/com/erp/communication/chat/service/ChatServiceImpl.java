@@ -390,7 +390,11 @@ public class ChatServiceImpl implements ChatService {
         if (currentUserId != null) {
             Optional<ChatChannelMember> member = memberRepository.findByCompanyIdAndChannelIdAndUserId(ch.getCompanyId(), ch.getId(), currentUserId);
             LocalDateTime lastRead = member.map(ChatChannelMember::getLastReadAt).orElse(null);
-            unreadCount = messageRepository.countUnreadMessages(ch.getCompanyId(), ch.getId(), lastRead);
+            if (lastRead == null) {
+                unreadCount = messageRepository.countByCompanyIdAndChannelId(ch.getCompanyId(), ch.getId());
+            } else {
+                unreadCount = messageRepository.countByCompanyIdAndChannelIdAndCreatedAtAfter(ch.getCompanyId(), ch.getId(), lastRead);
+            }
         }
 
         Optional<ChatMessage> lastMsg = messageRepository.findFirstByChannelIdOrderByCreatedAtDesc(ch.getId());
