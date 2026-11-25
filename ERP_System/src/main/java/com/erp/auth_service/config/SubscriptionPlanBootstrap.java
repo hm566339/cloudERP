@@ -225,6 +225,40 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
         attachModulesToPlanIfMissing(enterprisePlan,
                 List.of("ACCOUNT", "INVENTORY", "WORKFLOW", "CRM", "SALES", "PURCHASE"));
 
+        // 6. Bootstrap Unlimited Education Plan (₹5/year, maxCompanies=null unlimited, maxUsersPerCompany=null unlimited)
+        SubscriptionPlan unlimitedEduPlan = subscriptionPlanRepository.findByCodeIgnoreCase("UNLIMITED_EDUCATION")
+                .map(existing -> {
+                    if (existing.getMaxCompanies() != null || existing.getMaxUsersPerCompany() != null || existing.getMaxUsers() != null) {
+                        existing.setMaxCompanies(null);
+                        existing.setMaxUsersPerCompany(null);
+                        existing.setMaxUsers(null);
+                        existing = subscriptionPlanRepository.saveAndFlush(existing);
+                    }
+                    syncToLegacyPlanTableIfPresent(existing);
+                    return existing;
+                })
+                .orElseGet(() -> {
+                    SubscriptionPlan plan = SubscriptionPlan.builder()
+                            .code("UNLIMITED_EDUCATION")
+                            .name("Unlimited education")
+                            .description("Complete unlimited learning plan with unlimited companies, unlimited users, and full ERP suite access.")
+                            .durationDays(365)
+                            .maxCompanies(null)
+                            .maxUsersPerCompany(null)
+                            .maxUsers(null)
+                            .price(new BigDecimal("5.00"))
+                            .currency("INR")
+                            .active(true)
+                            .isTrial(false)
+                            .build();
+                    SubscriptionPlan saved = subscriptionPlanRepository.saveAndFlush(plan);
+                    syncToLegacyPlanTableIfPresent(saved);
+                    log.info("Created default Unlimited Education plan [UNLIMITED_EDUCATION]");
+                    return saved;
+                });
+        attachModulesToPlanIfMissing(unlimitedEduPlan,
+                List.of("ACCOUNT", "INVENTORY", "WORKFLOW", "CRM", "SALES", "PURCHASE"));
+
         // 3. Existing Companies Backward Compatibility
         // Ensure any existing company has a CompanySubscription so access checks pass
         // seamlessly

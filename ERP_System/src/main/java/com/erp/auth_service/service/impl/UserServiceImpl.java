@@ -1642,8 +1642,57 @@ public class UserServiceImpl implements UserService {
         AccessMode effectiveAccessMode = AccessMode.FULL;
         SubscriptionPlan effectivePlan = null;
 
-        // 1. Check Company-specific subscription first
-        if (effectiveCompany != null && companySubscriptionRepository != null) {
+        // 1. Organization-level subscription (Authoritative in SaaS multi-tenant)
+        Subscription orgSub = null;
+        if (organization != null && subscriptionRepository != null) {
+            java.util.Optional<Subscription> orgSubOpt = subscriptionRepository
+                    .findEffectiveByOrganizationId(organization.getId());
+            if (orgSubOpt.isEmpty()) {
+                orgSubOpt = subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId());
+            }
+            if (orgSubOpt.isPresent()) {
+                orgSub = orgSubOpt.get();
+            }
+        }
+
+        // If organization has an ACTIVE paid subscription, it takes top priority!
+        if (orgSub != null && orgSub.getStatus() == SubscriptionStatus.ACTIVE) {
+            long daysRemaining = 0L;
+            if (orgSub.getCurrentPeriodEnd() != null) {
+                daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
+                        LocalDateTime.now(), orgSub.getCurrentPeriodEnd());
+                if (daysRemaining < 0) {
+                    daysRemaining = 0L;
+                }
+            }
+
+            subscriptionCtx = SsoMeResponse.SubscriptionContext.builder()
+                    .id(orgSub.getId())
+                    .planCode(orgSub.getPlanCode())
+                    .status(orgSub.getStatus())
+                    .accessMode(orgSub.getAccessMode())
+                    .trialStartedAt(orgSub.getTrialStartedAt())
+                    .trialEndsAt(orgSub.getTrialEndsAt())
+                    .currentPeriodStart(orgSub.getCurrentPeriodStart())
+                    .currentPeriodEnd(orgSub.getCurrentPeriodEnd())
+                    .trialing(false)
+                    .daysRemaining(daysRemaining)
+                    .build();
+
+            effectiveAccessMode = orgSub.getAccessMode();
+            if (orgSub.getPlan() != null) {
+                effectivePlan = orgSub.getPlan();
+            } else if (orgSub.getPlanCode() != null && subscriptionPlanRepository != null) {
+                final String planCodeLookup = orgSub.getPlanCode();
+                effectivePlan = subscriptionPlanRepository
+                        .findByCodeIgnoreCaseAndActiveTrue(planCodeLookup)
+                        .or(() -> subscriptionPlanRepository.findByCodeIgnoreCase(planCodeLookup))
+                        .orElse(null);
+            }
+        }
+
+        // 2. If organization does not have an ACTIVE subscription, check Company-specific subscription
+        if (subscriptionCtx == null && effectiveCompany != null && companySubscriptionRepository != null) {
             java.util.Optional<CompanySubscription> compSubOpt = companySubscriptionRepository
                     .findTopByCompany_IdAndStatusInOrderByCreatedAtDesc(
                             effectiveCompanyId,
@@ -1689,80 +1738,78 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        // 2. Organization-level subscription fallback / merge
-        if (organization != null && subscriptionRepository != null) {
-            java.util.Optional<Subscription> orgSubOpt = subscriptionRepository
-                    .findEffectiveByOrganizationId(organization.getId());
-            if (orgSubOpt.isEmpty()) {
-                orgSubOpt = subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId());
+        // 3. Fallback to organization subscription (trialing / expired / pending) if still null
+        if (subscriptionCtx == null && orgSub != null) {
+            boolean isTrialing = orgSub.getStatus() == SubscriptionStatus.TRIALING
+                    && (orgSub.getTrialEndsAt() == null || orgSub.getTrialEndsAt().isAfter(LocalDateTime.now()));
+
+            long daysRemaining = 0L;
+            if (isTrialing && orgSub.getTrialEndsAt() != null) {
+                daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
+                        LocalDateTime.now(), orgSub.getTrialEndsAt());
+                if (daysRemaining < 0)
+                    daysRemaining = 0L;
+            } else if (orgSub.getStatus() == SubscriptionStatus.ACTIVE && orgSub.getCurrentPeriodEnd() != null) {
+                daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
+                        LocalDateTime.now(), orgSub.getCurrentPeriodEnd());
+                if (daysRemaining < 0)
+                    daysRemaining = 0L;
             }
 
-            if (orgSubOpt.isPresent()) {
-                Subscription orgSub = orgSubOpt.get();
-                boolean isTrialing = orgSub.getStatus() == SubscriptionStatus.TRIALING
-                        && (orgSub.getTrialEndsAt() == null || orgSub.getTrialEndsAt().isAfter(LocalDateTime.now()));
-
-                long daysRemaining = 0L;
-                if (isTrialing && orgSub.getTrialEndsAt() != null) {
-                    daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
-                            LocalDateTime.now(), orgSub.getTrialEndsAt());
-                    if (daysRemaining < 0)
-                        daysRemaining = 0L;
-                } else if (orgSub.getStatus() == SubscriptionStatus.ACTIVE && orgSub.getCurrentPeriodEnd() != null) {
-                    daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
-                            LocalDateTime.now(), orgSub.getCurrentPeriodEnd());
-                    if (daysRemaining < 0)
-                        daysRemaining = 0L;
-                }
-
-                if (subscriptionCtx == null) {
-                    AccessMode subAccessMode = orgSub.getAccessMode();
-                    if (orgSub.getStatus() == SubscriptionStatus.PENDING) {
-                        subAccessMode = AccessMode.READ_ONLY;
-                    }
-
-                    subscriptionCtx = SsoMeResponse.SubscriptionContext.builder()
-                            .id(orgSub.getId())
-                            .planCode(orgSub.getPlanCode())
-                            .status(orgSub.getStatus())
-                            .accessMode(subAccessMode)
-                            .trialStartedAt(orgSub.getTrialStartedAt())
-                            .trialEndsAt(orgSub.getTrialEndsAt())
-                            .currentPeriodStart(orgSub.getCurrentPeriodStart())
-                            .currentPeriodEnd(orgSub.getCurrentPeriodEnd())
-                            .trialing(isTrialing)
-                            .daysRemaining(daysRemaining)
-                            .build();
-
-                    effectiveAccessMode = subAccessMode;
-                    if (orgSub.getStatus() == SubscriptionStatus.EXPIRED
-                            || (orgSub.getStatus() == SubscriptionStatus.TRIALING && orgSub.getTrialEndsAt() != null
-                                    && !orgSub.getTrialEndsAt().isAfter(LocalDateTime.now()))
-                            || orgSub.getStatus() == SubscriptionStatus.PENDING) {
-                        effectiveAccessMode = AccessMode.READ_ONLY;
-                    }
-                }
-
-                // Grant plan entitlements ONLY if ACTIVE or legitimately TRIALING (NEVER for
-                // PENDING unconfirmed)
-                boolean isValidPaidOrTrial = orgSub.getStatus() == SubscriptionStatus.ACTIVE
-                        || (orgSub.getStatus() == SubscriptionStatus.TRIALING && isTrialing);
-
-                if (effectivePlan == null && isValidPaidOrTrial && orgSub.getAccessMode() != AccessMode.BLOCKED) {
-                    if (orgSub.getPlan() != null) {
-                        effectivePlan = orgSub.getPlan();
-                    } else if (orgSub.getPlanCode() != null && subscriptionPlanRepository != null) {
-                        effectivePlan = subscriptionPlanRepository
-                                .findByCodeIgnoreCaseAndActiveTrue(orgSub.getPlanCode())
-                                .or(() -> subscriptionPlanRepository.findByCodeIgnoreCase(orgSub.getPlanCode()))
-                                .orElse(null);
-                    }
-                }
+            AccessMode subAccessMode = orgSub.getAccessMode();
+            if (orgSub.getStatus() == SubscriptionStatus.PENDING) {
+                subAccessMode = AccessMode.READ_ONLY;
             }
 
-            if (organization.getAccessMode() != null && organization.getAccessMode() != AccessMode.FULL) {
-                effectiveAccessMode = organization.getAccessMode();
+            subscriptionCtx = SsoMeResponse.SubscriptionContext.builder()
+                    .id(orgSub.getId())
+                    .planCode(orgSub.getPlanCode())
+                    .status(orgSub.getStatus())
+                    .accessMode(subAccessMode)
+                    .trialStartedAt(orgSub.getTrialStartedAt())
+                    .trialEndsAt(orgSub.getTrialEndsAt())
+                    .currentPeriodStart(orgSub.getCurrentPeriodStart())
+                    .currentPeriodEnd(orgSub.getCurrentPeriodEnd())
+                    .trialing(isTrialing)
+                    .daysRemaining(daysRemaining)
+                    .build();
+
+            effectiveAccessMode = subAccessMode;
+            if (orgSub.getStatus() == SubscriptionStatus.EXPIRED
+                    || (orgSub.getStatus() == SubscriptionStatus.TRIALING && orgSub.getTrialEndsAt() != null
+                            && !orgSub.getTrialEndsAt().isAfter(LocalDateTime.now()))
+                    || orgSub.getStatus() == SubscriptionStatus.PENDING) {
+                effectiveAccessMode = AccessMode.READ_ONLY;
             }
+
+            // Grant plan entitlements ONLY if ACTIVE or legitimately TRIALING (NEVER for
+            // PENDING unconfirmed)
+            boolean isValidPaidOrTrial = orgSub.getStatus() == SubscriptionStatus.ACTIVE
+                    || (orgSub.getStatus() == SubscriptionStatus.TRIALING && isTrialing);
+
+            if (effectivePlan == null && isValidPaidOrTrial && orgSub.getAccessMode() != AccessMode.BLOCKED) {
+                if (orgSub.getPlan() != null) {
+                    effectivePlan = orgSub.getPlan();
+                } else if (orgSub.getPlanCode() != null && subscriptionPlanRepository != null) {
+                    final String planCodeLookup = orgSub.getPlanCode();
+                    effectivePlan = subscriptionPlanRepository
+                            .findByCodeIgnoreCaseAndActiveTrue(planCodeLookup)
+                            .or(() -> subscriptionPlanRepository.findByCodeIgnoreCase(planCodeLookup))
+                            .orElse(null);
+                }
+            }
+        }
+
+        // Attach plan limits directly to subscriptionCtx for frontend consumption
+        if (subscriptionCtx != null && effectivePlan != null) {
+            subscriptionCtx.setMaxCompanies(effectivePlan.getMaxCompanies());
+            subscriptionCtx.setMaxUsers(effectivePlan.getMaxUsers());
+            subscriptionCtx.setMaxUsersPerCompany(effectivePlan.getMaxUsersPerCompany());
+            subscriptionCtx.setPlanName(effectivePlan.getName());
+        }
+
+        if (organization != null && organization.getAccessMode() != null && organization.getAccessMode() != AccessMode.FULL) {
+            effectiveAccessMode = organization.getAccessMode();
         }
 
         // 3. Fallback to default trial plan if still null (ONLY if access mode permits

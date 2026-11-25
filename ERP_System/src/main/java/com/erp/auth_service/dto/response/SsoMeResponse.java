@@ -242,6 +242,14 @@ public class SsoMeResponse {
         private boolean trialing;
         /** Convenience: days remaining in trial or subscription period. */
         private Long daysRemaining;
+        /** Maximum companies allowed under this subscription (null means unlimited). */
+        private Integer maxCompanies;
+        /** Maximum total users allowed under this subscription (null means unlimited). */
+        private Integer maxUsers;
+        /** Maximum users allowed per company under this subscription (null means unlimited). */
+        private Integer maxUsersPerCompany;
+        /** Display name of the active subscription plan. */
+        private String planName;
     }
 
     @Data

@@ -9,12 +9,16 @@ import com.erp.auth_service.dto.subscription.SubscriptionCheckoutRequest;
 import com.erp.auth_service.exception.BadRequestException;
 import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.exception.ResourceNotFoundException;
+import com.erp.auth_service.model.Company;
+import com.erp.auth_service.model.CompanySubscription;
 import com.erp.auth_service.model.Invoice;
 import com.erp.auth_service.model.Organization;
 import com.erp.auth_service.model.OrganizationMember;
 import com.erp.auth_service.model.Payment;
 import com.erp.auth_service.model.Subscription;
 import com.erp.auth_service.model.SubscriptionPlan;
+import com.erp.auth_service.repository.CompanyRepository;
+import com.erp.auth_service.repository.CompanySubscriptionRepository;
 import com.erp.auth_service.repository.InvoiceRepository;
 import com.erp.auth_service.repository.OrganizationMemberRepository;
 import com.erp.auth_service.repository.OrganizationRepository;
@@ -26,6 +30,7 @@ import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.SubscriptionBillingService;
 import com.erp.auth_service.service.razorpay.RazorpayService;
 import com.erp.auth_service.utility.AccessMode;
+import com.erp.auth_service.utility.CompanySubscriptionStatus;
 import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
 import com.erp.auth_service.utility.OrganizationStatus;
@@ -58,6 +63,20 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     private final InvoiceRepository invoiceRepository;
     private final RazorpayService razorpayService;
     private final RazorpayProperties razorpayProperties;
+
+    @Autowired(required = false)
+    private CompanyRepository companyRepository;
+
+    @Autowired(required = false)
+    private CompanySubscriptionRepository companySubscriptionRepository;
+
+    public void setCompanyRepository(CompanyRepository companyRepository) {
+        this.companyRepository = companyRepository;
+    }
+
+    public void setCompanySubscriptionRepository(CompanySubscriptionRepository companySubscriptionRepository) {
+        this.companySubscriptionRepository = companySubscriptionRepository;
+    }
 
     @Autowired
     public SubscriptionBillingServiceImpl(OrganizationRepository organizationRepository,
@@ -146,16 +165,19 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         Object orgLock = orgCheckoutLocks.computeIfAbsent(resolvedOrgId, k -> new Object());
         synchronized (orgLock) {
             // Check for ACTIVE subscription (business duplicate guard)
-            Optional<Subscription> activeSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.ACTIVE);
+            Optional<Subscription> activeSubOpt = subscriptionRepository
+                    .findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.ACTIVE);
             if (activeSubOpt.isPresent()) {
                 Subscription activeSub = activeSubOpt.get();
                 if (activeSub.getPlan() != null && activeSub.getPlan().getId().equals(plan.getId())) {
-                    throw new BadRequestException("Organization already has an active subscription to plan: " + plan.getName());
+                    throw new BadRequestException(
+                            "Organization already has an active subscription to plan: " + plan.getName());
                 }
             }
 
             // Check for PENDING order checkout with matching plan to avoid duplicate orders
-            Optional<Subscription> pendingSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.PENDING);
+            Optional<Subscription> pendingSubOpt = subscriptionRepository
+                    .findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.PENDING);
             if (pendingSubOpt.isPresent()) {
                 Subscription pendingSub = pendingSubOpt.get();
                 if (pendingSub.getRazorpayOrderId() != null
@@ -163,7 +185,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                         && pendingSub.getPlan().getId().equals(plan.getId())) {
                     log.info("Reusing existing PENDING order checkout for organizationId={}, rzpOrderId={}",
                             resolvedOrgId, pendingSub.getRazorpayOrderId());
-                    long paise = priceAtSubscription.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+                    long paise = priceAtSubscription.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP)
+                            .longValue();
                     return RazorpayCheckoutResponse.builder()
                             .keyId(razorpayProperties.getKeyId())
                             .orderId(pendingSub.getRazorpayOrderId())
@@ -175,10 +198,12 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                             .amount(priceAtSubscription)
                             .currency(plan.getCurrency() != null ? plan.getCurrency() : "INR")
                             .organizationId(organization.getId())
-                            .organizationName(organization.getDisplayName() != null ? organization.getDisplayName() : organization.getLegalName())
+                            .organizationName(organization.getDisplayName() != null ? organization.getDisplayName()
+                                    : organization.getLegalName())
                             .build();
                 } else if (pendingSub.getPlan() != null && !pendingSub.getPlan().getId().equals(plan.getId())) {
-                    // Organization is switching to a different plan: safely cancel the older uncompleted pending checkout
+                    // Organization is switching to a different plan: safely cancel the older
+                    // uncompleted pending checkout
                     log.info("Cancelling prior pending checkout for plan [{}] in favor of new checkout for plan [{}]",
                             pendingSub.getPlan().getCode(), plan.getCode());
                     pendingSub.setStatus(SubscriptionStatus.CANCELLED);
@@ -196,19 +221,20 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
             notes.put("plan_version", plan.getPlanVersion() != null ? plan.getPlanVersion() : "v1");
             notes.put("payment_type", "ONE_TIME_PLAN_PURCHASE");
 
-            String receipt = "rcpt_" + organization.getId().toString().substring(0, 8) + "_" + System.currentTimeMillis();
+            String receipt = "rcpt_" + organization.getId().toString().substring(0, 8) + "_"
+                    + System.currentTimeMillis();
 
             RazorpayOrderDto rzpOrder = razorpayService.createOrder(
                     priceAtSubscription,
                     plan.getCurrency() != null ? plan.getCurrency() : "INR",
                     receipt,
-                    notes
-            );
+                    notes);
             log.info("Created Razorpay order [{}] for organization=[{}], plan=[{}]",
                     rzpOrder.getId(), organization.getOrganizationCode(), plan.getCode());
 
             // ---- SAVE ERP SUBSCRIPTION IN PENDING STATE ----
-            Subscription subscription = buildOrUpdatePendingSubscription(organization, plan, priceAtSubscription, rzpOrder.getId());
+            Subscription subscription = buildOrUpdatePendingSubscription(organization, plan, priceAtSubscription,
+                    rzpOrder.getId());
 
             // ---- CREATE / UPDATE PENDING PAYMENT RECORD ----
             Payment pendingPayment = paymentRepository.findByRazorpayOrderId(rzpOrder.getId())
@@ -229,7 +255,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
             paymentRepository.save(pendingPayment);
 
             long paise = rzpOrder.getAmount() != null ? rzpOrder.getAmount()
-                    : priceAtSubscription.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+                    : priceAtSubscription.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP)
+                            .longValue();
 
             return RazorpayCheckoutResponse.builder()
                     .keyId(razorpayProperties.getKeyId())
@@ -242,7 +269,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                     .amount(priceAtSubscription)
                     .currency(plan.getCurrency() != null ? plan.getCurrency() : "INR")
                     .organizationId(organization.getId())
-                    .organizationName(organization.getDisplayName() != null ? organization.getDisplayName() : organization.getLegalName())
+                    .organizationName(organization.getDisplayName() != null ? organization.getDisplayName()
+                            : organization.getLegalName())
                     .build();
         }
     }
@@ -337,44 +365,103 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         // 1. Authorization check: caller must have OWNER/ADMIN access to organization
         assertOrganizationManagementAccess(resolvedOrgId);
 
-        // 2. Cryptographic signature check
-        boolean isValidSignature = razorpayService.verifyPaymentSignature(orderId, paymentId, signature);
-        if (!isValidSignature) {
-            log.warn("Invalid Razorpay payment signature for orderId={}, paymentId={}", orderId, paymentId);
+        if ((paymentId == null || paymentId.isBlank()) && (orderId == null || orderId.isBlank())) {
+            throw new BadRequestException("Either paymentId or orderId is required for payment verification.");
+        }
+
+        // 2. Server-side verification with Razorpay API (Authoritative check when
+        // paymentId is available)
+        JsonNode rzpPayment = null;
+        boolean verifiedViaApi = false;
+        if (paymentId != null && !paymentId.isBlank()) {
+            try {
+                rzpPayment = razorpayService.getPayment(paymentId);
+                if (rzpPayment != null) {
+                    String paymentStatus = rzpPayment.path("status").asText("");
+                    if ("captured".equalsIgnoreCase(paymentStatus) || "authorized".equalsIgnoreCase(paymentStatus)) {
+                        verifiedViaApi = true;
+                        String paymentOrderId = rzpPayment.path("order_id").asText("");
+                        if ((orderId == null || orderId.isBlank()) && paymentOrderId != null
+                                && !paymentOrderId.isBlank()) {
+                            orderId = paymentOrderId;
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                log.warn("Could not query Razorpay API for paymentId {}: {}", paymentId, ex.getMessage());
+            }
+        }
+
+        // 3. Cryptographic signature check (if orderId, paymentId, and signature are
+        // all provided)
+        boolean isValidSignature = false;
+        if (orderId != null && !orderId.isBlank() && paymentId != null && !paymentId.isBlank() && signature != null
+                && !signature.isBlank()) {
+            isValidSignature = razorpayService.verifyPaymentSignature(orderId, paymentId, signature);
+        }
+
+        if (!isValidSignature && !verifiedViaApi) {
+            log.warn(
+                    "Neither Razorpay cryptographic signature nor server-side API verification succeeded for orderId={}, paymentId={}",
+                    orderId, paymentId);
             throw new BadRequestException("Invalid payment signature. Verification failed.");
         }
 
-        // 3. Find pending payment record by order ID (or providerPaymentId)
-        Payment payment = paymentRepository.findByRazorpayOrderId(orderId)
-                .orElseGet(() -> paymentRepository.findByProviderPaymentId(orderId)
-                        .orElseThrow(() -> new ResourceNotFoundException("No payment record found for order: " + orderId)));
+        // 4. Find payment record by order ID or payment ID
+        final String effectiveOrderId = orderId;
+        Payment payment = null;
+        if (effectiveOrderId != null && !effectiveOrderId.isBlank()) {
+            payment = paymentRepository.findByRazorpayOrderId(effectiveOrderId)
+                    .orElseGet(() -> paymentRepository.findByProviderPaymentId(effectiveOrderId).orElse(null));
+        }
+        if (payment == null && paymentId != null && !paymentId.isBlank()) {
+            final String effectivePaymentId = paymentId;
+            payment = paymentRepository.findByRazorpayPaymentId(effectivePaymentId)
+                    .orElseGet(() -> paymentRepository.findByProviderPaymentId(effectivePaymentId).orElse(null));
+        }
 
-        // 4. Verify organization ownership
-        if (payment.getOrganization() == null || !payment.getOrganization().getId().equals(resolvedOrgId)) {
+        // 5. Verify organization ownership
+        if (payment != null && payment.getOrganization() != null
+                && !payment.getOrganization().getId().equals(resolvedOrgId)) {
             log.warn("Security violation: Payment order {} belongs to org {}, not {}",
-                    orderId, payment.getOrganization() != null ? payment.getOrganization().getId() : null, resolvedOrgId);
+                    orderId, payment.getOrganization().getId(), resolvedOrgId);
             throw new ForbiddenException("Payment order does not belong to the authenticated organization.");
         }
 
-        Subscription subscription = payment.getSubscription();
+        // 6. Find subscription
+        Subscription subscription = payment != null ? payment.getSubscription() : null;
         if (subscription == null) {
-            throw new ResourceNotFoundException("Subscription not associated with payment: " + payment.getId());
+            subscription = subscriptionRepository
+                    .findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.PENDING)
+                    .or(() -> subscriptionRepository.findEffectiveByOrganizationId(resolvedOrgId))
+                    .or(() -> subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(resolvedOrgId))
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "No subscription found for organization: " + resolvedOrgId));
         }
 
         SubscriptionPlan plan = subscription.getPlan();
+        if (plan == null && subscription.getPlanCode() != null && subscriptionPlanRepository != null) {
+            final String effectivePlanCode = subscription.getPlanCode();
+            plan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue(effectivePlanCode)
+                    .or(() -> subscriptionPlanRepository.findByCodeIgnoreCase(effectivePlanCode))
+                    .orElse(null);
+            subscription.setPlan(plan);
+        }
         if (plan == null) {
-            throw new ResourceNotFoundException("Subscription plan not found for subscription: " + subscription.getId());
+            throw new ResourceNotFoundException(
+                    "Subscription plan not found for subscription: " + subscription.getId());
         }
 
-        // 5. Idempotency check: if payment already marked SUCCESS, return subscription directly without duplicate extension
-        if ("SUCCESS".equalsIgnoreCase(payment.getStatus())) {
+        // 7. Idempotency check: if payment already marked SUCCESS and subscription
+        // ACTIVE, return immediately
+        if (payment != null && "SUCCESS".equalsIgnoreCase(payment.getStatus())
+                && subscription.getStatus() == SubscriptionStatus.ACTIVE) {
             log.info("Payment order {} already verified and processed (idempotent request).", orderId);
             return subscription;
         }
 
-        // 6. Server-side verification with Razorpay API (Double-check status & amount)
-        try {
-            JsonNode rzpPayment = razorpayService.getPayment(paymentId);
+        // 8. Amount verification with Razorpay API (Double-check status & amount)
+        if (rzpPayment != null) {
             String paymentStatus = rzpPayment.path("status").asText("");
             if (!"captured".equalsIgnoreCase(paymentStatus) && !"authorized".equalsIgnoreCase(paymentStatus)) {
                 log.warn("Razorpay payment {} is in status {}, expected captured/authorized", paymentId, paymentStatus);
@@ -382,38 +469,53 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
             }
 
             String paymentOrderId = rzpPayment.path("order_id").asText("");
-            if (paymentOrderId != null && !paymentOrderId.isBlank() && !orderId.equals(paymentOrderId)) {
+            if (paymentOrderId != null && !paymentOrderId.isBlank() && orderId != null && !orderId.isBlank()
+                    && !orderId.equals(paymentOrderId)) {
                 log.warn("Mismatched order_id in Razorpay payment: expected={}, actual={}", orderId, paymentOrderId);
                 throw new BadRequestException("Payment does not correspond to the requested order.");
             }
 
             long actualAmountPaise = rzpPayment.path("amount").asLong(0);
-            long expectedAmountPaise = plan.getPrice().multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+            long expectedAmountPaise = plan.getPrice().multiply(BigDecimal.valueOf(100))
+                    .setScale(0, RoundingMode.HALF_UP).longValue();
             if (actualAmountPaise > 0 && actualAmountPaise < expectedAmountPaise) {
                 log.warn("Payment amount mismatch: expected={}, actual={}", expectedAmountPaise, actualAmountPaise);
                 throw new BadRequestException("Payment amount does not match plan price.");
             }
-        } catch (Exception ex) {
-            if (ex instanceof BadRequestException bre) throw bre;
-            log.warn("Could not fetch payment from Razorpay API for secondary check (relying on verified HMAC signature): {}", ex.getMessage());
         }
 
-        // 7. Update Payment record
+        // 9. Update or create Payment record
+        if (payment == null) {
+            payment = Payment.builder()
+                    .organization(resolvedOrg != null ? resolvedOrg : subscription.getOrganization())
+                    .subscription(subscription)
+                    .provider("razorpay")
+                    .amount(subscription.getPrice() != null ? subscription.getPrice() : plan.getPrice())
+                    .currency(plan.getCurrency() != null ? plan.getCurrency() : "INR")
+                    .build();
+        }
         payment.setRazorpayPaymentId(paymentId);
         payment.setProviderPaymentId(paymentId);
-        payment.setRazorpaySignature(signature);
+        if (signature != null && !signature.isBlank()) {
+            payment.setRazorpaySignature(signature);
+        }
+        if (orderId != null && !orderId.isBlank()) {
+            payment.setRazorpayOrderId(orderId);
+        }
         payment.setStatus("SUCCESS");
         payment.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // 8. Calculate validity & activate subscription
+        // 10. Calculate validity & activate subscription
         LocalDateTime now = LocalDateTime.now();
-        int durationDays = (plan.getDurationDays() != null && plan.getDurationDays() > 0) ? plan.getDurationDays() : 30;
+        int durationDays = (plan.getDurationDays() != null && plan.getDurationDays() > 0) ? plan.getDurationDays()
+                : 365;
 
         LocalDateTime newStart;
         LocalDateTime newEnd;
 
-        // Check if subscription was already active and not expired (Early renewal before expiry)
+        // Check if subscription was already active and not expired (Early renewal
+        // before expiry)
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE
                 && subscription.getCurrentPeriodEnd() != null
                 && subscription.getCurrentPeriodEnd().isAfter(now)) {
@@ -436,9 +538,12 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         subscription.setCurrentPeriodEnd(newEnd);
         subscription.setNextBillingDate(newEnd);
         subscription.setCancelledAt(null);
+        if (orderId != null && subscription.getRazorpayOrderId() == null) {
+            subscription.setRazorpayOrderId(orderId);
+        }
         subscriptionRepository.save(subscription);
 
-        // Update organization access mode and active status
+        // 11. Update organization access mode and active status
         Organization organization = subscription.getOrganization();
         if (organization != null) {
             organization.setAccessMode(AccessMode.FULL);
@@ -446,6 +551,27 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                 organization.setStatus(OrganizationStatus.ACTIVE);
             }
             organizationRepository.save(organization);
+        }
+
+        // 12. Synchronize CompanySubscription for all companies under this organization
+        if (companyRepository != null && companySubscriptionRepository != null && organization != null) {
+            try {
+                List<Company> orgCompanies = companyRepository.findByOrganization_Id(organization.getId());
+                for (Company comp : orgCompanies) {
+                    CompanySubscription compSub = companySubscriptionRepository
+                            .findTopByCompany_IdOrderByCreatedAtDesc(comp.getId())
+                            .orElseGet(() -> CompanySubscription.builder().company(comp).build());
+                    compSub.setPlan(plan);
+                    compSub.setStartAt(newStart);
+                    compSub.setEndAt(newEnd);
+                    compSub.setStatus(CompanySubscriptionStatus.ACTIVE);
+                    companySubscriptionRepository.save(compSub);
+                    log.info("Synchronized company subscription for company [{}] ({}) to plan [{}]",
+                            comp.getCompanyCode(), comp.getId(), plan.getCode());
+                }
+            } catch (Exception ex) {
+                log.warn("Failed to synchronize company subscriptions during payment activation: {}", ex.getMessage());
+            }
         }
 
         log.info("Successfully activated plan [{}] for organization [{}] until {}",
@@ -521,7 +647,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         assertOrganizationManagementAccess(resolvedOrgId);
 
         // Check if organization already has an active paid subscription
-        Optional<Subscription> activeOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.ACTIVE);
+        Optional<Subscription> activeOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId,
+                SubscriptionStatus.ACTIVE);
         if (activeOpt.isPresent()) {
             Subscription active = activeOpt.get();
             if (active.getCurrentPeriodEnd() == null || active.getCurrentPeriodEnd().isAfter(LocalDateTime.now())) {
@@ -530,19 +657,23 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         }
 
         // Check if organization already has an active trial
-        Optional<Subscription> trialingOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.TRIALING);
+        Optional<Subscription> trialingOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId,
+                SubscriptionStatus.TRIALING);
         if (trialingOpt.isPresent()) {
             Subscription existingTrial = trialingOpt.get();
             if (existingTrial.getTrialEndsAt() != null && existingTrial.getTrialEndsAt().isAfter(LocalDateTime.now())) {
-                log.info("Organization [{}] already has an active trial until {}", resolvedOrgId, existingTrial.getTrialEndsAt());
+                log.info("Organization [{}] already has an active trial until {}", resolvedOrgId,
+                        existingTrial.getTrialEndsAt());
                 return existingTrial;
             }
         }
 
         // Check if organization already completed or expired their free trial
-        boolean hadExpiredTrial = subscriptionRepository.findAllByOrganization_IdOrderByCreatedAtDesc(resolvedOrgId).stream()
+        boolean hadExpiredTrial = subscriptionRepository.findAllByOrganization_IdOrderByCreatedAtDesc(resolvedOrgId)
+                .stream()
                 .anyMatch(s -> s.getStatus() == SubscriptionStatus.EXPIRED ||
-                        (s.getStatus() == SubscriptionStatus.TRIALING && s.getTrialEndsAt() != null && !s.getTrialEndsAt().isAfter(LocalDateTime.now())));
+                        (s.getStatus() == SubscriptionStatus.TRIALING && s.getTrialEndsAt() != null
+                                && !s.getTrialEndsAt().isAfter(LocalDateTime.now())));
         if (hadExpiredTrial) {
             throw new BadRequestException("Organization has already completed or expired their free trial.");
         }
@@ -559,7 +690,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
 
         LocalDateTime startedAt = LocalDateTime.now();
         int durationDays = (trialPlan.getDurationDays() != null && trialPlan.getDurationDays() > 0)
-                ? trialPlan.getDurationDays() : 30;
+                ? trialPlan.getDurationDays()
+                : 30;
         LocalDateTime trialEndsAt = startedAt.plusDays(durationDays);
 
         Subscription trialSubscription = Subscription.builder()
@@ -597,7 +729,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         UUID resolvedOrgId = organization.getId();
         assertOrganizationManagementAccess(resolvedOrgId);
         Subscription subscription = subscriptionRepository.findEffectiveByOrganizationId(resolvedOrgId)
-                .orElseThrow(() -> new ResourceNotFoundException("No subscription found for organization: " + organizationId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No subscription found for organization: " + organizationId));
 
         LocalDateTime now = LocalDateTime.now();
         // Check for automated trial expiration

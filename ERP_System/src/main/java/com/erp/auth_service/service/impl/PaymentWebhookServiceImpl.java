@@ -60,6 +60,20 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
     private final Map<String, PaymentProvider> providers = new HashMap<>();
     private final PaymentProvider defaultProvider;
 
+    @Autowired(required = false)
+    private CompanyRepository companyRepository;
+
+    @Autowired(required = false)
+    private CompanySubscriptionRepository companySubscriptionRepository;
+
+    public void setCompanyRepository(CompanyRepository companyRepository) {
+        this.companyRepository = companyRepository;
+    }
+
+    public void setCompanySubscriptionRepository(CompanySubscriptionRepository companySubscriptionRepository) {
+        this.companySubscriptionRepository = companySubscriptionRepository;
+    }
+
     @Autowired
     public PaymentWebhookServiceImpl(PaymentEventRepository paymentEventRepository,
             PaymentRepository paymentRepository,
@@ -560,6 +574,27 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
             }
             if (organizationRepository != null) {
                 organizationRepository.save(subscription.getOrganization());
+            }
+
+            // Synchronize CompanySubscription for all companies under this organization
+            if (companyRepository != null && companySubscriptionRepository != null) {
+                try {
+                    List<Company> orgCompanies = companyRepository.findByOrganization_Id(subscription.getOrganization().getId());
+                    for (Company comp : orgCompanies) {
+                        CompanySubscription compSub = companySubscriptionRepository
+                                .findTopByCompany_IdOrderByCreatedAtDesc(comp.getId())
+                                .orElseGet(() -> CompanySubscription.builder().company(comp).build());
+                        compSub.setPlan(subscription.getPlan());
+                        compSub.setStartAt(newStart);
+                        compSub.setEndAt(newEnd);
+                        compSub.setStatus(com.erp.auth_service.utility.CompanySubscriptionStatus.ACTIVE);
+                        companySubscriptionRepository.save(compSub);
+                        log.info("handleOrderPaid: Synchronized company subscription for company [{}] ({}) to plan [{}]",
+                                comp.getCompanyCode(), comp.getId(), subscription.getPlan() != null ? subscription.getPlan().getCode() : "UNKNOWN");
+                    }
+                } catch (Exception ex) {
+                    log.warn("handleOrderPaid: Failed to synchronize company subscriptions: {}", ex.getMessage());
+                }
             }
         }
 
