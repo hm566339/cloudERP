@@ -207,4 +207,23 @@ class ServiceAuthFilterTest {
         assertEquals(401, response.getStatus());
         assertTrue(response.getContentAsString().contains("Valid service token or JWT credential is required"));
     }
+
+    @Test
+    @DisplayName("shouldNotFilter allows WebSocket endpoints and options requests to bypass filter")
+    void testShouldNotFilterBypassesWebSocketAndOptions() {
+        MockHttpServletRequest optionsReq = new MockHttpServletRequest("OPTIONS", "/api/communication/v1/chat/channels");
+        assertTrue(filter.shouldNotFilter(optionsReq));
+
+        MockHttpServletRequest wsReq = new MockHttpServletRequest("GET", "/ws-chat");
+        assertTrue(filter.shouldNotFilter(wsReq));
+
+        MockHttpServletRequest wsInfoReq = new MockHttpServletRequest("GET", "/ws-chat/info");
+        assertTrue(filter.shouldNotFilter(wsInfoReq));
+
+        MockHttpServletRequest wsGatewayReq = new MockHttpServletRequest("GET", "/api/communication/v1/ws-chat/info");
+        assertTrue(filter.shouldNotFilter(wsGatewayReq));
+
+        MockHttpServletRequest apiReq = new MockHttpServletRequest("GET", "/api/communication/v1/chat/channels");
+        assertFalse(filter.shouldNotFilter(apiReq));
+    }
 }

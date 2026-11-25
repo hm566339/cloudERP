@@ -79,6 +79,7 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/webjars") ||
                 path.startsWith("/ws-chat") ||
+                path.startsWith("/api/communication/v1/ws-chat") ||
                 path.startsWith("/api/communication/v1/webhooks")
         );
     }

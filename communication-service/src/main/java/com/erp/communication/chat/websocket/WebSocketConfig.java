@@ -29,14 +29,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Primary WebSocket endpoint with SockJS fallback
-        registry.addEndpoint("/ws-chat")
-                .setAllowedOriginPatterns("*")
+        // Primary WebSocket endpoint with SockJS fallback (supports direct /ws-chat and gateway /api/communication/v1/ws-chat)
+        registry.addEndpoint("/ws-chat", "/api/communication/v1/ws-chat")
+                .setAllowedOriginPatterns("*", "https://*.mark2.in", "https://mark2.in", "http://localhost:*")
                 .withSockJS();
 
         // Plain WebSocket endpoint for native STOMP clients
-        registry.addEndpoint("/ws-chat")
-                .setAllowedOriginPatterns("*");
+        registry.addEndpoint("/ws-chat", "/api/communication/v1/ws-chat")
+                .setAllowedOriginPatterns("*", "https://*.mark2.in", "https://mark2.in", "http://localhost:*");
     }
 
     @Override

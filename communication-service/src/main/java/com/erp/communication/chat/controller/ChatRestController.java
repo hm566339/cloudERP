@@ -136,7 +136,7 @@ public class ChatRestController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping({"/events", "/quotations/event"})
+    @PostMapping({"/events", "/quotations/event", "/quotations/events"})
     @Operation(summary = "Post external chat / quotation event", description = "Common internal API used by CRM or Accounts service to post quotation request/ready cards")
     public ResponseEntity<ChatMessageResponse> postQuotationEvent(
             @RequestHeader(value = "X-Company-Id", required = false) UUID headerCompanyId,
@@ -150,6 +150,9 @@ public class ChatRestController {
                 ? event.getCompanyId()
                 : resolveCompanyId(headerCompanyId);
         event.setCompanyId(companyId);
+        if (TenantContext.getCompanyId() == null) {
+            TenantContext.setCompanyId(companyId);
+        }
 
         ChatMessageResponse response = chatService.handleExternalQuotationEvent(event);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

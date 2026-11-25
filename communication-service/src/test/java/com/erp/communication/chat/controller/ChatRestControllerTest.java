@@ -343,4 +343,44 @@ class ChatRestControllerTest {
                 .andExpect(jsonPath("$.messageType").value("QUOTATION_READY"))
                 .andExpect(jsonPath("$.actionStatus").value("COMPLETED"));
     }
+
+    @Test
+    @DisplayName("POST /quotations/events alias also successfully dispatches external quotation event")
+    void testPostQuotationEventViaAliasRoutes() throws Exception {
+        UUID refId = UUID.randomUUID();
+        UUID msgId = UUID.randomUUID();
+        ChatMessageResponse response = ChatMessageResponse.builder()
+                .id(msgId)
+                .companyId(companyId)
+                .channelId(channelId)
+                .messageType(ChatMessageType.QUOTATION_READY)
+                .referenceId(refId)
+                .actionStatus(ChatActionStatus.COMPLETED)
+                .content("Quotation QT-2026-1002 is ready")
+                .build();
+
+        when(chatService.handleExternalQuotationEvent(any())).thenReturn(response);
+
+        String json = """
+                {
+                    "companyId": "%s",
+                    "eventType": "QUOTATION_READY",
+                    "referenceId": "%s",
+                    "senderName": "Accounts Team",
+                    "content": "Quotation QT-2026-1002 is ready"
+                }
+                """.formatted(companyId, refId);
+
+        mockMvc.perform(post("/api/communication/v1/chat/quotations/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(msgId.toString()));
+
+        mockMvc.perform(post("/api/communication/v1/chat/quotations/event")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(msgId.toString()));
+    }
 }
