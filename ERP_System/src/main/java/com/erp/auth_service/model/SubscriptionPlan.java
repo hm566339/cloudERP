@@ -60,9 +60,12 @@ public class SubscriptionPlan {
 
     public void setMaxUsersPerCompany(Integer maxUsersPerCompany) {
         this.maxUsersPerCompany = maxUsersPerCompany;
-        if (this.maxUsers == null) {
-            this.maxUsers = maxUsersPerCompany;
-        }
+        this.maxUsers = maxUsersPerCompany;
+    }
+
+    public void setMaxUsers(Integer maxUsers) {
+        this.maxUsers = maxUsers;
+        this.maxUsersPerCompany = maxUsers;
     }
 
     @Column(precision = 19, scale = 4)

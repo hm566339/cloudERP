@@ -17,7 +17,8 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
   const Icon = item.icon;
 
   useEffect(() => {
-    if (isParentActive) {
+    // Keep Sales & CRM closed by default on initial page open; allow other active parents to open
+    if (isParentActive && item.id !== 'sales-crm' && item.id !== 'crm') {
       setMenuOpen(item.id, true);
     }
   }, [isParentActive, item.id, setMenuOpen]);

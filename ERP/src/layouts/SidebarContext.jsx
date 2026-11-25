@@ -43,7 +43,16 @@ export function SidebarProvider({ children }) {
   const [openMenus, setOpenMenus] = useState(() => {
     try {
       const saved = localStorage.getItem('erp_sidebar_open_menus');
-      return saved ? JSON.parse(saved) : {};
+      const parsed = saved ? JSON.parse(saved) : {};
+      // Ensure sales-crm and crm always start closed by default on page load
+      if (parsed['sales-crm']) parsed['sales-crm'] = false;
+      if (parsed['crm']) parsed['crm'] = false;
+      try {
+        localStorage.setItem('erp_sidebar_open_menus', JSON.stringify(parsed));
+      } catch {
+        // ignore
+      }
+      return parsed;
     } catch {
       return {};
     }
@@ -51,7 +60,8 @@ export function SidebarProvider({ children }) {
 
   const toggleMenu = useCallback((menuId) => {
     setOpenMenus((prev) => {
-      const next = { ...prev, [menuId]: !prev[menuId] };
+      const currentVal = prev[menuId] !== undefined ? prev[menuId] : false;
+      const next = { ...prev, [menuId]: !currentVal };
       try {
         localStorage.setItem('erp_sidebar_open_menus', JSON.stringify(next));
       } catch {
@@ -78,6 +88,10 @@ export function SidebarProvider({ children }) {
     (menuId, isParentActive) => {
       if (openMenus && openMenus[menuId] !== undefined) {
         return openMenus[menuId];
+      }
+      // Sales & CRM starts closed by default on initial page open
+      if (menuId === 'sales-crm' || menuId === 'crm') {
+        return false;
       }
       if (isParentActive) return true;
       return false;

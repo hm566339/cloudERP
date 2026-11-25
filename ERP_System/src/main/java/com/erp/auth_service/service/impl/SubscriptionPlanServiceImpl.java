@@ -167,14 +167,12 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
         if (request.getIsTrial() != null) {
             plan.setIsTrial(request.getIsTrial());
         }
-        if (request.getMaxCompanies() != null) {
-            plan.setMaxCompanies(request.getMaxCompanies());
-        }
-        if (request.getMaxUsersPerCompany() != null) {
-            plan.setMaxUsersPerCompany(request.getMaxUsersPerCompany());
-        } else if (request.getMaxUsers() != null) {
-            plan.setMaxUsersPerCompany(request.getMaxUsers());
-        }
+        plan.setMaxCompanies(request.getMaxCompanies());
+        Integer requestedUsers = request.getMaxUsersPerCompany() != null
+                ? request.getMaxUsersPerCompany()
+                : request.getMaxUsers();
+        plan.setMaxUsersPerCompany(requestedUsers);
+        plan.setMaxUsers(requestedUsers);
 
         SubscriptionPlan updatedPlan = subscriptionPlanRepository.save(plan);
 
@@ -427,7 +425,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
                 .durationDays(plan.getDurationDays())
                 .maxCompanies(plan.getMaxCompanies())
                 .maxUsersPerCompany(plan.getMaxUsersPerCompany())
-                .maxUsers(plan.getMaxUsersPerCompany())
+                .maxUsers(plan.getMaxUsers() != null ? plan.getMaxUsers() : plan.getMaxUsersPerCompany())
                 .price(plan.getPrice())
                 .currency(plan.getCurrency())
                 .active(plan.getActive())

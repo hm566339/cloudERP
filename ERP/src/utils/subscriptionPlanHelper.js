@@ -130,11 +130,23 @@ export function validatePlanFormData(formData) {
  * @returns {Object} Clean DTO payload
  */
 export function preparePlanPayload(formData, existingPlan = null) {
-  const maxCompanies = formData.isUnlimitedCompanies
+  const isUnlimitedCompanies =
+    Boolean(formData.isUnlimitedCompanies) ||
+    formData.maxCompanies === null ||
+    formData.maxCompanies === '' ||
+    formData.maxCompanies === undefined;
+
+  const isUnlimitedUsers =
+    Boolean(formData.isUnlimitedUsers) ||
+    formData.maxUsersPerCompany === null ||
+    formData.maxUsersPerCompany === '' ||
+    formData.maxUsersPerCompany === undefined;
+
+  const maxCompanies = isUnlimitedCompanies
     ? null
     : parseInt(formData.maxCompanies, 10);
 
-  const maxUsersPerCompany = formData.isUnlimitedUsers
+  const maxUsersPerCompany = isUnlimitedUsers
     ? null
     : parseInt(formData.maxUsersPerCompany, 10);
 

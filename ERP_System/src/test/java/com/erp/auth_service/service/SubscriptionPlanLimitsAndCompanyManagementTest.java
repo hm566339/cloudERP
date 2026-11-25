@@ -197,6 +197,50 @@ public class SubscriptionPlanLimitsAndCompanyManagementTest {
         verify(companyRepository, never()).save(any(Company.class));
     }
 
+    @Test
+    @DisplayName("Company creation allowed when plan has unlimited companies (maxCompanies = null)")
+    void createCompany_AllowedWhenUnlimitedPlan() {
+        RequestContext.set(ownerUserId, orgId, null, null, AccessMode.FULL);
+
+        SubscriptionPlan unlimitedPlan = SubscriptionPlan.builder()
+                .id(UUID.randomUUID())
+                .code("UNLIMITED_EDUCATION")
+                .name("Unlimited education")
+                .maxCompanies(null)
+                .maxUsersPerCompany(null)
+                .active(true)
+                .build();
+
+        Subscription unlimitedSub = Subscription.builder()
+                .id(UUID.randomUUID())
+                .organization(organization)
+                .plan(unlimitedPlan)
+                .status(SubscriptionStatus.ACTIVE)
+                .accessMode(AccessMode.FULL)
+                .build();
+
+        when(organizationMemberRepository.findByOrganization_IdAndUser_Id(orgId, ownerUserId))
+                .thenReturn(Optional.of(ownerMember));
+        when(organizationRepository.findById(orgId)).thenReturn(Optional.of(organization));
+        when(subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(orgId))
+                .thenReturn(Optional.of(unlimitedSub));
+        when(companyRepository.countByOrganization_IdAndActiveTrue(orgId)).thenReturn(50L);
+
+        CompanyRequest request = new CompanyRequest();
+        request.setCompanyName("Company 51");
+        request.setCompanyCode("000051");
+
+        Company mappedCompany = Company.builder().companyName("Company 51").companyCode("000051").build();
+        when(companyMapper.toCompany(request)).thenReturn(mappedCompany);
+        when(companyRepository.save(any(Company.class))).thenReturn(mappedCompany);
+
+        var result = companyService.createCompany(request, null, null);
+
+        assertNotNull(result);
+        assertEquals("000051", result.get("companyCode"));
+        verify(companyRepository).save(any(Company.class));
+    }
+
     // ==========================================
     // 2. USER LIMITS: maxUsersPerCompany = 10
     // ==========================================

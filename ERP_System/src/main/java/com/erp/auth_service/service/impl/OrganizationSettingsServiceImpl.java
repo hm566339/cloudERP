@@ -522,7 +522,7 @@ public class OrganizationSettingsServiceImpl implements OrganizationSettingsServ
 
         SubscriptionPlan plan = sub.getPlan();
         String planName = plan != null ? plan.getName() : "Standard Plan";
-        Integer companyLimit = plan != null ? plan.getMaxCompanies() : 5;
+        Integer companyLimit = plan != null ? plan.getMaxCompanies() : null;
         boolean isTrial = sub.getStatus() == SubscriptionStatus.TRIALING
                 || (plan != null && Boolean.TRUE.equals(plan.getIsTrial()));
 
@@ -535,7 +535,7 @@ public class OrganizationSettingsServiceImpl implements OrganizationSettingsServ
                 .trialEndDate(sub.getTrialEndsAt())
                 .currentPeriodStart(sub.getCurrentPeriodStart())
                 .currentPeriodEnd(sub.getCurrentPeriodEnd())
-                .companyLimit(companyLimit != null ? companyLimit : 5)
+                .companyLimit(companyLimit)
                 .storageLimit("10 GB")
                 .price(sub.getPrice() != null ? sub.getPrice() : BigDecimal.ZERO)
                 .currency(sub.getCurrency() != null ? sub.getCurrency() : "INR")
@@ -553,9 +553,9 @@ public class OrganizationSettingsServiceImpl implements OrganizationSettingsServ
                 organizationId, MembershipStatus.ACTIVE);
 
         Subscription sub = subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(organizationId).orElse(null);
-        Integer limit = (sub != null && sub.getPlan() != null && sub.getPlan().getMaxCompanies() != null)
+        Integer limit = (sub != null && sub.getPlan() != null)
                 ? sub.getPlan().getMaxCompanies()
-                : 5;
+                : null;
 
         return OrganizationSubscriptionUsageResponse.builder()
                 .activeCompanies(activeCompanies)

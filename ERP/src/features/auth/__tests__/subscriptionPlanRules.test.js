@@ -97,6 +97,45 @@ describe('Subscription Plan Frontend Rules & Management Tests', () => {
       assert.strictEqual(payload.maxUsersPerCompany, null);
       assert.strictEqual(payload.maxUsers, null);
     });
+
+    it('supports UNLIMITED_EDUCATION with null maxCompanies, maxUsersPerCompany, and maxUsers', () => {
+      const formData = {
+        name: 'Unlimited education',
+        code: 'UNLIMITED_EDUCATION',
+        durationDays: 365,
+        price: 0,
+        isUnlimitedCompanies: true,
+        maxCompanies: null,
+        isUnlimitedUsers: true,
+        maxUsersPerCompany: null,
+        moduleIds: ['mod-acc'],
+      };
+
+      const validation = validatePlanFormData(formData);
+      assert.strictEqual(validation.isValid, true);
+
+      const payload = preparePlanPayload(formData);
+      assert.strictEqual(payload.code, 'UNLIMITED_EDUCATION');
+      assert.strictEqual(payload.maxCompanies, null);
+      assert.strictEqual(payload.maxUsersPerCompany, null);
+      assert.strictEqual(payload.maxUsers, null);
+    });
+
+    it('normalizes empty string limits to null even if isUnlimited flag was omitted', () => {
+      const formData = {
+        name: 'Unlimited education',
+        code: 'UNLIMITED_EDUCATION',
+        durationDays: 365,
+        maxCompanies: '',
+        maxUsersPerCompany: '',
+        moduleIds: ['mod-acc'],
+      };
+
+      const payload = preparePlanPayload(formData);
+      assert.strictEqual(payload.maxCompanies, null);
+      assert.strictEqual(payload.maxUsersPerCompany, null);
+      assert.strictEqual(payload.maxUsers, null);
+    });
   });
 
   // ──────────────────────────────────────────────────────────────────────────

@@ -202,6 +202,88 @@ public class SubscriptionPlanServiceTest {
     }
 
     @Test
+    @DisplayName("Update plan to unlimited companies and unlimited users saves null correctly")
+    void testUpdatePlanToUnlimitedCompaniesAndUsers() {
+        UUID planId = UUID.randomUUID();
+        SubscriptionPlan limitedPlan = SubscriptionPlan.builder()
+                .id(planId)
+                .code("UNLIMITED_EDUCATION")
+                .name("Unlimited education")
+                .durationDays(365)
+                .maxCompanies(1)
+                .maxUsersPerCompany(5)
+                .maxUsers(5)
+                .price(BigDecimal.ZERO)
+                .active(true)
+                .deleted(false)
+                .build();
+
+        when(subscriptionPlanRepository.findById(planId)).thenReturn(Optional.of(limitedPlan));
+        when(subscriptionPlanRepository.save(any(SubscriptionPlan.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        SubscriptionPlanRequest updateRequest = SubscriptionPlanRequest.builder()
+                .code("UNLIMITED_EDUCATION")
+                .name("Unlimited education")
+                .durationDays(365)
+                .maxCompanies(null)
+                .maxUsersPerCompany(null)
+                .maxUsers(null)
+                .price(BigDecimal.ZERO)
+                .build();
+
+        SubscriptionPlanResponse response = subscriptionPlanService.updatePlan(planId, updateRequest);
+
+        assertNotNull(response);
+        assertEquals("UNLIMITED_EDUCATION", response.getCode());
+        assertNull(response.getMaxCompanies(), "maxCompanies must be null for unlimited");
+        assertNull(response.getMaxUsersPerCompany(), "maxUsersPerCompany must be null for unlimited");
+        assertNull(response.getMaxUsers(), "maxUsers must be null for unlimited");
+
+        verify(subscriptionPlanRepository).save(argThat(saved ->
+                saved.getMaxCompanies() == null &&
+                saved.getMaxUsersPerCompany() == null &&
+                saved.getMaxUsers() == null
+        ));
+    }
+
+    @Test
+    @DisplayName("Update plan preserves numeric limits when provided")
+    void testUpdatePlanPreservesNumericLimits() {
+        UUID planId = UUID.randomUUID();
+        SubscriptionPlan plan = SubscriptionPlan.builder()
+                .id(planId)
+                .code("CUSTOM_PLAN")
+                .name("Custom Plan")
+                .durationDays(30)
+                .maxCompanies(null)
+                .maxUsersPerCompany(null)
+                .maxUsers(null)
+                .price(BigDecimal.ZERO)
+                .active(true)
+                .deleted(false)
+                .build();
+
+        when(subscriptionPlanRepository.findById(planId)).thenReturn(Optional.of(plan));
+        when(subscriptionPlanRepository.save(any(SubscriptionPlan.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        SubscriptionPlanRequest updateRequest = SubscriptionPlanRequest.builder()
+                .code("CUSTOM_PLAN")
+                .name("Custom Plan")
+                .durationDays(30)
+                .maxCompanies(5)
+                .maxUsersPerCompany(25)
+                .maxUsers(25)
+                .build();
+
+        SubscriptionPlanResponse response = subscriptionPlanService.updatePlan(planId, updateRequest);
+
+        assertNotNull(response);
+        assertEquals(5, response.getMaxCompanies());
+        assertEquals(25, response.getMaxUsersPerCompany());
+        assertEquals(25, response.getMaxUsers());
+    }
+
+    @Test
     @DisplayName("Get current company subscription returns active state and provisioned modules")
     void testGetCurrentCompanySubscription() {
         UUID companyId = testCompany.getId();
