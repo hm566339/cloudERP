@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @Order(3)
@@ -31,7 +32,6 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    @Transactional
     public void run(String... args) {
         log.info("Checking and bootstrapping default SaaS subscription plans...");
 
@@ -57,7 +57,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                     SubscriptionPlan plan = SubscriptionPlan.builder()
                             .code("30_DAY_FREE_TRIAL")
                             .name("30-Day Free Trial")
-                            .description("30-day free trial with standard financial, CRM, inventory, and workflow modules.")
+                            .description(
+                                    "30-day free trial with standard financial, CRM, inventory, and workflow modules.")
                             .durationDays(30)
                             .maxCompanies(4)
                             .maxUsersPerCompany(10)
@@ -72,7 +73,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                     return saved;
                 });
 
-        // Ensure default modules for 30-Day Free Trial: ACCOUNT, CRM, INVENTORY, WORKFLOW
+        // Ensure default modules for 30-Day Free Trial: ACCOUNT, CRM, INVENTORY,
+        // WORKFLOW
         List<String> trialModuleNames = List.of("ACCOUNT", "CRM", "INVENTORY", "WORKFLOW");
         attachModulesToPlanIfMissing(trialPlan, trialModuleNames);
 
@@ -113,7 +115,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                     return saved;
                 });
 
-        // Ensure default modules for Business Plan: ACCOUNT, INVENTORY, WORKFLOW, SALES, PURCHASE, CRM
+        // Ensure default modules for Business Plan: ACCOUNT, INVENTORY, WORKFLOW,
+        // SALES, PURCHASE, CRM
         List<String> businessModuleNames = List.of("ACCOUNT", "INVENTORY", "WORKFLOW", "SALES", "PURCHASE", "CRM");
         attachModulesToPlanIfMissing(businessPlan, businessModuleNames);
 
@@ -193,7 +196,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                 });
         attachModulesToPlanIfMissing(proPlan, List.of("ACCOUNT", "INVENTORY", "WORKFLOW"));
 
-        // 5. Bootstrap Enterprise Plan (₹9,999/month, maxCompanies=null unlimited, maxUsersPerCompany=null unlimited)
+        // 5. Bootstrap Enterprise Plan (₹9,999/month, maxCompanies=null unlimited,
+        // maxUsersPerCompany=null unlimited)
         SubscriptionPlan enterprisePlan = subscriptionPlanRepository.findByCodeIgnoreCase("ENTERPRISE")
                 .map(existing -> {
                     syncToLegacyPlanTableIfPresent(existing);
@@ -203,7 +207,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                     SubscriptionPlan plan = SubscriptionPlan.builder()
                             .code("ENTERPRISE")
                             .name("Enterprise Plan")
-                            .description("Unlimited enterprise suite with multi-company, CRM, and dedicated priority support.")
+                            .description(
+                                    "Unlimited enterprise suite with multi-company, CRM, and dedicated priority support.")
                             .durationDays(30)
                             .maxCompanies(null)
                             .maxUsersPerCompany(null)
@@ -217,14 +222,18 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                     log.info("Created default Enterprise plan [ENTERPRISE]");
                     return saved;
                 });
-        attachModulesToPlanIfMissing(enterprisePlan, List.of("ACCOUNT", "INVENTORY", "WORKFLOW", "CRM", "SALES", "PURCHASE"));
+        attachModulesToPlanIfMissing(enterprisePlan,
+                List.of("ACCOUNT", "INVENTORY", "WORKFLOW", "CRM", "SALES", "PURCHASE"));
 
         // 3. Existing Companies Backward Compatibility
-        // Ensure any existing company has a CompanySubscription so access checks pass seamlessly
+        // Ensure any existing company has a CompanySubscription so access checks pass
+        // seamlessly
         List<Company> allCompanies = companyRepository.findAll();
         for (Company company : allCompanies) {
-            boolean hasSub = companySubscriptionRepository.existsByCompany_IdAndStatus(company.getId(), CompanySubscriptionStatus.ACTIVE)
-                    || companySubscriptionRepository.existsByCompany_IdAndStatus(company.getId(), CompanySubscriptionStatus.TRIALING);
+            boolean hasSub = companySubscriptionRepository.existsByCompany_IdAndStatus(company.getId(),
+                    CompanySubscriptionStatus.ACTIVE)
+                    || companySubscriptionRepository.existsByCompany_IdAndStatus(company.getId(),
+                            CompanySubscriptionStatus.TRIALING);
 
             if (!hasSub) {
                 SubscriptionPlan assignedPlan = trialPlan != null ? trialPlan : businessPlan;
@@ -232,12 +241,14 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                         .company(company)
                         .plan(assignedPlan)
                         .startAt(LocalDateTime.now())
-                        .endAt(LocalDateTime.now().plusDays(assignedPlan.getDurationDays() != null ? assignedPlan.getDurationDays() : 365))
+                        .endAt(LocalDateTime.now().plusDays(
+                                assignedPlan.getDurationDays() != null ? assignedPlan.getDurationDays() : 365))
                         .status(CompanySubscriptionStatus.ACTIVE)
                         .autoRenew(true)
                         .build();
                 companySubscriptionRepository.save(existingSub);
-                log.info("Assigned backward-compatible active subscription to existing company [{}]", company.getCompanyCode());
+                log.info("Assigned backward-compatible active subscription to existing company [{}]",
+                        company.getCompanyCode());
             }
         }
 
@@ -252,20 +263,32 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
             Integer tableCount = jdbcTemplate.queryForObject(
                     "SELECT count(*) FROM information_schema.tables WHERE table_name = 'plan'", Integer.class);
             if (tableCount != null && tableCount > 0) {
-                jdbcTemplate.update("""
-                    INSERT INTO plan (id, code, name, trial_days, active, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT (id) DO UPDATE SET
-                        code = EXCLUDED.code,
-                        name = EXCLUDED.name,
-                        trial_days = EXCLUDED.trial_days,
-                        active = EXCLUDED.active,
-                        updated_at = EXCLUDED.updated_at
-                """, plan.getId(), plan.getCode(), plan.getName(),
-                    plan.getDurationDays() != null ? plan.getDurationDays() : 30,
-                    Boolean.TRUE.equals(plan.getActive()),
-                    plan.getCreatedAt() != null ? plan.getCreatedAt() : LocalDateTime.now(),
-                    LocalDateTime.now());
+                List<UUID> existingIds = jdbcTemplate.query(
+                        "SELECT id FROM plan WHERE UPPER(code) = UPPER(?) OR id = ?",
+                        (rs, rowNum) -> rs.getObject("id", UUID.class),
+                        plan.getCode(), plan.getId());
+
+                if (!existingIds.isEmpty()) {
+                    jdbcTemplate.update("""
+                                UPDATE plan
+                                SET name = ?, trial_days = ?, active = ?, updated_at = ?
+                                WHERE UPPER(code) = UPPER(?) OR id = ?
+                            """, plan.getName(),
+                            plan.getDurationDays() != null ? plan.getDurationDays() : 30,
+                            Boolean.TRUE.equals(plan.getActive()),
+                            LocalDateTime.now(),
+                            plan.getCode(), plan.getId());
+                } else {
+                    jdbcTemplate.update("""
+                                INSERT INTO plan (id, code, name, trial_days, active, created_at, updated_at)
+                                VALUES (?, ?, ?, ?, ?, ?, ?)
+                                ON CONFLICT DO NOTHING
+                            """, plan.getId(), plan.getCode(), plan.getName(),
+                            plan.getDurationDays() != null ? plan.getDurationDays() : 30,
+                            Boolean.TRUE.equals(plan.getActive()),
+                            plan.getCreatedAt() != null ? plan.getCreatedAt() : LocalDateTime.now(),
+                            LocalDateTime.now());
+                }
                 log.debug("Synchronized plan [{}] to legacy table 'plan'", plan.getCode());
             }
         } catch (Exception ex) {
