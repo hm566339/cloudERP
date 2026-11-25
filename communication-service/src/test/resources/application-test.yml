@@ -31,6 +31,12 @@ spring:
 server:
   port: 0
 
+sso:
+  backend: http://localhost:8090
+  cookie-name: access_token
+  verification:
+    enabled: false
+
 app:
   jwt:
     secret: test-jwt-secret-key-must-be-at-least-256-bits-long-for-testing-purposes-1234567890
@@ -67,3 +73,7 @@ app:
     whatsapp-routing-key: notification.whatsapp
     whatsapp-dlq: erp.notification.whatsapp.dlq
     whatsapp-dlq-routing-key: notification.whatsapp.dlq
+    chat-queue: erp.notification.chat.queue
+    chat-routing-key: notification.chat.#
+    chat-dlq: erp.notification.chat.dlq
+    chat-dlq-routing-key: notification.chat.dlq

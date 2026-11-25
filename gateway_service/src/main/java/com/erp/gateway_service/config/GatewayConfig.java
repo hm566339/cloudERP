@@ -61,6 +61,7 @@ public class GatewayConfig {
         AtomicInteger registeredRoutes = new AtomicInteger();
         Set<String> registeredRouteIds = new HashSet<>();
         java.util.concurrent.atomic.AtomicBoolean hasCrmRoute = new java.util.concurrent.atomic.AtomicBoolean(false);
+        java.util.concurrent.atomic.AtomicBoolean hasCommunicationRoute = new java.util.concurrent.atomic.AtomicBoolean(false);
 
         fetchedRoutes.stream()
                 .peek(route -> log.debug("Evaluating route candidate: {}", route))
@@ -137,6 +138,15 @@ public class GatewayConfig {
                             } else if (serviceUrl.contains(":8083")) {
                                 log.warn("Overriding erroneous port 8083 with 8086 for CRM serviceUrl: {}", serviceUrl);
                                 serviceUrl = serviceUrl.replace(":8083", ":8086");
+                            }
+                        }
+
+                        // Map Communication route to correct service URL & resolve docker hostname for local development
+                        if (pattern.startsWith("/api/communication") || pattern.startsWith("/ws-chat")) {
+                            hasCommunicationRoute.set(true);
+                            if (authServiceBaseUrl.contains("localhost") && serviceUrl.contains("communication-service:8084")) {
+                                log.info("Mapping docker hostname 'communication-service:8084' to 'localhost:8084' for local gateway");
+                                serviceUrl = serviceUrl.replace("communication-service:8084", "localhost:8084");
                             }
                         }
 

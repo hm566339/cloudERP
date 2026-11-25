@@ -182,6 +182,10 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       {SharedCrmRoutes({ prefix: `${prefix}sales-crm/` })}
       {SharedCrmRoutes({ prefix: `${prefix}crm/` })}
 
+      {/* Internal Company Chat & Quotation Coordination Convenience Aliases */}
+      <Route path={`${prefix}chat`} element={<CompanyRedirect to="sales-crm/chat" />} />
+      <Route path={`${prefix}chat/:channelId`} element={<CompanyRedirect to="sales-crm/chat" />} />
+
       {/* Purchase Management */}
       <Route path={`${prefix}purchase`} element={<CompanyRedirect to="purchases/dashboard" />} />
       <Route path={`${prefix}purchase/requisitions`} element={<CompanyRedirect to="purchases/requisitions" />} />

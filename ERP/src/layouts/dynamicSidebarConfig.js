@@ -242,6 +242,7 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
           icon: TrendingUp,
           children: [
             { id: 'acc-txn-sales', label: 'Sales', path: `${base}/accounts/transactions/quotations`, icon: FileText, featureCode: 'SALES_INVOICES', action: 'READ' },
+            { id: 'acc-txn-chat', label: 'Company Chat', path: `${base}/sales-crm/chat`, icon: MessageSquare, featureCode: 'COMMUNICATION_CHAT', action: 'READ' },
             { id: 'acc-txn-pur', label: 'Purchase', path: `${base}/accounts/transactions/purchase-requisitions`, icon: FileText, featureCode: 'PURCHASE_INVOICES', action: 'READ' },
             { id: 'acc-txn-exp', label: 'Expense', path: `${base}/accounts/transactions/expenses/requests`, icon: Receipt, featureCode: 'EXPENSES', action: 'READ' },
             { id: 'acc-txn-cn', label: 'Credit Notes', path: `${base}/accounts/transactions/credit-notes`, icon: ArrowDownCircle, featureCode: 'CREDIT_NOTES', action: 'READ' },
@@ -437,6 +438,14 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
           path: `${base}/sales-crm/communications`,
           icon: MessageSquare,
           featureCode: 'CRM_COMMUNICATION',
+          action: 'READ',
+        },
+        {
+          id: 'crm-chat',
+          label: 'Company Chat',
+          path: `${base}/sales-crm/chat`,
+          icon: MessageSquare,
+          featureCode: 'COMMUNICATION_CHAT',
           action: 'READ',
         },
         {

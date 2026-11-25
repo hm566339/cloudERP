@@ -52,6 +52,9 @@ public class CrmQuotationServiceImpl implements CrmQuotationService {
     private final CrmWorkflowClient workflowClient;
     private final CrmOutboxService outboxService;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.erp.crm.modules.communication.client.CrmChatEventClient chatEventClient;
+
     @Override
     public QuotationResponse createQuotation(QuotationCreateRequest request, UUID requestCompanyId) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
@@ -216,6 +219,28 @@ public class CrmQuotationServiceImpl implements CrmQuotationService {
             quotationRepository.save(savedQuotation);
         }
 
+        // Notify internal company chat channel via common communication-service API
+        if (chatEventClient != null) {
+            try {
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("quotationNumber", quoteNumber);
+                metadata.put("totalAmount", finalTotal);
+                metadata.put("accountId", request.getAccountId());
+                metadata.put("opportunityId", request.getOpportunityId());
+                metadata.put("status", savedQuotation.getStatus() != null ? savedQuotation.getStatus().name() : "DRAFT");
+                chatEventClient.sendQuotationRequestedEvent(
+                        companyId,
+                        savedQuotation.getId(),
+                        quoteNumber,
+                        TenantUtils.getCurrentUserId(),
+                        "CRM Sales Operator",
+                        metadata
+                );
+            } catch (Exception ex) {
+                log.warn("Non-blocking failure notifying chat channel of quotation {}: {}", quoteNumber, ex.getMessage());
+            }
+        }
+
         return enrichResponse(savedQuotation);
     }
 
@@ -254,7 +279,28 @@ public class CrmQuotationServiceImpl implements CrmQuotationService {
                 quotation.getQuotationNumber(), TenantUtils.getCurrentUserId(), "Current User", vars);
         quotation.setWorkflowTransactionId(txnId);
 
-        return enrichResponse(quotationRepository.save(quotation));
+        CrmQuotation saved = quotationRepository.save(quotation);
+
+        if (chatEventClient != null) {
+            try {
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("quotationNumber", quotation.getQuotationNumber());
+                metadata.put("totalAmount", quotation.getTotalAmount());
+                metadata.put("status", "PENDING_APPROVAL");
+                chatEventClient.sendQuotationRequestedEvent(
+                        companyId,
+                        quotation.getId(),
+                        quotation.getQuotationNumber(),
+                        TenantUtils.getCurrentUserId(),
+                        "CRM Sales Operator",
+                        metadata
+                );
+            } catch (Exception ex) {
+                log.warn("Non-blocking failure notifying chat channel of quotation submission {}: {}", quotation.getQuotationNumber(), ex.getMessage());
+            }
+        }
+
+        return enrichResponse(saved);
     }
 
     @Override

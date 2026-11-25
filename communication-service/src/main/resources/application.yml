@@ -121,3 +121,29 @@ app:
     api-url: ${WHATSAPP_API_URL:}
     api-token: ${WHATSAPP_API_TOKEN:}
     phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+
+sso:
+  backend: ${SSO_BACKEND:http://auth-service:8090}
+  cookie-name: ${SSO_COOKIE_NAME:access_token}
+  verification:
+    enabled: ${SSO_VERIFICATION_ENABLED:true}
+  authorization:
+    modules:
+      COMMUNICATION_CHAT:
+        - "/api/communication/v1/chat"
+        - "/api/communication/v1/chat/**"
+      COMMUNICATION_MESSAGES:
+        - "/api/communication/v1/messages"
+        - "/api/communication/v1/messages/**"
+    method-actions:
+      GET:
+        - "READ"
+      POST:
+        - "CREATE"
+        - "WRITE"
+      PUT:
+        - "UPDATE"
+        - "WRITE"
+      DELETE:
+        - "DELETE"
+

@@ -84,6 +84,22 @@ public class RabbitMqConfig {
                 .build();
     }
 
+    @Bean
+    public Queue chatQueue() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-dead-letter-exchange", properties.getDlxExchange());
+        args.put("x-dead-letter-routing-key", properties.getChatDlqRoutingKey());
+        return QueueBuilder.durable(properties.getChatQueue())
+                .withArguments(args)
+                .build();
+    }
+
+    @Bean
+    public Queue chatDlq() {
+        return QueueBuilder.durable(properties.getChatDlq())
+                .build();
+    }
+
     // =========================================================================
     // Bindings
     // =========================================================================
@@ -114,6 +130,27 @@ public class RabbitMqConfig {
         return BindingBuilder.bind(whatsappDlq)
                 .to(notificationDlxExchange)
                 .with(properties.getWhatsappDlqRoutingKey());
+    }
+
+    @Bean
+    public Binding chatBinding(Queue chatQueue, DirectExchange notificationExchange) {
+        return BindingBuilder.bind(chatQueue)
+                .to(notificationExchange)
+                .with(properties.getChatRoutingKey());
+    }
+
+    @Bean
+    public Binding chatQuotationBinding(Queue chatQueue, DirectExchange notificationExchange) {
+        return BindingBuilder.bind(chatQueue)
+                .to(notificationExchange)
+                .with("chat.quotation.#");
+    }
+
+    @Bean
+    public Binding chatDlqBinding(Queue chatDlq, DirectExchange notificationDlxExchange) {
+        return BindingBuilder.bind(chatDlq)
+                .to(notificationDlxExchange)
+                .with(properties.getChatDlqRoutingKey());
     }
 
     // =========================================================================

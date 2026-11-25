@@ -9,7 +9,7 @@ import {
   Boxes, Warehouse, ArrowLeftRight, Tag, TrendingUp, UserPlus, Clock,
   BadgeCheck, Truck, ClipboardCheck, Cog, ScrollText, Search, Key, Target,
   Network, FolderTree, PieChart, BookOpen, PackageOpen, Sparkles, AlertTriangle, ShieldAlert,
-  CheckCircle2
+  CheckCircle2, MessageSquare
 } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { clearSelectedCompany, setSelectedCompany } from '../features/company-management/companySlice'
@@ -543,6 +543,16 @@ export default function CompanyLayout() {
                   <span>Active Plan</span>
                 </Link>
               )}
+
+              {/* Company Chat & Quotation Requests Quick Access */}
+              <Link
+                to={companyId ? `/company/${companyId}/sales-crm/chat` : '/sales-crm/chat'}
+                aria-label="Internal Chat & RFQ"
+                title="Internal Company Chat & Quotation Requests"
+                className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors group border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
+              >
+                <MessageSquare size={18} />
+              </Link>
 
               {/* Notifications */}
               <button

@@ -14,6 +14,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -76,6 +77,9 @@ public class QuotationServiceImpl implements QuotationService {
     private final QuotationPdfService quotationPdfService;
     private final WorkflowClient workflowClient;
     private final com.erp.account.modules.quotation.service.QuotationAcceptanceTokenService tokenService;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.erp.account.integration.communication.AccountChatEventClient chatEventClient;
 
     @Override
     @Transactional
@@ -307,6 +311,25 @@ public class QuotationServiceImpl implements QuotationService {
         quotation.setStatus(newStatus);
         quotation.setUpdatedBy(TenantUtils.getCurrentUserId());
         Quotation saved = quotationRepository.save(quotation);
+
+        if (chatEventClient != null && (newStatus == QuotationStatus.APPROVED || newStatus == QuotationStatus.CUSTOMER_ACCEPTED)) {
+            try {
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("quotationNumber", quotation.getQuotationNumber());
+                metadata.put("totalAmount", quotation.getTotalAmount());
+                metadata.put("status", newStatus.name());
+                chatEventClient.sendQuotationReadyEvent(
+                        resolvedCompanyId,
+                        quotation.getId(),
+                        quotation.getQuotationNumber(),
+                        "Accounts Team",
+                        metadata
+                );
+            } catch (Exception ex) {
+                log.warn("Non-blocking failure notifying chat channel of quotation status change {}: {}", quotation.getQuotationNumber(), ex.getMessage());
+            }
+        }
+
         return quotationMapper.toResponse(saved);
     }
 
@@ -339,6 +362,26 @@ public class QuotationServiceImpl implements QuotationService {
         quotation.setUpdatedBy(TenantUtils.getCurrentUserId());
 
         Quotation saved = quotationRepository.save(quotation);
+
+        if (chatEventClient != null) {
+            try {
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("quotationNumber", quotation.getQuotationNumber());
+                metadata.put("totalAmount", quotation.getTotalAmount());
+                metadata.put("status", "APPROVED");
+                metadata.put("approvedAt", quotation.getApprovedAt());
+                chatEventClient.sendQuotationReadyEvent(
+                        resolvedCompanyId,
+                        quotation.getId(),
+                        quotation.getQuotationNumber(),
+                        "Accounts Team",
+                        metadata
+                );
+            } catch (Exception ex) {
+                log.warn("Non-blocking failure notifying chat channel of quotation approval {}: {}", quotation.getQuotationNumber(), ex.getMessage());
+            }
+        }
+
         return quotationMapper.toResponse(saved);
     }
 
@@ -404,6 +447,24 @@ public class QuotationServiceImpl implements QuotationService {
         }
 
         QuotationResponse response = changeStatus(companyId, id, QuotationStatus.SENT);
+
+        if (chatEventClient != null) {
+            try {
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("quotationNumber", response.getQuotationNumber());
+                metadata.put("totalAmount", response.getTotalAmount());
+                metadata.put("status", "SENT");
+                chatEventClient.sendQuotationReadyEvent(
+                        resolvedCompanyId,
+                        id,
+                        response.getQuotationNumber(),
+                        "Accounts Team",
+                        metadata
+                );
+            } catch (Exception ex) {
+                log.warn("Non-blocking failure notifying chat channel of quotation sent {}: {}", response.getQuotationNumber(), ex.getMessage());
+            }
+        }
 
         try {
             Quotation quotation = quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)

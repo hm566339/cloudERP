@@ -100,6 +100,10 @@ public class JwtAuthenticationFilter
                         "/api/crm/integrations/facebook/webhook",
                         "/api/crm/integrations/facebook/webhook/**",
 
+                        // Internal Chat WebSocket (STOMP handshake & SockJS fallback authenticated at frame level)
+                        "/ws-chat/**",
+                        "/ws-chat",
+
                         // Swagger / OpenAPI
                         "/swagger-ui/**",
                         "/swagger-ui",

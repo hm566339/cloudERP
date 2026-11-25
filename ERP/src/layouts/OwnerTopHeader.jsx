@@ -18,6 +18,7 @@ import {
   User,
   Search,
   Bell,
+  MessageSquare,
 } from 'lucide-react';
 import { useAppDispatch } from '../app/hooks';
 import { setSelectedCompany } from '../features/company-management/companySlice';
@@ -310,6 +311,16 @@ export default function OwnerTopHeader({
             )}
           </div>
         )}
+
+        {/* Company Chat & Quotation Requests Quick Access */}
+        <Link
+          to={activeCompanyId ? `/company/${activeCompanyId}/sales-crm/chat` : '/sales-crm/chat'}
+          aria-label="Internal Chat & RFQ"
+          title="Internal Company Chat & Quotation Requests"
+          className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D]"
+        >
+          <MessageSquare size={18} />
+        </Link>
 
         {/* Notifications Icon Button */}
         <button

@@ -22,8 +22,11 @@ import com.erp.communication.repository.NotificationRequestRepository;
 import com.erp.communication.template.RenderedEmail;
 import com.erp.communication.template.TemplateCode;
 import com.erp.communication.template.TemplateEngineService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +45,9 @@ public class CommunicationDispatchService {
     private final ProviderRegistry providerRegistry;
     private final TemplateEngineService templateEngineService;
     private final Executor communicationTaskExecutor;
+
+    @Autowired(required = false)
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional
     public CommunicationResponse dispatchEmail(SendEmailRequest request) {
@@ -227,9 +233,18 @@ public class CommunicationDispatchService {
     }
 
     @Transactional
+    public CommunicationResponse executeWhatsAppDelivery(UUID notificationId, String messageText) {
+        return executeWhatsAppDelivery(notificationId, messageText, Collections.emptyMap());
+    }
+
+    @Transactional
     public CommunicationResponse executeWhatsAppDelivery(UUID notificationId, String messageText, Map<String, Object> templateData) {
         NotificationRequest request = requestRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalStateException("Notification request not found: " + notificationId));
+
+        Map<String, Object> effectiveTemplateData = (templateData != null && !templateData.isEmpty())
+                ? templateData
+                : parsePayloadJson(request.getPayloadJson());
 
         WhatsAppMessage message = WhatsAppMessage.builder()
                 .notificationId(request.getId())
@@ -237,7 +252,7 @@ public class CommunicationDispatchService {
                 .recipientPhone(request.getRecipient())
                 .templateCode(request.getEventCode())
                 .messageText(messageText)
-                .templateData(templateData != null ? templateData : Collections.emptyMap())
+                .templateData(effectiveTemplateData != null ? effectiveTemplateData : Collections.emptyMap())
                 .build();
 
         CommunicationResult result = providerRegistry.getWhatsAppProvider().sendWhatsApp(message);
@@ -414,7 +429,43 @@ public class CommunicationDispatchService {
                 copy.put(k, v);
             }
         });
+        try {
+            if (objectMapper != null) {
+                return objectMapper.writeValueAsString(copy);
+            }
+        } catch (Exception e) {
+            log.debug("Could not serialize sanitized payload to JSON: {}", e.getMessage());
+        }
         return copy.toString();
+    }
+
+    private Map<String, Object> parsePayloadJson(String payloadJson) {
+        if (payloadJson == null || payloadJson.isBlank()) {
+            return Collections.emptyMap();
+        }
+        try {
+            if (objectMapper != null) {
+                return objectMapper.readValue(payloadJson, new TypeReference<Map<String, Object>>() {});
+            }
+        } catch (Exception e) {
+            log.debug("Could not parse payloadJson with Jackson: {}", e.getMessage());
+        }
+        // Fallback parser for Map.toString() representation: {key=val, key2=val2}
+        Map<String, Object> fallback = new HashMap<>();
+        String trimmed = payloadJson.trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            trimmed = trimmed.substring(1, trimmed.length() - 1);
+            String[] pairs = trimmed.split(",");
+            for (String pair : pairs) {
+                int eqIdx = pair.indexOf('=');
+                if (eqIdx > 0) {
+                    String k = pair.substring(0, eqIdx).trim();
+                    String v = pair.substring(eqIdx + 1).trim();
+                    fallback.put(k, v);
+                }
+            }
+        }
+        return fallback;
     }
 
     private CommunicationResponse mapToResponse(NotificationRequest nr, String message) {

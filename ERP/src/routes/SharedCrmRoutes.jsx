@@ -18,6 +18,7 @@ const ActivitiesPage = lazy(() => import('../features/sales-crm/pages/Activities
 const CampaignsPage = lazy(() => import('../features/sales-crm/pages/CampaignsPage'));
 const AttributionPage = lazy(() => import('../features/sales-crm/pages/AttributionPage'));
 const CommunicationsPage = lazy(() => import('../features/sales-crm/pages/CommunicationsPage'));
+const ChatPage = lazy(() => import('../features/chat/pages/ChatPage'));
 const AutomationPage = lazy(() => import('../features/sales-crm/pages/AutomationPage'));
 const IntegrationsPage = lazy(() => import('../features/sales-crm/pages/IntegrationsPage'));
 const CrmSettingsPage = lazy(() => import('../features/sales-crm/pages/CrmSettingsPage'));
@@ -196,6 +197,24 @@ export function SharedCrmRoutes({ prefix = "" }) {
         element={
           <ProtectedRoute module="CRM">
             <CommunicationsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 12b. Internal Company Chat & Quotation Requests */}
+      <Route
+        path={`${prefix}chat`}
+        element={
+          <ProtectedRoute module="COMMUNICATION_CHAT">
+            <ChatPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}chat/:channelId`}
+        element={
+          <ProtectedRoute module="COMMUNICATION_CHAT">
+            <ChatPage />
           </ProtectedRoute>
         }
       />

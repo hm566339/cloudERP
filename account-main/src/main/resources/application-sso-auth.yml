@@ -197,6 +197,9 @@ sso:
       SETTINGS:
         - "/api/account/v1/settings/**"
         - "/api/account/workflow/**"
+      COMMUNICATION_CHAT:
+        - "/api/communication/v1/chat"
+        - "/api/communication/v1/chat/**"
 
     method-actions:
       GET:

@@ -25,6 +25,12 @@ public class RabbitMqProperties {
     private String whatsappDlq = "erp.notification.whatsapp.dlq";
     private String whatsappDlqRoutingKey = "notification.whatsapp.dlq";
 
+    // Internal Chat & Quotation Events
+    private String chatQueue = "erp.notification.chat.queue";
+    private String chatRoutingKey = "notification.chat.#";
+    private String chatDlq = "erp.notification.chat.dlq";
+    private String chatDlqRoutingKey = "notification.chat.dlq";
+
     // Consumer concurrency (bounded for low-volume ERP)
     private int concurrency = 2;
     private int maxConcurrency = 5;

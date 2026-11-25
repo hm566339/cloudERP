@@ -12,9 +12,14 @@ export default defineConfig(({ mode }) => {
   const cleanedTarget = rawProxyTarget.trim().replace(/\/+$/, '').replace(/\/api$/, '');
   const proxyTarget = (cleanedTarget && cleanedTarget !== '') ? cleanedTarget : "http://localhost:8080";
 
+  const commTarget = (env.VITE_COMMUNICATION_API_URL || "http://localhost:8084").trim().replace(/\/+$/, '');
+
   return {
     base: env.VITE_BASE_PATH || "/erp/",
     plugins: [react()],
+    define: {
+      global: 'window',
+    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
@@ -42,6 +47,17 @@ export default defineConfig(({ mode }) => {
       },
       // Proxy API requests to backend
       proxy: {
+        "/api/communication": {
+          target: commTarget,
+          changeOrigin: true,
+          secure: false,
+        },
+        "/ws-chat": {
+          target: commTarget,
+          ws: true,
+          changeOrigin: true,
+          secure: false,
+        },
         "/api": {
           target: proxyTarget,
           changeOrigin: true,
@@ -111,6 +127,17 @@ export default defineConfig(({ mode }) => {
       strictPort: false,
       host: true,
       proxy: {
+        "/api/communication": {
+          target: commTarget,
+          changeOrigin: true,
+          secure: false,
+        },
+        "/ws-chat": {
+          target: commTarget,
+          ws: true,
+          changeOrigin: true,
+          secure: false,
+        },
         "/api": {
           target: proxyTarget,
           changeOrigin: true,

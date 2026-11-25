@@ -40,6 +40,16 @@ public class WhatsAppProperties {
     private String phoneNumberId = "";
 
     /**
+     * WhatsApp Business Account ID (WABA ID).
+     */
+    private String wabaId = "";
+
+    /**
+     * Secret verification token for incoming Meta Webhook verification (GET challenge).
+     */
+    private String webhookVerifyToken = "mark2-whatsapp-verify-token";
+
+    /**
      * Connection timeout in milliseconds.
      */
     private int connectionTimeoutMs = 5000;

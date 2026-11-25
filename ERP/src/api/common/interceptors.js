@@ -219,6 +219,7 @@ export const isCompanySpecificEndpoint = (url) => {
     '/api/expenses',
     '/api/gst',
     '/api/settings',
+    '/api/communication',
     // Relative endpoints (without leading /api)
     '/account',
     '/finance',
@@ -231,7 +232,8 @@ export const isCompanySpecificEndpoint = (url) => {
     '/payroll',
     '/workflows',
     '/dashboard',
-    '/reports'
+    '/reports',
+    '/communication'
   ];
 
   if (businessModulePrefixes.some((prefix) => pathname.startsWith(prefix))) {

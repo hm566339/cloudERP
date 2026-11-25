@@ -34,6 +34,7 @@ const buildDefaultConfig = (name) => ({
 // Pre-register known modules
 const KNOWN_MODULES = [
   'account',
+  'communication',
   'finance',
   'inventory',
   'hr',

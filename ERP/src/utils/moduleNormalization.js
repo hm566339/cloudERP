@@ -168,6 +168,13 @@ const FEATURE_CODE_ALIASES = {
   SUBSCRIPTIONS: 'SUBSCRIPTION',
   SUBSCRIPTION_MANAGEMENT: 'SUBSCRIPTION',
 
+  // Chat & Communication
+  COMMUNICATION_CHAT: 'COMMUNICATION_CHAT',
+  COMMUNICATION_MESSAGES: 'COMMUNICATION_MESSAGES',
+  CHAT: 'COMMUNICATION_CHAT',
+  COMPANY_CHAT: 'COMMUNICATION_CHAT',
+  INTERNAL_CHAT: 'COMMUNICATION_CHAT',
+
   // Accounts
   CUSTOMER: 'CUSTOMERS',
   VENDOR: 'VENDORS',
@@ -1098,7 +1105,7 @@ export function normalizePermissionsList(rawPermissions) {
                   'CRM_SETTINGS', 'SALES_ORDERS', 'SALES_INVOICES', 'ORDERS', 'INVOICES', 'CRM_DASHBOARD',
                   'CRM_ACTIVITIES', 'CRM_CAMPAIGNS', 'CRM_COMMUNICATION', 'CRM_AUTOMATION', 'CRM_INTEGRATIONS',
                   'CRM_SETTINGS', 'CRM_OPPORTUNITIES', 'CRM_PIPELINES', 'CRM_TASKS', 'CRM_LEADS', 'CRM_ACCOUNTS',
-                  'CRM_CONTACTS', 'DELIVERY_CHALLANS', 'PROFORMA_INVOICES'
+                  'CRM_CONTACTS', 'DELIVERY_CHALLANS', 'PROFORMA_INVOICES', 'COMMUNICATION_CHAT', 'CHAT', 'COMPANY_CHAT'
                 ];
                 if (CRM_FEATS.includes(normUpper) || CRM_FEATS.includes(upper)) {
                   return entitled.includes(CANONICAL_MODULES.CRM);
@@ -1109,10 +1116,10 @@ export function normalizePermissionsList(rawPermissions) {
                   'SALES_INVOICES', 'PURCHASE_INVOICES', 'PAYMENTS', 'PAYMENT_VOUCHERS', 'RECEIPT_VOUCHERS',
                   'CREDIT_NOTES', 'DEBIT_NOTES', 'GL_JOURNALS', 'GL_JOURNAL_LINES', 'GST_MASTER', 'GST_SLABS',
                   'BANK_ACCOUNTS', 'BANK_TRANSACTIONS', 'BANK_RECONCILIATION', 'BUDGET_HEADERS', 'BUDGET_LINES',
-                  'AUDIT_LOGS', 'REPORTS', 'ANALYTICS', 'SALES_TAXES', 'HSN_SAC'
+                  'AUDIT_LOGS', 'REPORTS', 'ANALYTICS', 'SALES_TAXES', 'HSN_SAC', 'COMMUNICATION_CHAT', 'CHAT', 'COMPANY_CHAT'
                 ];
                 if (ACCOUNT_FEATS.includes(normUpper) || ACCOUNT_FEATS.includes(upper)) {
-                  return entitled.includes(CANONICAL_MODULES.ACCOUNT) || (normUpper === 'CUSTOMERS' || normUpper === 'AUDIT_LOGS' || normUpper === 'ANALYTICS' ? entitled.includes(CANONICAL_MODULES.CRM) : false);
+                  return entitled.includes(CANONICAL_MODULES.ACCOUNT) || (normUpper === 'CUSTOMERS' || normUpper === 'AUDIT_LOGS' || normUpper === 'ANALYTICS' || normUpper === 'COMMUNICATION_CHAT' || normUpper === 'CHAT' ? entitled.includes(CANONICAL_MODULES.CRM) : false);
                 }
                 const INVENTORY_FEATS = [
                   'PRODUCTS', 'PRODUCT_CATEGORIES', 'PRODUCT_PRICES', 'PRODUCT_BATCHES', 'PRODUCT_SERIALS',
@@ -1185,6 +1192,15 @@ export function normalizePermissionsList(rawPermissions) {
 
               // 3. User MUST have active READ permission (or wildcard ALL/ALL_MODULES)
               let allowed = hasPermission(authContext, normUpper, 'READ') || hasPermission(authContext, upper, 'READ');
+              if (!allowed && (normUpper === 'COMMUNICATION_CHAT' || upper === 'COMMUNICATION_CHAT' || normUpper === 'CHAT')) {
+                allowed = hasPermission(authContext, 'CRM', 'READ') ||
+                  hasPermission(authContext, 'CRM_COMMUNICATION', 'READ') ||
+                  hasPermission(authContext, 'ACCOUNT', 'READ') ||
+                  hasPermission(authContext, 'QUOTATIONS', 'READ') ||
+                  hasPermission(authContext, 'SALES_INVOICES', 'READ') ||
+                  entitled.includes(CANONICAL_MODULES.CRM) ||
+                  entitled.includes(CANONICAL_MODULES.ACCOUNT);
+              }
               if (!allowed && (normUpper === 'QUOTATIONS' || upper === 'QUOTATIONS')) {
                 allowed = hasPermission(authContext, 'SALES_INVOICES', 'READ') || hasPermission(authContext, 'SALES', 'READ');
               }

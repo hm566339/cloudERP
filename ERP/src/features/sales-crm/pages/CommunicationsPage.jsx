@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import {
   MessageSquare,
   Send,
@@ -179,6 +179,15 @@ export default function CommunicationsPage() {
         title="Customer Communication Hub"
         description="Omnichannel messaging via WhatsApp Cloud API, SMS gateways, and telephony PBX"
         icon={MessageSquare}
+        actions={
+          <Link
+            to={companyId ? `/company/${companyId}/sales-crm/chat` : '/sales-crm/chat'}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            Internal Company Chat & RFQ
+          </Link>
+        }
       />
 
       {/* 2. Common Enterprise Module Tabs */}

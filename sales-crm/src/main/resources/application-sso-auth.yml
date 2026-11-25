@@ -25,6 +25,9 @@ sso:
       CRM_COMMUNICATION:
         - "/api/crm/communication"
         - "/api/crm/communication/**"
+      COMMUNICATION_CHAT:
+        - "/api/communication/v1/chat"
+        - "/api/communication/v1/chat/**"
       CRM_QUOTATIONS:
         - "/api/crm/quotations"
         - "/api/crm/quotations/**"

@@ -1,4 +1,4 @@
-import { baseApi } from '../../../api/common/baseApi';
+import { baseApi } from '../../../api/common/baseApi.js';
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({

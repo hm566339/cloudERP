@@ -4,7 +4,9 @@ import com.erp.communication.channel.CommunicationChannel;
 import com.erp.communication.channel.ProviderRegistry;
 import com.erp.communication.channel.email.EmailMessage;
 import com.erp.communication.channel.email.EmailProvider;
+import com.erp.communication.dto.request.SendChannelMessageRequest;
 import com.erp.communication.dto.request.SendEmailRequest;
+import com.erp.communication.entity.NotificationRequest;
 import com.erp.communication.dto.response.CommunicationResponse;
 import com.erp.communication.dto.response.NotificationStatusResponse;
 import com.erp.communication.model.CommunicationResult;
@@ -137,5 +139,58 @@ class CommunicationDispatchServiceTest {
         var entity = requestRepository.findById(response.getNotificationId()).orElseThrow();
         assertEquals(1, entity.getRetryCount());
         assertNull(entity.getNextRetryAt(), "Permanent error must NOT schedule any future retry");
+    }
+
+    @Test
+    @DisplayName("Should dispatch WhatsApp synchronously and record delivery")
+    void testDispatchWhatsAppSuccess() {
+        UUID companyId = UUID.randomUUID();
+        SendChannelMessageRequest request = SendChannelMessageRequest.builder()
+                .companyId(companyId)
+                .channel(CommunicationChannel.WHATSAPP)
+                .recipient("+919876543210")
+                .subject("Welcome to Mark2 ERP")
+                .templateCode("WELCOME_USER")
+                .templateData(Map.of("messageText", "Hello from Mark2 ERP", "userId", "user-123"))
+                .async(false)
+                .build();
+
+        CommunicationResponse response = dispatchService.dispatchWhatsApp(request);
+        assertNotNull(response);
+        assertEquals(NotificationStatus.ACCEPTED_BY_PROVIDER, response.getStatus());
+        assertEquals("MOCK_WHATSAPP", response.getProviderName());
+
+        var entity = requestRepository.findById(response.getNotificationId()).orElseThrow();
+        assertEquals(CommunicationChannel.WHATSAPP, entity.getChannel());
+        assertEquals(1, entity.getRetryCount());
+        assertNull(entity.getNextRetryAt());
+    }
+
+    @Test
+    @DisplayName("Should execute WhatsApp retry via executeWhatsAppDelivery overload")
+    void testExecuteWhatsAppDeliveryOverload() {
+        UUID companyId = UUID.randomUUID();
+        NotificationRequest initial = NotificationRequest.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .channel(CommunicationChannel.WHATSAPP)
+                .recipient("+919876543210")
+                .recipientMasked("+91******3210")
+                .eventCode("WHATSAPP_ALERT")
+                .subject("Critical Server Alert")
+                .status(NotificationStatus.PENDING)
+                .retryCount(0)
+                .maxRetries(3)
+                .build();
+
+        NotificationRequest saved = requestRepository.save(initial);
+
+        CommunicationResponse response = dispatchService.executeWhatsAppDelivery(saved.getId(), "Critical Server Alert");
+        assertNotNull(response);
+        assertEquals(NotificationStatus.ACCEPTED_BY_PROVIDER, response.getStatus());
+
+        var updated = requestRepository.findById(saved.getId()).orElseThrow();
+        assertEquals(1, updated.getRetryCount());
+        assertEquals(NotificationStatus.ACCEPTED_BY_PROVIDER, updated.getStatus());
     }
 }

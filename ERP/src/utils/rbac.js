@@ -51,7 +51,7 @@ export const rolePermissions = {
   },
   [ROLES.COMPANY_ADMIN]: {
     canCreate: true, canEdit: true, canDelete: true, canApprove: true,
-    modules: ['companies', 'fiscal_years', 'accounting_periods', 'account_groups', 'account_categories', 'chart_of_accounts', 'dashboard', 'ACCOUNTS_RECEIVABLE', 'CUSTOMERS', 'VENDORS', 'BANK_ACCOUNTS', 'BANK_TRANSACTIONS', 'GL_JOURNALS', 'GENERAL_LEDGER', 'EXPENSES', 'expenses', 'WORKFLOW', 'workflows', 'workflow', 'APPROVALS', 'approvals']
+    modules: ['companies', 'fiscal_years', 'accounting_periods', 'account_groups', 'account_categories', 'chart_of_accounts', 'dashboard', 'ACCOUNTS_RECEIVABLE', 'CUSTOMERS', 'VENDORS', 'BANK_ACCOUNTS', 'BANK_TRANSACTIONS', 'GL_JOURNALS', 'GENERAL_LEDGER', 'EXPENSES', 'expenses', 'WORKFLOW', 'workflows', 'workflow', 'APPROVALS', 'approvals', 'COMMUNICATION_CHAT', 'CHAT']
   },
   [ROLES.FINANCE_MANAGER]: {
     permissions: ['CREATE', 'READ', 'UPDATE', 'DELETE', 'APPROVE', 'EXPORT', 'PRINT'],
@@ -66,7 +66,7 @@ export const rolePermissions = {
       'PRODUCTS', 'PRODUCT_PRICES', 'STOCK', 'STOCK_MOVEMENTS', 'STOCK_ADJUSTMENTS',
       'INVENTORY_VALUATION', 'INVENTORY_REPORTS',
       'SALES_INVOICE_INTEGRATION', 'PURCHASE_INVOICE_INTEGRATION', 'STOCK_INTEGRATION',
-      'WAREHOUSES', 'WAREHOUSE_LOCATIONS'
+      'WAREHOUSES', 'WAREHOUSE_LOCATIONS', 'COMMUNICATION_CHAT', 'CHAT'
     ]
   },
   [ROLES.ACCOUNTANT]: {
@@ -79,7 +79,8 @@ export const rolePermissions = {
       'BUDGET_HEADERS', 'BUDGET_LINES', 'EXPENSES',
       'PRODUCTS', 'PRODUCT_PRICES', 'STOCK', 'WAREHOUSES', 'WAREHOUSE_LOCATIONS',
       'STOCK_MOVEMENTS', 'INVENTORY_VALUATION', 'INVENTORY_REPORTS',
-      'SALES_INVOICE_INTEGRATION', 'PURCHASE_INVOICE_INTEGRATION', 'STOCK_INTEGRATION'
+      'SALES_INVOICE_INTEGRATION', 'PURCHASE_INVOICE_INTEGRATION', 'STOCK_INTEGRATION',
+      'COMMUNICATION_CHAT', 'CHAT'
     ]
   },
   [ROLES.AP_EXECUTIVE]: {

@@ -90,4 +90,35 @@ class HttpWhatsAppProviderTest {
         assertFalse(result.isRetryable());
         assertTrue(result.getErrorMessage().contains("missing"));
     }
+
+    @Test
+    @DisplayName("HttpWhatsAppProvider: should resolve multi-tenant WABA credentials from repository when present")
+    void testHttpWhatsAppProviderResolvesCompanyWabaConfig() {
+        WhatsAppProperties props = new WhatsAppProperties();
+        props.setEnabled(true);
+        props.setProvider("real");
+        props.setApiUrl("https://graph.facebook.com/v21.0/default/messages");
+        props.setApiToken("default-token");
+
+        com.erp.communication.repository.CompanyWhatsAppConfigRepository configRepo =
+                org.mockito.Mockito.mock(com.erp.communication.repository.CompanyWhatsAppConfigRepository.class);
+
+        UUID companyId = UUID.randomUUID();
+        com.erp.communication.entity.CompanyWhatsAppConfig customConfig =
+                com.erp.communication.entity.CompanyWhatsAppConfig.builder()
+                        .id(UUID.randomUUID())
+                        .companyId(companyId)
+                        .phoneNumberId("109876543210987")
+                        .accessToken("custom-company-access-token")
+                        .apiUrl("https://graph.facebook.com/v21.0/109876543210987/messages")
+                        .isActive(true)
+                        .build();
+
+        org.mockito.Mockito.when(configRepo.findByCompanyIdAndIsActiveTrue(companyId))
+                .thenReturn(java.util.Optional.of(customConfig));
+
+        HttpWhatsAppProvider provider = new HttpWhatsAppProvider(props, configRepo);
+        assertEquals("HTTP_WHATSAPP", provider.getProviderName());
+        assertTrue(provider.isEnabled());
+    }
 }
