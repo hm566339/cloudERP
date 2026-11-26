@@ -124,8 +124,20 @@ export function useChatWebSocket({
                 console.error('Failed to parse STOMP notification:', e);
               }
             });
+
+            if (companyId && userId) {
+              const companyUserTopic = `/topic/company.${companyId}.user.${userId}.notifications`;
+              client.subscribe(companyUserTopic, (frame) => {
+                try {
+                  const payload = JSON.parse(frame.body);
+                  if (onNotifRef.current) onNotifRef.current(payload);
+                } catch (e) {
+                  console.error('Failed to parse company user notification:', e);
+                }
+              });
+            }
           } catch (e) {
-            console.error('Failed to subscribe to /user/queue/notifications:', e);
+            console.error('Failed to subscribe to notifications:', e);
           }
         }
       },

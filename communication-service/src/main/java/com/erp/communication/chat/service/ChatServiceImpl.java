@@ -12,10 +12,14 @@ import com.erp.communication.chat.repository.ChatChannelMemberRepository;
 import com.erp.communication.chat.repository.ChatChannelRepository;
 import com.erp.communication.chat.repository.ChatMessageRepository;
 import com.erp.communication.exception.InvalidRequestException;
+import com.erp.communication.notification.dto.CreateNotificationRequest;
+import com.erp.communication.notification.model.UserNotificationType;
+import com.erp.communication.notification.service.NotificationService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -35,17 +39,21 @@ public class ChatServiceImpl implements ChatService {
     private final ChatChannelMemberRepository memberRepository;
     private final ChatMessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
 
+    @Autowired
     public ChatServiceImpl(ChatChannelRepository channelRepository,
             ChatChannelMemberRepository memberRepository,
             ChatMessageRepository messageRepository,
             SimpMessagingTemplate messagingTemplate,
-            @org.springframework.beans.factory.annotation.Autowired(required = false) ObjectMapper objectMapper) {
+            @Autowired(required = false) NotificationService notificationService,
+            @Autowired(required = false) ObjectMapper objectMapper) {
         this.channelRepository = channelRepository;
         this.memberRepository = memberRepository;
         this.messageRepository = messageRepository;
         this.messagingTemplate = messagingTemplate;
+        this.notificationService = notificationService;
         if (objectMapper != null) {
             this.objectMapper = objectMapper;
         } else {
@@ -53,6 +61,14 @@ public class ChatServiceImpl implements ChatService {
             om.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
             this.objectMapper = om;
         }
+    }
+
+    public ChatServiceImpl(ChatChannelRepository channelRepository,
+            ChatChannelMemberRepository memberRepository,
+            ChatMessageRepository messageRepository,
+            SimpMessagingTemplate messagingTemplate,
+            ObjectMapper objectMapper) {
+        this(channelRepository, memberRepository, messageRepository, messagingTemplate, null, objectMapper);
     }
 
     @Override
@@ -98,6 +114,7 @@ public class ChatServiceImpl implements ChatService {
                             .role(ChatMemberRole.MEMBER)
                             .build();
                     memberRepository.save(member);
+                    pushGroupAddedNotification(savedChannel, memberUserId, currentUserId, "Administrator");
                 }
             }
         }
@@ -201,6 +218,9 @@ public class ChatServiceImpl implements ChatService {
 
         // Real-time WebSocket Broadcast
         broadcastToChannel(companyId, channelId, response);
+
+        // Push User Notifications for other channel members
+        pushChatNotificationToMembers(channel, saved, currentUserId, currentUserName);
 
         return response;
     }
@@ -438,6 +458,7 @@ public class ChatServiceImpl implements ChatService {
                         .build();
                 memberRepository.save(newMember);
                 addedCount++;
+                pushGroupAddedNotification(channel, memberUserId, currentUserId, currentUserName);
             }
         }
 
@@ -753,6 +774,79 @@ public class ChatServiceImpl implements ChatService {
         } catch (Exception e) {
             log.error("Failed to deserialize chat metadata: {}", e.getMessage());
             return Collections.emptyMap();
+        }
+    }
+
+    private void pushChatNotificationToMembers(ChatChannel channel, ChatMessage message, UUID senderId, String senderName) {
+        if (notificationService == null || channel == null || message == null) {
+            return;
+        }
+
+        try {
+            List<ChatChannelMember> members = memberRepository.findByCompanyIdAndChannelId(channel.getCompanyId(), channel.getId());
+            if (members == null || members.isEmpty()) {
+                return;
+            }
+
+            String author = StringUtils.hasText(senderName) ? senderName : (StringUtils.hasText(message.getSenderName()) ? message.getSenderName() : "Colleague");
+            String title = channel.getType() == ChatChannelType.DIRECT
+                    ? "New message from " + author
+                    : "New message in #" + channel.getName();
+
+            String contentPreview = message.getContent();
+            if (contentPreview != null && contentPreview.length() > 100) {
+                contentPreview = contentPreview.substring(0, 97) + "...";
+            }
+            if (!StringUtils.hasText(contentPreview)) {
+                contentPreview = "Sent a message";
+            }
+
+            for (ChatChannelMember member : members) {
+                UUID recipientId = member.getUserId();
+                if (recipientId == null || recipientId.equals(senderId)) {
+                    continue;
+                }
+
+                CreateNotificationRequest notifReq = CreateNotificationRequest.builder()
+                        .tenantId(channel.getCompanyId())
+                        .recipientUserId(recipientId)
+                        .type(UserNotificationType.CHAT_MESSAGE)
+                        .title(title)
+                        .message(author + ": " + contentPreview)
+                        .referenceId(channel.getId())
+                        .referenceType(channel.getType() != null ? channel.getType().name() : "CHAT")
+                        .build();
+
+                notificationService.createAndSendNotification(notifReq);
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to push chat notifications for channel {}: {}", channel.getId(), ex.getMessage());
+        }
+    }
+
+    private void pushGroupAddedNotification(ChatChannel channel, UUID recipientUserId, UUID adderId, String adderName) {
+        if (notificationService == null || channel == null || recipientUserId == null) {
+            return;
+        }
+
+        try {
+            String author = StringUtils.hasText(adderName) ? adderName : "An administrator";
+            String title = "Added to #" + channel.getName();
+            String msg = author + " added you to the group #" + channel.getName();
+
+            CreateNotificationRequest notifReq = CreateNotificationRequest.builder()
+                    .tenantId(channel.getCompanyId())
+                    .recipientUserId(recipientUserId)
+                    .type(UserNotificationType.GROUP_ADDED)
+                    .title(title)
+                    .message(msg)
+                    .referenceId(channel.getId())
+                    .referenceType("GROUP")
+                    .build();
+
+            notificationService.createAndSendNotification(notifReq);
+        } catch (Exception ex) {
+            log.warn("Failed to push group added notification to user {}: {}", recipientUserId, ex.getMessage());
         }
     }
 }

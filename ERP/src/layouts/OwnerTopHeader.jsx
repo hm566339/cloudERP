@@ -26,6 +26,7 @@ import { logout as logoutAction } from '../features/auth/authSlice';
 import { useLogoutApiMutation, authApi } from '../features/auth/services/authApi';
 import { removeCookie, clearLegacyAuthCookies } from '../utils/cookieHelper';
 import ThemeToggle from '../components/common/ThemeToggle';
+import NotificationBell from '../components/common/NotificationBell';
 
 /**
  * Top Header component for Owner Dashboard Layout matching Company Dashboard visual system.
@@ -323,14 +324,7 @@ export default function OwnerTopHeader({
         </Link>
 
         {/* Notifications Icon Button */}
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D]"
-        >
-          <Bell size={18} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white dark:border-[#161922] rounded-full shadow-xs" />
-        </button>
+        <NotificationBell companyId={activeCompanyId} />
 
         {/* Theme Toggle */}
         <ThemeToggle />

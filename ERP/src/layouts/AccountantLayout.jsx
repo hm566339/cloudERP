@@ -24,6 +24,7 @@ import CompanyDetailsPopup from '../features/account/components/CompanyDetailsPo
 import SwitchTenantPopup from '../features/account/components/SwitchTenantPopup'
 import MarkLogo from '../components/common/MarkLogo'
 import AppFooter from '../components/common/AppFooter'
+import NotificationBell from '../components/common/NotificationBell'
 import { fetchAccountCompanies, selectAccountCompanies, clearAccountCompany } from '../features/account/store/accountCompanySlice'
 import SearchAccount from '../components/common/SearchAccount'
 import SubscriptionNoticeBanner from '../components/common/SubscriptionNoticeBanner'
@@ -418,10 +419,7 @@ export default function AccountantLayout() {
           )}
 
           {/* Notifications */}
-          <button className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] transition-colors group border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D]">
-            <Bell size={18} className="group-hover:animate-wiggle" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white dark:border-[#161922] rounded-full shadow-sm" />
-          </button>
+          <NotificationBell />
 
           {/* Theme Toggle */}
           <ThemeToggle />

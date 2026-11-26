@@ -132,6 +132,11 @@ sso:
       COMMUNICATION_CHAT:
         - "/api/communication/v1/chat"
         - "/api/communication/v1/chat/**"
+        - "/api/communication/v1/notifications"
+        - "/api/communication/v1/notifications/**"
+      COMMUNICATION_NOTIFICATIONS:
+        - "/api/communication/v1/notifications"
+        - "/api/communication/v1/notifications/**"
       COMMUNICATION_MESSAGES:
         - "/api/communication/v1/messages"
         - "/api/communication/v1/messages/**"
@@ -142,6 +147,9 @@ sso:
         - "CREATE"
         - "WRITE"
       PUT:
+        - "UPDATE"
+        - "WRITE"
+      PATCH:
         - "UPDATE"
         - "WRITE"
       DELETE:

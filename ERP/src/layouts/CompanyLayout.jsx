@@ -24,6 +24,7 @@ import { MODULE_DEFINITIONS, getAccessibleModuleKeys, getFirstAccessibleDashboar
 import { isOwnerUser as checkIsOwnerUser } from '../utils/moduleNormalization'
 import MarkLogo from '../components/common/MarkLogo'
 import AppFooter from '../components/common/AppFooter'
+import NotificationBell from '../components/common/NotificationBell'
 
 import { useRBAC } from '../utils/rbac'
 import { useRoutePath } from '../hooks/useRoutePath'
@@ -555,13 +556,7 @@ export default function CompanyLayout() {
               </Link>
 
               {/* Notifications */}
-              <button
-                aria-label="Notifications"
-                className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors group border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
-              >
-                <Bell size={18} className="group-hover:animate-wiggle" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white dark:border-zinc-900 rounded-full shadow-sm" />
-              </button>
+              <NotificationBell companyId={companyId} />
 
               {/* Theme Toggle */}
               <ThemeToggle />

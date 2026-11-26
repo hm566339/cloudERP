@@ -49,6 +49,9 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
     private static final Pattern CHANNEL_TOPIC_PATTERN =
             Pattern.compile("^/topic/company\\.([a-fA-F0-9\\-]+)\\.channel\\.([a-fA-F0-9\\-]+)$");
 
+    private static final Pattern USER_NOTIFICATION_TOPIC_PATTERN =
+            Pattern.compile("^/topic/company\\.([a-fA-F0-9\\-]+)\\.user\\.([a-fA-F0-9\\-]+)\\.notifications$");
+
     @Autowired
     public WebSocketAuthChannelInterceptor(
             ServiceAuthProperties serviceAuthProperties,
@@ -295,6 +298,31 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
                     throw new AccessDeniedException("Access denied: You are not a member of this channel");
                 }
             }
+            return;
+        }
+
+        // Validate personal user notifications topic: /topic/company.{companyId}.user.{userId}.notifications
+        Matcher userNotifMatcher = USER_NOTIFICATION_TOPIC_PATTERN.matcher(destination);
+        if (userNotifMatcher.matches()) {
+            UUID targetCompanyId = UUID.fromString(userNotifMatcher.group(1));
+            UUID targetUserId = UUID.fromString(userNotifMatcher.group(2));
+
+            boolean isInternal = principal.getAuthorities() != null &&
+                    principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_INTERNAL_SERVICE"));
+
+            if (!isInternal) {
+                if (principal.getCompanyId() != null && !principal.getCompanyId().equals(targetCompanyId)) {
+                    log.warn("STOMP cross-tenant notification subscription blocked! userCompany={} attempted={}",
+                            principal.getCompanyId(), targetCompanyId);
+                    throw new AccessDeniedException("Tenant isolation violation: cannot subscribe to another company's notifications");
+                }
+                if (principal.getUserId() != null && !principal.getUserId().equals(targetUserId)) {
+                    log.warn("STOMP cross-user notification subscription blocked! user={} attempted={}",
+                            principal.getUserId(), targetUserId);
+                    throw new AccessDeniedException("Access denied: You cannot subscribe to another user's notifications");
+                }
+            }
+            return;
         }
     }
 

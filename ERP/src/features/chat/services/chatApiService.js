@@ -190,6 +190,54 @@ export const chatApiService = {
     );
     return data;
   },
+
+  /**
+   * Get user notifications (paginated, newest first)
+   */
+  async getNotifications({ page = 0, size = 20, unreadOnly = false } = {}, companyId) {
+    const cid = companyId || getActiveCompanyId();
+    const config = {
+      ...getHeaders(cid),
+      params: { page, size, unreadOnly },
+    };
+    const { data } = await apiClient.get('/api/communication/v1/notifications', config);
+    return data;
+  },
+
+  /**
+   * Get total unread notifications count for current user
+   */
+  async getUnreadNotificationCount(companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.get('/api/communication/v1/notifications/unread-count', config);
+    return data;
+  },
+
+  /**
+   * Mark a single notification as read
+   */
+  async markNotificationAsRead(notificationId, companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.patch(
+      `/api/communication/v1/notifications/${notificationId}/read`,
+      {},
+      config
+    );
+    return data;
+  },
+
+  /**
+   * Mark all notifications for the current user as read
+   */
+  async markAllNotificationsAsRead(companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.patch(
+      '/api/communication/v1/notifications/read-all',
+      {},
+      config
+    );
+    return data;
+  },
 };
 
 export default chatApiService;

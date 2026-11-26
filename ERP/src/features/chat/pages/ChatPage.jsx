@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getActiveCompanyId } from '../../../api/common/roleCompanyContext';
 import chatApiService from '../services/chatApiService';
@@ -16,12 +16,37 @@ import LeaveGroupConfirmModal from '../components/LeaveGroupConfirmModal';
 
 export default function ChatPage() {
   const params = useParams();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const authUser = useSelector((state) => state.auth?.user);
   const currentCompanyId = params.companyId || getActiveCompanyId() || authUser?.companyId;
   const currentUserId = authUser?.id || authUser?.userId;
 
+  const urlChannelId = searchParams.get('channelId') || location.state?.channelId;
+
   const [channels, setChannels] = useState([]);
-  const [activeChannelId, setActiveChannelId] = useState(null);
+  const [activeChannelId, setActiveChannelId] = useState(urlChannelId || null);
+
+  // Sync active channel when query param changes
+  useEffect(() => {
+    const qChannelId = searchParams.get('channelId');
+    if (qChannelId) {
+      setActiveChannelId(qChannelId);
+    }
+  }, [searchParams]);
+
+  // Listen for custom event from NotificationBell
+  useEffect(() => {
+    const handleOpenChannel = (e) => {
+      if (e.detail?.channelId) {
+        setActiveChannelId(e.detail.channelId);
+      }
+    };
+    window.addEventListener('mark2:open-chat-channel', handleOpenChannel);
+    return () => {
+      window.removeEventListener('mark2:open-chat-channel', handleOpenChannel);
+    };
+  }, []);
   const [messages, setMessages] = useState([]);
   const [isLoadingChannels, setIsLoadingChannels] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -107,9 +132,14 @@ export default function ChatPage() {
         const list = Array.isArray(data) ? data : [];
         setChannels(list);
 
-        // Auto-select first channel or default
-        if (list.length > 0 && !activeChannelId) {
-          setActiveChannelId(list[0].id);
+        // Auto-select target channel from URL/props or first channel
+        if (list.length > 0) {
+          const preferredId = urlChannelId && list.some((c) => c.id === urlChannelId)
+            ? urlChannelId
+            : activeChannelId && list.some((c) => c.id === activeChannelId)
+            ? activeChannelId
+            : list[0].id;
+          setActiveChannelId(preferredId);
         } else if (list.length === 0) {
           // Auto-provision initial Quotations & Sales channel
           chatApiService
