@@ -68,6 +68,7 @@ public class ChatServiceImpl implements ChatService {
         ChatChannel channel = ChatChannel.builder()
                 .companyId(companyId)
                 .name(request.getName().trim())
+                .description(StringUtils.hasText(request.getDescription()) ? request.getDescription().trim() : null)
                 .type(request.getType() != null ? request.getType() : ChatChannelType.GROUP)
                 .createdBy(currentUserId)
                 .build();
@@ -333,6 +334,264 @@ public class ChatServiceImpl implements ChatService {
         return response;
     }
 
+    @Override
+    @Transactional
+    public ChatChannelResponse updateChannel(UUID channelId, UpdateChannelRequest request, UUID companyId, UUID currentUserId, String currentUserName) {
+        ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
+
+        if (currentUserId != null && !isChannelAdminOrCreator(channel, companyId, currentUserId)) {
+            throw new AccessDeniedException("Only channel administrators or the creator can update channel details");
+        }
+
+        boolean updated = false;
+        if (request != null) {
+            if (StringUtils.hasText(request.getName())) {
+                channel.setName(request.getName().trim());
+                updated = true;
+            }
+            if (request.getDescription() != null) {
+                channel.setDescription(StringUtils.hasText(request.getDescription()) ? request.getDescription().trim() : null);
+                updated = true;
+            }
+        }
+
+        if (updated) {
+            channel.setUpdatedAt(LocalDateTime.now());
+            channel = channelRepository.save(channel);
+
+            String authorName = StringUtils.hasText(currentUserName) ? currentUserName : "An administrator";
+            postAndBroadcastSystemMessage(channel, currentUserId, authorName,
+                    authorName + " updated channel details", Map.of("action", "CHANNEL_UPDATED"));
+        }
+
+        return mapToChannelResponse(channel, currentUserId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteChannel(UUID channelId, UUID companyId, UUID currentUserId, String currentUserName) {
+        ChatChannel channel = channelRepository.findByIdAndCompanyId(channelId, companyId)
+                .orElseThrow(() -> new InvalidRequestException("Channel not found: " + channelId));
+
+        if (currentUserId != null && !isChannelAdminOrCreator(channel, companyId, currentUserId)) {
+            throw new AccessDeniedException("Only channel administrators or the creator can delete this channel");
+        }
+
+        String authorName = StringUtils.hasText(currentUserName) ? currentUserName : "An administrator";
+        postAndBroadcastSystemMessage(channel, currentUserId, authorName,
+                authorName + " deleted the channel", Map.of("action", "CHANNEL_DELETED", "channelId", channelId.toString()));
+
+        memberRepository.deleteByCompanyIdAndChannelId(companyId, channelId);
+        messageRepository.deleteByCompanyIdAndChannelId(companyId, channelId);
+        channelRepository.delete(channel);
+
+        log.info("Deleted channel | channelId={} | companyId={} | deletedBy={}", channelId, companyId, currentUserId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ChatMemberResponse> getChannelMembers(UUID channelId, UUID companyId, UUID currentUserId) {
+        validateChannelAccess(channelId, companyId, currentUserId);
+        List<ChatChannelMember> members = memberRepository.findByCompanyIdAndChannelId(companyId, channelId);
+        return members.stream()
+                .map(this::mapToMemberResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<ChatMemberResponse> addChannelMembers(UUID channelId, AddChannelMembersRequest request, UUID companyId, UUID currentUserId, String currentUserName) {
+        ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
+
+        if (request == null || request.getMemberUserIds() == null || request.getMemberUserIds().isEmpty()) {
+            throw new InvalidRequestException("memberUserIds list cannot be empty");
+        }
+
+        int addedCount = 0;
+        ChatMemberRole role = request.getRole() != null ? request.getRole() : ChatMemberRole.MEMBER;
+
+        for (UUID memberUserId : request.getMemberUserIds()) {
+            if (memberUserId == null) continue;
+
+            Optional<ChatChannelMember> existing = memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, memberUserId);
+            if (existing.isEmpty()) {
+                ChatChannelMember newMember = ChatChannelMember.builder()
+                        .channel(channel)
+                        .companyId(companyId)
+                        .userId(memberUserId)
+                        .role(role)
+                        .lastReadAt(LocalDateTime.now())
+                        .build();
+                memberRepository.save(newMember);
+                addedCount++;
+            }
+        }
+
+        if (addedCount > 0) {
+            channel.setUpdatedAt(LocalDateTime.now());
+            channelRepository.save(channel);
+
+            String authorName = StringUtils.hasText(currentUserName) ? currentUserName : "An administrator";
+            postAndBroadcastSystemMessage(channel, currentUserId, authorName,
+                    authorName + " added " + addedCount + " member(s) to the channel",
+                    Map.of("action", "MEMBERS_ADDED", "count", addedCount));
+        }
+
+        return getChannelMembers(channelId, companyId, currentUserId);
+    }
+
+    @Override
+    @Transactional
+    public void removeChannelMember(UUID channelId, UUID memberUserId, UUID companyId, UUID currentUserId, String currentUserName) {
+        ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
+
+        if (memberUserId == null) {
+            throw new InvalidRequestException("memberUserId is required");
+        }
+
+        if (memberUserId.equals(currentUserId)) {
+            leaveChannel(channelId, companyId, currentUserId, currentUserName);
+            return;
+        }
+
+        if (currentUserId != null && !isChannelAdminOrCreator(channel, companyId, currentUserId)) {
+            throw new AccessDeniedException("Only channel administrators can remove members");
+        }
+
+        ChatChannelMember member = memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, memberUserId)
+                .orElseThrow(() -> new InvalidRequestException("User is not a member of this channel"));
+
+        memberRepository.delete(member);
+        channel.setUpdatedAt(LocalDateTime.now());
+        channelRepository.save(channel);
+
+        String authorName = StringUtils.hasText(currentUserName) ? currentUserName : "An administrator";
+        postAndBroadcastSystemMessage(channel, currentUserId, authorName,
+                authorName + " removed a member from the channel",
+                Map.of("action", "MEMBER_REMOVED", "removedUserId", memberUserId.toString()));
+
+        log.info("Removed member from channel | channelId={} | removedUserId={} | removedBy={}",
+                channelId, memberUserId, currentUserId);
+    }
+
+    @Override
+    @Transactional
+    public ChatMemberResponse updateMemberRole(UUID channelId, UUID memberUserId, UpdateMemberRoleRequest request, UUID companyId, UUID currentUserId, String currentUserName) {
+        ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
+
+        if (memberUserId == null || request == null || request.getRole() == null) {
+            throw new InvalidRequestException("memberUserId and role are required");
+        }
+
+        if (currentUserId != null && !isChannelAdminOrCreator(channel, companyId, currentUserId)) {
+            throw new AccessDeniedException("Only channel administrators can change member roles");
+        }
+
+        ChatChannelMember member = memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, memberUserId)
+                .orElseThrow(() -> new InvalidRequestException("User is not a member of this channel"));
+
+        // Demoting an admin: verify not the last admin
+        if (member.getRole() == ChatMemberRole.ADMIN && request.getRole() == ChatMemberRole.MEMBER) {
+            long adminCount = memberRepository.countByCompanyIdAndChannelIdAndRole(companyId, channelId, ChatMemberRole.ADMIN);
+            if (adminCount <= 1) {
+                throw new InvalidRequestException("Cannot demote the last administrator of the channel");
+            }
+        }
+
+        member.setRole(request.getRole());
+        ChatChannelMember saved = memberRepository.save(member);
+
+        String authorName = StringUtils.hasText(currentUserName) ? currentUserName : "An administrator";
+        postAndBroadcastSystemMessage(channel, currentUserId, authorName,
+                authorName + " updated member role to " + request.getRole(),
+                Map.of("action", "ROLE_UPDATED", "targetUserId", memberUserId.toString(), "newRole", request.getRole().name()));
+
+        return mapToMemberResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void leaveChannel(UUID channelId, UUID companyId, UUID currentUserId, String currentUserName) {
+        if (currentUserId == null) {
+            throw new InvalidRequestException("Authentication is required to leave channel");
+        }
+
+        ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
+
+        ChatChannelMember member = memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, currentUserId)
+                .orElseThrow(() -> new InvalidRequestException("You are not a member of this channel"));
+
+        // If member is ADMIN and leaving, check if there are other members needing promotion
+        if (member.getRole() == ChatMemberRole.ADMIN) {
+            long adminCount = memberRepository.countByCompanyIdAndChannelIdAndRole(companyId, channelId, ChatMemberRole.ADMIN);
+            if (adminCount <= 1) {
+                List<ChatChannelMember> otherMembers = memberRepository.findByCompanyIdAndChannelId(companyId, channelId)
+                        .stream()
+                        .filter(m -> !m.getUserId().equals(currentUserId))
+                        .toList();
+                if (!otherMembers.isEmpty()) {
+                    ChatChannelMember promotee = otherMembers.get(0);
+                    promotee.setRole(ChatMemberRole.ADMIN);
+                    memberRepository.save(promotee);
+                }
+            }
+        }
+
+        memberRepository.delete(member);
+        channel.setUpdatedAt(LocalDateTime.now());
+        channelRepository.save(channel);
+
+        String authorName = StringUtils.hasText(currentUserName) ? currentUserName : "A member";
+        postAndBroadcastSystemMessage(channel, currentUserId, authorName,
+                authorName + " left the channel",
+                Map.of("action", "MEMBER_LEFT", "userId", currentUserId.toString()));
+
+        log.info("User left channel | channelId={} | userId={}", channelId, currentUserId);
+    }
+
+    private boolean isChannelAdminOrCreator(ChatChannel channel, UUID companyId, UUID userId) {
+        if (userId == null) {
+            return false;
+        }
+        if (userId.equals(channel.getCreatedBy())) {
+            return true;
+        }
+        return memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channel.getId(), userId)
+                .map(m -> m.getRole() == ChatMemberRole.ADMIN)
+                .orElse(false);
+    }
+
+    private ChatMemberResponse mapToMemberResponse(ChatChannelMember m) {
+        return ChatMemberResponse.builder()
+                .id(m.getId())
+                .channelId(m.getChannel().getId())
+                .companyId(m.getCompanyId())
+                .userId(m.getUserId())
+                .userName("User")
+                .role(m.getRole())
+                .joinedAt(m.getJoinedAt())
+                .lastReadAt(m.getLastReadAt())
+                .build();
+    }
+
+    private void postAndBroadcastSystemMessage(ChatChannel channel, UUID senderId, String senderName, String content, Map<String, Object> metadata) {
+        try {
+            ChatMessage msg = ChatMessage.builder()
+                    .companyId(channel.getCompanyId())
+                    .channel(channel)
+                    .senderId(senderId)
+                    .senderName(senderName)
+                    .messageType(ChatMessageType.SYSTEM_ALERT)
+                    .content(content)
+                    .metadataJson(serializeMetadata(metadata))
+                    .build();
+            ChatMessage saved = messageRepository.save(msg);
+            broadcastToChannel(channel.getCompanyId(), channel.getId(), mapToMessageResponse(saved));
+        } catch (Exception ex) {
+            log.warn("Failed to broadcast system message for channel {}: {}", channel.getId(), ex.getMessage());
+        }
+    }
+
     private ChatChannel resolveOrCreateQuotationChannel(UUID companyId, String channelName) {
         return channelRepository.findByCompanyIdAndNameAndType(companyId, channelName, ChatChannelType.GROUP)
                 .orElseGet(() -> {
@@ -404,6 +663,7 @@ public class ChatServiceImpl implements ChatService {
                 .id(ch.getId())
                 .companyId(ch.getCompanyId())
                 .name(ch.getName())
+                .description(ch.getDescription())
                 .type(ch.getType())
                 .createdBy(ch.getCreatedBy())
                 .unreadCount(unreadCount)

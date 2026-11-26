@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import Badge from '../../../components/common/Badge';
+import GroupOptionsMenu from './GroupOptionsMenu';
 
 export default function ChatThread({
   channel,
@@ -20,6 +21,11 @@ export default function ChatThread({
   currentUserId,
   onSendMessage,
   onOpenQuotationModal,
+  onOpenGroupInfo,
+  onOpenAddMembers,
+  onOpenManageMembers,
+  onOpenDeleteConfirm,
+  onOpenLeaveConfirm,
   onUpdateStatus,
   isSending = false,
   isUpdatingStatus = false,
@@ -85,9 +91,17 @@ export default function ChatThread({
                 {channel.type}
               </Badge>
             </div>
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5">
+            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5 flex-wrap">
               <Users className="w-3 h-3" />
               <span>{channel.memberCount || 1} members</span>
+              {channel.description && (
+                <>
+                  <span>·</span>
+                  <span className="truncate max-w-[240px]" title={channel.description}>
+                    {channel.description}
+                  </span>
+                </>
+              )}
               <span>·</span>
               <span className={isConnected ? 'text-emerald-500' : 'text-zinc-400'}>
                 {isConnected ? 'Real-time Connected' : 'Connecting...'}
@@ -96,7 +110,7 @@ export default function ChatThread({
           </div>
         </div>
 
-        {/* Header Action: Request Quotation Button */}
+        {/* Header Action: Request Quotation Button & 3-Dot Group Management Menu */}
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
@@ -106,6 +120,16 @@ export default function ChatThread({
             <FileText className="w-3.5 h-3.5" />
             <span>Request Quote</span>
           </button>
+
+          {/* 3-Dot Group Management Options */}
+          <GroupOptionsMenu
+            channel={channel}
+            onOpenInfo={onOpenGroupInfo}
+            onOpenAddMembers={onOpenAddMembers}
+            onOpenManageMembers={onOpenManageMembers}
+            onOpenDeleteConfirm={onOpenDeleteConfirm}
+            onOpenLeaveConfirm={onOpenLeaveConfirm}
+          />
         </div>
       </div>
 

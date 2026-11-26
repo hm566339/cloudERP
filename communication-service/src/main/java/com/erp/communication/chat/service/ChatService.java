@@ -24,4 +24,18 @@ public interface ChatService {
     ChatMessageResponse updateActionStatus(UUID channelId, UUID messageId, UpdateActionStatusRequest request, UUID companyId, UUID currentUserId, String currentUserName);
 
     ChatMessageResponse handleExternalQuotationEvent(QuotationEventDto event);
+
+    ChatChannelResponse updateChannel(UUID channelId, UpdateChannelRequest request, UUID companyId, UUID currentUserId, String currentUserName);
+
+    void deleteChannel(UUID channelId, UUID companyId, UUID currentUserId, String currentUserName);
+
+    List<ChatMemberResponse> getChannelMembers(UUID channelId, UUID companyId, UUID currentUserId);
+
+    List<ChatMemberResponse> addChannelMembers(UUID channelId, AddChannelMembersRequest request, UUID companyId, UUID currentUserId, String currentUserName);
+
+    void removeChannelMember(UUID channelId, UUID memberUserId, UUID companyId, UUID currentUserId, String currentUserName);
+
+    ChatMemberResponse updateMemberRole(UUID channelId, UUID memberUserId, UpdateMemberRoleRequest request, UUID companyId, UUID currentUserId, String currentUserName);
+
+    void leaveChannel(UUID channelId, UUID companyId, UUID currentUserId, String currentUserName);
 }

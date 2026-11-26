@@ -8,6 +8,7 @@ export default function CreateChannelModal({
   isSubmitting = false,
 }) {
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [type, setType] = useState('GROUP');
   const [initialMessage, setInitialMessage] = useState('');
 
@@ -19,6 +20,7 @@ export default function CreateChannelModal({
 
     onSubmit({
       name: name.trim(),
+      description: description.trim() || undefined,
       type,
       initialMessage: initialMessage.trim() || undefined,
     });
@@ -88,6 +90,20 @@ export default function CreateChannelModal({
                 Direct
               </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+              Description / Topic (Optional)
+            </label>
+            <input
+              type="text"
+              maxLength={500}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. Channel for sales quotes and customer negotiations"
+              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#4C8DFF]"
+            />
           </div>
 
           <div>

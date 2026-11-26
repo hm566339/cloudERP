@@ -100,6 +100,96 @@ export const chatApiService = {
     const { data } = await apiClient.post('/api/communication/v1/chat/quotations/event', payload, config);
     return data;
   },
+
+  /**
+   * Update channel details (name, description)
+   */
+  async updateChannel(channelId, updateData, companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.put(
+      `/api/communication/v1/chat/channels/${channelId}`,
+      updateData,
+      config
+    );
+    return data;
+  },
+
+  /**
+   * Delete channel (admin/creator only)
+   */
+  async deleteChannel(channelId, companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.delete(
+      `/api/communication/v1/chat/channels/${channelId}`,
+      config
+    );
+    return data;
+  },
+
+  /**
+   * Get all members of a channel
+   */
+  async getChannelMembers(channelId, companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.get(
+      `/api/communication/v1/chat/channels/${channelId}/members`,
+      config
+    );
+    return data;
+  },
+
+  /**
+   * Add members to a channel
+   * @param {Object} memberData - { memberUserIds: string[], role: 'MEMBER' | 'ADMIN' }
+   */
+  async addChannelMembers(channelId, memberData, companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.post(
+      `/api/communication/v1/chat/channels/${channelId}/members`,
+      memberData,
+      config
+    );
+    return data;
+  },
+
+  /**
+   * Remove a member from a channel (admin only, or redirects to leave if self)
+   */
+  async removeChannelMember(channelId, memberUserId, companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.delete(
+      `/api/communication/v1/chat/channels/${channelId}/members/${memberUserId}`,
+      config
+    );
+    return data;
+  },
+
+  /**
+   * Update member role in channel (ADMIN / MEMBER)
+   * @param {Object} roleData - { role: 'ADMIN' | 'MEMBER' }
+   */
+  async updateMemberRole(channelId, memberUserId, roleData, companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.put(
+      `/api/communication/v1/chat/channels/${channelId}/members/${memberUserId}/role`,
+      roleData,
+      config
+    );
+    return data;
+  },
+
+  /**
+   * Leave a channel (removes current user from channel)
+   */
+  async leaveChannel(channelId, companyId) {
+    const config = getHeaders(companyId);
+    const { data } = await apiClient.post(
+      `/api/communication/v1/chat/channels/${channelId}/leave`,
+      {},
+      config
+    );
+    return data;
+  },
 };
 
 export default chatApiService;

@@ -14,6 +14,7 @@ public class ChatChannelResponse {
     private UUID id;
     private UUID companyId;
     private String name;
+    private String description;
     private ChatChannelType type;
     private UUID createdBy;
     private long unreadCount;

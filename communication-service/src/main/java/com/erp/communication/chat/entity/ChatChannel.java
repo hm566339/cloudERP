@@ -25,6 +25,9 @@ public class ChatChannel {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "description", length = 500)
+    private String description;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 50)
     @Builder.Default

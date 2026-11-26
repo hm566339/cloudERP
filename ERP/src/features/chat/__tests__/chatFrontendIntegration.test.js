@@ -16,6 +16,14 @@ describe('Company Chat & RFQ Frontend Security & Integration Suite', () => {
     assert.ok(typeof chatApiService.markChannelRead === 'function');
     assert.ok(typeof chatApiService.updateActionStatus === 'function');
     assert.ok(typeof chatApiService.postQuotationEvent === 'function');
+    // Group Management APIs
+    assert.ok(typeof chatApiService.updateChannel === 'function');
+    assert.ok(typeof chatApiService.deleteChannel === 'function');
+    assert.ok(typeof chatApiService.getChannelMembers === 'function');
+    assert.ok(typeof chatApiService.addChannelMembers === 'function');
+    assert.ok(typeof chatApiService.removeChannelMember === 'function');
+    assert.ok(typeof chatApiService.updateMemberRole === 'function');
+    assert.ok(typeof chatApiService.leaveChannel === 'function');
   });
 
   it('2. canViewModule allows COMMUNICATION_CHAT for CRM operators and Accountants', () => {

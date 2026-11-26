@@ -16,6 +16,8 @@ public class CreateChannelRequest {
     @NotBlank(message = "Channel name is required")
     private String name;
 
+    private String description;
+
     @Builder.Default
     private ChatChannelType type = ChatChannelType.GROUP;
 

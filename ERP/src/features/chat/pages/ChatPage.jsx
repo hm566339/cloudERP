@@ -8,6 +8,11 @@ import ChannelSidebar from '../components/ChannelSidebar';
 import ChatThread from '../components/ChatThread';
 import CreateChannelModal from '../components/CreateChannelModal';
 import RequestQuotationModal from '../components/RequestQuotationModal';
+import GroupInfoModal from '../components/GroupInfoModal';
+import AddMembersModal from '../components/AddMembersModal';
+import ManageMembersModal from '../components/ManageMembersModal';
+import DeleteGroupConfirmModal from '../components/DeleteGroupConfirmModal';
+import LeaveGroupConfirmModal from '../components/LeaveGroupConfirmModal';
 
 export default function ChatPage() {
   const params = useParams();
@@ -24,6 +29,14 @@ export default function ChatPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const [isRequestQuoteOpen, setIsRequestQuoteOpen] = useState(false);
+
+  // Group Management Modals state
+  const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
+  const [isAddMembersOpen, setIsAddMembersOpen] = useState(false);
+  const [isManageMembersOpen, setIsManageMembersOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
+  const [isUpdatingGroup, setIsUpdatingGroup] = useState(false);
 
   // Active channel object
   const activeChannel = useMemo(
@@ -232,6 +245,88 @@ export default function ChatPage() {
     }
   };
 
+  // Update Group Details (name, description)
+  const handleUpdateChannel = async (updateData) => {
+    if (!activeChannelId || !currentCompanyId) return;
+
+    setIsUpdatingGroup(true);
+    try {
+      const updated = await chatApiService.updateChannel(
+        activeChannelId,
+        updateData,
+        currentCompanyId
+      );
+
+      // Reflect in channels list
+      setChannels((prev) =>
+        prev.map((c) => (c.id === activeChannelId ? { ...c, ...updated } : c))
+      );
+      return updated;
+    } finally {
+      setIsUpdatingGroup(false);
+    }
+  };
+
+  // Delete Channel
+  const handleDeleteChannel = async (channelId) => {
+    if (!channelId || !currentCompanyId) return;
+
+    await chatApiService.deleteChannel(channelId, currentCompanyId);
+
+    // Remove from channels list and select another channel cleanly
+    setChannels((prev) => {
+      const remaining = prev.filter((c) => c.id !== channelId);
+      if (activeChannelId === channelId) {
+        setActiveChannelId(remaining.length > 0 ? remaining[0].id : null);
+      }
+      return remaining;
+    });
+  };
+
+  // Leave Channel
+  const handleLeaveChannel = async (channelId) => {
+    if (!channelId || !currentCompanyId) return;
+
+    await chatApiService.leaveChannel(channelId, currentCompanyId);
+
+    // Remove from user's channels list and select another channel cleanly
+    setChannels((prev) => {
+      const remaining = prev.filter((c) => c.id !== channelId);
+      if (activeChannelId === channelId) {
+        setActiveChannelId(remaining.length > 0 ? remaining[0].id : null);
+      }
+      return remaining;
+    });
+  };
+
+  // Refresh active channel details (e.g. member count)
+  const handleRefreshChannel = async () => {
+    if (!activeChannelId || !currentCompanyId) return;
+
+    try {
+      const fresh = await chatApiService.getChannel(activeChannelId, currentCompanyId);
+      if (fresh) {
+        setChannels((prev) =>
+          prev.map((c) => (c.id === activeChannelId ? { ...c, ...fresh } : c))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to refresh channel metadata:', err);
+    }
+  };
+
+  // Handle members added
+  const handleMembersAdded = async (count) => {
+    setChannels((prev) =>
+      prev.map((c) =>
+        c.id === activeChannelId
+          ? { ...c, memberCount: (c.memberCount || 1) + count }
+          : c
+      )
+    );
+    await handleRefreshChannel();
+  };
+
   return (
     <div className="flex-1 flex h-[calc(100vh-4rem)] overflow-hidden bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs m-2 sm:m-4">
       {/* Channels Sidebar */}
@@ -251,6 +346,11 @@ export default function ChatPage() {
         currentUserId={currentUserId}
         onSendMessage={handleSendMessage}
         onOpenQuotationModal={() => setIsRequestQuoteOpen(true)}
+        onOpenGroupInfo={() => setIsGroupInfoOpen(true)}
+        onOpenAddMembers={() => setIsAddMembersOpen(true)}
+        onOpenManageMembers={() => setIsManageMembersOpen(true)}
+        onOpenDeleteConfirm={() => setIsDeleteConfirmOpen(true)}
+        onOpenLeaveConfirm={() => setIsLeaveConfirmOpen(true)}
         onUpdateStatus={handleUpdateStatus}
         isSending={isSending}
         isUpdatingStatus={isUpdatingStatus}
@@ -271,6 +371,53 @@ export default function ChatPage() {
         onClose={() => setIsRequestQuoteOpen(false)}
         onSubmit={handleRequestQuotationSubmit}
         isSubmitting={isSending}
+      />
+
+      {/* Group Info & Settings Modal */}
+      <GroupInfoModal
+        isOpen={isGroupInfoOpen}
+        channel={activeChannel}
+        onClose={() => setIsGroupInfoOpen(false)}
+        onUpdateChannel={handleUpdateChannel}
+        isSubmitting={isUpdatingGroup}
+      />
+
+      {/* Add Company Users Modal */}
+      <AddMembersModal
+        isOpen={isAddMembersOpen}
+        channel={activeChannel}
+        companyId={currentCompanyId}
+        currentUserId={currentUserId}
+        onClose={() => setIsAddMembersOpen(false)}
+        onMembersAdded={handleMembersAdded}
+      />
+
+      {/* Manage Members Modal */}
+      <ManageMembersModal
+        isOpen={isManageMembersOpen}
+        channel={activeChannel}
+        companyId={currentCompanyId}
+        currentUserId={currentUserId}
+        onClose={() => setIsManageMembersOpen(false)}
+        onOpenAddMembers={() => setIsAddMembersOpen(true)}
+        onMemberChanged={handleRefreshChannel}
+        onLeftChannel={handleLeaveChannel}
+      />
+
+      {/* Delete Group Confirm Modal */}
+      <DeleteGroupConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        channel={activeChannel}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirmDelete={handleDeleteChannel}
+      />
+
+      {/* Leave Group Confirm Modal */}
+      <LeaveGroupConfirmModal
+        isOpen={isLeaveConfirmOpen}
+        channel={activeChannel}
+        onClose={() => setIsLeaveConfirmOpen(false)}
+        onConfirmLeave={handleLeaveChannel}
       />
     </div>
   );

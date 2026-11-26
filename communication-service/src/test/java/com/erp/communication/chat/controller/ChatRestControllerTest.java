@@ -383,4 +383,154 @@ class ChatRestControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(msgId.toString()));
     }
+
+    @Test
+    @DisplayName("PUT /channels/{channelId} updates channel name and description")
+    void testUpdateChannel() throws Exception {
+        ChatChannelResponse response = ChatChannelResponse.builder()
+                .id(channelId)
+                .companyId(companyId)
+                .name("Updated Sales & Marketing")
+                .description("Discussion of quarterly targets")
+                .type(ChatChannelType.GROUP)
+                .build();
+
+        when(chatService.updateChannel(eq(channelId), any(), eq(companyId), eq(userId), any())).thenReturn(response);
+
+        String json = """
+                {
+                    "name": "Updated Sales & Marketing",
+                    "description": "Discussion of quarterly targets"
+                }
+                """;
+
+        mockMvc.perform(put("/api/communication/v1/chat/channels/{channelId}", channelId)
+                        .header("X-Company-Id", companyId.toString())
+                        .header("X-User-Id", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(channelId.toString()))
+                .andExpect(jsonPath("$.name").value("Updated Sales & Marketing"))
+                .andExpect(jsonPath("$.description").value("Discussion of quarterly targets"));
+    }
+
+    @Test
+    @DisplayName("DELETE /channels/{channelId} deletes channel and returns 204")
+    void testDeleteChannel() throws Exception {
+        mockMvc.perform(delete("/api/communication/v1/chat/channels/{channelId}", channelId)
+                        .header("X-Company-Id", companyId.toString())
+                        .header("X-User-Id", userId.toString()))
+                .andExpect(status().isNoContent());
+
+        verify(chatService, times(1)).deleteChannel(eq(channelId), eq(companyId), eq(userId), any());
+    }
+
+    @Test
+    @DisplayName("GET /channels/{channelId}/members returns list of channel members")
+    void testGetChannelMembers() throws Exception {
+        ChatMemberResponse member = ChatMemberResponse.builder()
+                .id(UUID.randomUUID())
+                .channelId(channelId)
+                .companyId(companyId)
+                .userId(userId)
+                .userName("Rohit Sharma")
+                .role(com.erp.communication.chat.model.ChatMemberRole.ADMIN)
+                .build();
+
+        when(chatService.getChannelMembers(eq(channelId), eq(companyId), eq(userId))).thenReturn(List.of(member));
+
+        mockMvc.perform(get("/api/communication/v1/chat/channels/{channelId}/members", channelId)
+                        .header("X-Company-Id", companyId.toString())
+                        .header("X-User-Id", userId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].userId").value(userId.toString()))
+                .andExpect(jsonPath("$[0].role").value("ADMIN"));
+    }
+
+    @Test
+    @DisplayName("POST /channels/{channelId}/members adds users and returns 201")
+    void testAddChannelMembers() throws Exception {
+        UUID newUserId = UUID.randomUUID();
+        ChatMemberResponse member = ChatMemberResponse.builder()
+                .id(UUID.randomUUID())
+                .channelId(channelId)
+                .companyId(companyId)
+                .userId(newUserId)
+                .userName("New Member")
+                .role(com.erp.communication.chat.model.ChatMemberRole.MEMBER)
+                .build();
+
+        when(chatService.addChannelMembers(eq(channelId), any(), eq(companyId), eq(userId), any())).thenReturn(List.of(member));
+
+        String json = """
+                {
+                    "memberUserIds": ["%s"],
+                    "role": "MEMBER"
+                }
+                """.formatted(newUserId);
+
+        mockMvc.perform(post("/api/communication/v1/chat/channels/{channelId}/members", channelId)
+                        .header("X-Company-Id", companyId.toString())
+                        .header("X-User-Id", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$[0].userId").value(newUserId.toString()))
+                .andExpect(jsonPath("$[0].role").value("MEMBER"));
+    }
+
+    @Test
+    @DisplayName("DELETE /channels/{channelId}/members/{memberUserId} removes member and returns 204")
+    void testRemoveChannelMember() throws Exception {
+        UUID targetUserId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/communication/v1/chat/channels/{channelId}/members/{memberUserId}", channelId, targetUserId)
+                        .header("X-Company-Id", companyId.toString())
+                        .header("X-User-Id", userId.toString()))
+                .andExpect(status().isNoContent());
+
+        verify(chatService, times(1)).removeChannelMember(eq(channelId), eq(targetUserId), eq(companyId), eq(userId), any());
+    }
+
+    @Test
+    @DisplayName("PUT /channels/{channelId}/members/{memberUserId}/role updates member role")
+    void testUpdateMemberRole() throws Exception {
+        UUID targetUserId = UUID.randomUUID();
+        ChatMemberResponse response = ChatMemberResponse.builder()
+                .id(UUID.randomUUID())
+                .channelId(channelId)
+                .companyId(companyId)
+                .userId(targetUserId)
+                .role(com.erp.communication.chat.model.ChatMemberRole.ADMIN)
+                .build();
+
+        when(chatService.updateMemberRole(eq(channelId), eq(targetUserId), any(), eq(companyId), eq(userId), any())).thenReturn(response);
+
+        String json = """
+                {
+                    "role": "ADMIN"
+                }
+                """;
+
+        mockMvc.perform(put("/api/communication/v1/chat/channels/{channelId}/members/{memberUserId}/role", channelId, targetUserId)
+                        .header("X-Company-Id", companyId.toString())
+                        .header("X-User-Id", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(targetUserId.toString()))
+                .andExpect(jsonPath("$.role").value("ADMIN"));
+    }
+
+    @Test
+    @DisplayName("POST /channels/{channelId}/leave leaves channel and returns 204")
+    void testLeaveChannel() throws Exception {
+        mockMvc.perform(post("/api/communication/v1/chat/channels/{channelId}/leave", channelId)
+                        .header("X-Company-Id", companyId.toString())
+                        .header("X-User-Id", userId.toString()))
+                .andExpect(status().isNoContent());
+
+        verify(chatService, times(1)).leaveChannel(eq(channelId), eq(companyId), eq(userId), any());
+    }
 }

@@ -21,9 +21,19 @@ public interface ChatChannelMemberRepository extends JpaRepository<ChatChannelMe
 
     List<ChatChannelMember> findByChannelId(UUID channelId);
 
+    List<ChatChannelMember> findByCompanyIdAndChannelId(UUID companyId, UUID channelId);
+
     List<ChatChannelMember> findByCompanyIdAndUserId(UUID companyId, UUID userId);
 
     long countByChannelId(UUID channelId);
 
+    long countByCompanyIdAndChannelId(UUID companyId, UUID channelId);
+
+    long countByCompanyIdAndChannelIdAndRole(UUID companyId, UUID channelId, com.erp.communication.chat.model.ChatMemberRole role);
+
     void deleteByChannelIdAndUserId(UUID channelId, UUID userId);
+
+    void deleteByCompanyIdAndChannelIdAndUserId(UUID companyId, UUID channelId, UUID userId);
+
+    void deleteByCompanyIdAndChannelId(UUID companyId, UUID channelId);
 }

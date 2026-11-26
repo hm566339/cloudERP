@@ -70,6 +70,121 @@ public class ChatRestController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/channels/{channelId}")
+    @Operation(summary = "Update channel details", description = "Updates channel name or description/topic")
+    public ResponseEntity<ChatChannelResponse> updateChannel(
+            @PathVariable UUID channelId,
+            @RequestHeader(value = "X-Company-Id", required = false) UUID headerCompanyId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId,
+            @RequestHeader(value = "X-User-Name", required = false) String headerUserName,
+            @Valid @RequestBody UpdateChannelRequest request) {
+
+        UUID companyId = resolveCompanyId(headerCompanyId);
+        UUID currentUserId = resolveUserId(headerUserId);
+        String currentUserName = resolveUserName(headerUserName);
+
+        ChatChannelResponse response = chatService.updateChannel(channelId, request, companyId, currentUserId, currentUserName);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/channels/{channelId}")
+    @Operation(summary = "Delete channel", description = "Deletes a group channel and its members/messages")
+    public ResponseEntity<Void> deleteChannel(
+            @PathVariable UUID channelId,
+            @RequestHeader(value = "X-Company-Id", required = false) UUID headerCompanyId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId,
+            @RequestHeader(value = "X-User-Name", required = false) String headerUserName) {
+
+        UUID companyId = resolveCompanyId(headerCompanyId);
+        UUID currentUserId = resolveUserId(headerUserId);
+        String currentUserName = resolveUserName(headerUserName);
+
+        chatService.deleteChannel(channelId, companyId, currentUserId, currentUserName);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/channels/{channelId}/members")
+    @Operation(summary = "List channel members", description = "Retrieves all members of a specific channel")
+    public ResponseEntity<List<ChatMemberResponse>> getChannelMembers(
+            @PathVariable UUID channelId,
+            @RequestHeader(value = "X-Company-Id", required = false) UUID headerCompanyId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId) {
+
+        UUID companyId = resolveCompanyId(headerCompanyId);
+        UUID currentUserId = resolveUserId(headerUserId);
+
+        List<ChatMemberResponse> members = chatService.getChannelMembers(channelId, companyId, currentUserId);
+        return ResponseEntity.ok(members);
+    }
+
+    @PostMapping("/channels/{channelId}/members")
+    @Operation(summary = "Add channel members", description = "Adds one or multiple company users to a group channel")
+    public ResponseEntity<List<ChatMemberResponse>> addChannelMembers(
+            @PathVariable UUID channelId,
+            @RequestHeader(value = "X-Company-Id", required = false) UUID headerCompanyId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId,
+            @RequestHeader(value = "X-User-Name", required = false) String headerUserName,
+            @Valid @RequestBody AddChannelMembersRequest request) {
+
+        UUID companyId = resolveCompanyId(headerCompanyId);
+        UUID currentUserId = resolveUserId(headerUserId);
+        String currentUserName = resolveUserName(headerUserName);
+
+        List<ChatMemberResponse> members = chatService.addChannelMembers(channelId, request, companyId, currentUserId, currentUserName);
+        return ResponseEntity.status(HttpStatus.CREATED).body(members);
+    }
+
+    @DeleteMapping("/channels/{channelId}/members/{memberUserId}")
+    @Operation(summary = "Remove channel member", description = "Removes a member from a group channel")
+    public ResponseEntity<Void> removeChannelMember(
+            @PathVariable UUID channelId,
+            @PathVariable UUID memberUserId,
+            @RequestHeader(value = "X-Company-Id", required = false) UUID headerCompanyId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId,
+            @RequestHeader(value = "X-User-Name", required = false) String headerUserName) {
+
+        UUID companyId = resolveCompanyId(headerCompanyId);
+        UUID currentUserId = resolveUserId(headerUserId);
+        String currentUserName = resolveUserName(headerUserName);
+
+        chatService.removeChannelMember(channelId, memberUserId, companyId, currentUserId, currentUserName);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/channels/{channelId}/members/{memberUserId}/role")
+    @Operation(summary = "Update member role", description = "Updates a member's role (ADMIN or MEMBER)")
+    public ResponseEntity<ChatMemberResponse> updateMemberRole(
+            @PathVariable UUID channelId,
+            @PathVariable UUID memberUserId,
+            @RequestHeader(value = "X-Company-Id", required = false) UUID headerCompanyId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId,
+            @RequestHeader(value = "X-User-Name", required = false) String headerUserName,
+            @Valid @RequestBody UpdateMemberRoleRequest request) {
+
+        UUID companyId = resolveCompanyId(headerCompanyId);
+        UUID currentUserId = resolveUserId(headerUserId);
+        String currentUserName = resolveUserName(headerUserName);
+
+        ChatMemberResponse response = chatService.updateMemberRole(channelId, memberUserId, request, companyId, currentUserId, currentUserName);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/channels/{channelId}/leave")
+    @Operation(summary = "Leave channel", description = "Allows current user to leave a group channel")
+    public ResponseEntity<Void> leaveChannel(
+            @PathVariable UUID channelId,
+            @RequestHeader(value = "X-Company-Id", required = false) UUID headerCompanyId,
+            @RequestHeader(value = "X-User-Id", required = false) UUID headerUserId,
+            @RequestHeader(value = "X-User-Name", required = false) String headerUserName) {
+
+        UUID companyId = resolveCompanyId(headerCompanyId);
+        UUID currentUserId = resolveUserId(headerUserId);
+        String currentUserName = resolveUserName(headerUserName);
+
+        chatService.leaveChannel(channelId, companyId, currentUserId, currentUserName);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/channels/{channelId}/messages")
     @Operation(summary = "Fetch message history", description = "Retrieves paginated messages in reverse-chronological order")
     public ResponseEntity<Page<ChatMessageResponse>> getChannelMessages(

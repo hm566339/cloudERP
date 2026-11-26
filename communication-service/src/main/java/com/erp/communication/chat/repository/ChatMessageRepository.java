@@ -35,4 +35,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> 
     Optional<ChatMessage> findByCompanyIdAndReferenceIdAndMessageType(UUID companyId, UUID referenceId, ChatMessageType messageType);
 
     List<ChatMessage> findByCompanyIdAndReferenceId(UUID companyId, UUID referenceId);
+
+    void deleteByCompanyIdAndChannelId(UUID companyId, UUID channelId);
 }
