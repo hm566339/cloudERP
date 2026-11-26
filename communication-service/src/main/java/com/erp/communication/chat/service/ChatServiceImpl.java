@@ -38,10 +38,10 @@ public class ChatServiceImpl implements ChatService {
     private final ObjectMapper objectMapper;
 
     public ChatServiceImpl(ChatChannelRepository channelRepository,
-                           ChatChannelMemberRepository memberRepository,
-                           ChatMessageRepository messageRepository,
-                           SimpMessagingTemplate messagingTemplate,
-                           @org.springframework.beans.factory.annotation.Autowired(required = false) ObjectMapper objectMapper) {
+            ChatChannelMemberRepository memberRepository,
+            ChatMessageRepository messageRepository,
+            SimpMessagingTemplate messagingTemplate,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) ObjectMapper objectMapper) {
         this.channelRepository = channelRepository;
         this.memberRepository = memberRepository;
         this.messageRepository = messageRepository;
@@ -150,15 +150,18 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ChatMessageResponse> getChannelMessages(UUID channelId, UUID companyId, UUID currentUserId, Pageable pageable) {
+    public Page<ChatMessageResponse> getChannelMessages(UUID channelId, UUID companyId, UUID currentUserId,
+            Pageable pageable) {
         validateChannelAccess(channelId, companyId, currentUserId);
-        Page<ChatMessage> page = messageRepository.findByCompanyIdAndChannelIdOrderByCreatedAtDesc(companyId, channelId, pageable);
+        Page<ChatMessage> page = messageRepository.findByCompanyIdAndChannelIdOrderByCreatedAtDesc(companyId, channelId,
+                pageable);
         return page.map(this::mapToMessageResponse);
     }
 
     @Override
     @Transactional
-    public ChatMessageResponse sendMessage(UUID channelId, SendChatMessageRequest request, UUID companyId, UUID currentUserId, String currentUserName) {
+    public ChatMessageResponse sendMessage(UUID channelId, SendChatMessageRequest request, UUID companyId,
+            UUID currentUserId, String currentUserName) {
         ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
 
         if (!StringUtils.hasText(request.getContent())) {
@@ -218,7 +221,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatMessageResponse updateActionStatus(UUID channelId, UUID messageId, UpdateActionStatusRequest request,
-                                                 UUID companyId, UUID currentUserId, String currentUserName) {
+            UUID companyId, UUID currentUserId, String currentUserName) {
         validateChannelAccess(channelId, companyId, currentUserId);
 
         ChatMessage message = messageRepository.findByIdAndCompanyId(messageId, companyId)
@@ -272,7 +275,8 @@ public class ChatServiceImpl implements ChatService {
         }
 
         UUID companyId = event.getCompanyId();
-        String channelName = StringUtils.hasText(event.getChannelName()) ? event.getChannelName().trim() : "Quotations & Sales";
+        String channelName = StringUtils.hasText(event.getChannelName()) ? event.getChannelName().trim()
+                : "Quotations & Sales";
 
         // Find or create company-wide quotation channel
         ChatChannel channel;
@@ -292,9 +296,12 @@ public class ChatServiceImpl implements ChatService {
             msgType = ChatMessageType.QUOTATION_READY;
             actionStatus = ChatActionStatus.COMPLETED;
 
-            // Also mark previous QUOTATION_REQUEST message as COMPLETED if reference matches
+            // Also mark previous QUOTATION_REQUEST message as COMPLETED if reference
+            // matches
             if (event.getReferenceId() != null) {
-                messageRepository.findByCompanyIdAndReferenceIdAndMessageType(companyId, event.getReferenceId(), ChatMessageType.QUOTATION_REQUEST)
+                messageRepository
+                        .findByCompanyIdAndReferenceIdAndMessageType(companyId, event.getReferenceId(),
+                                ChatMessageType.QUOTATION_REQUEST)
                         .ifPresent(existingReq -> {
                             existingReq.setActionStatus(ChatActionStatus.COMPLETED);
                             messageRepository.save(existingReq);
@@ -318,7 +325,8 @@ public class ChatServiceImpl implements ChatService {
                 .referenceId(event.getReferenceId())
                 .actionStatus(actionStatus)
                 .metadataJson(metadataJson)
-                .content(StringUtils.hasText(event.getContent()) ? event.getContent() : "Quotation event dispatched from ERP")
+                .content(StringUtils.hasText(event.getContent()) ? event.getContent()
+                        : "Quotation event dispatched from ERP")
                 .build();
 
         ChatMessage saved = messageRepository.save(message);
@@ -336,7 +344,8 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional
-    public ChatChannelResponse updateChannel(UUID channelId, UpdateChannelRequest request, UUID companyId, UUID currentUserId, String currentUserName) {
+    public ChatChannelResponse updateChannel(UUID channelId, UpdateChannelRequest request, UUID companyId,
+            UUID currentUserId, String currentUserName) {
         ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
 
         if (currentUserId != null && !isChannelAdminOrCreator(channel, companyId, currentUserId)) {
@@ -350,7 +359,8 @@ public class ChatServiceImpl implements ChatService {
                 updated = true;
             }
             if (request.getDescription() != null) {
-                channel.setDescription(StringUtils.hasText(request.getDescription()) ? request.getDescription().trim() : null);
+                channel.setDescription(
+                        StringUtils.hasText(request.getDescription()) ? request.getDescription().trim() : null);
                 updated = true;
             }
         }
@@ -379,7 +389,8 @@ public class ChatServiceImpl implements ChatService {
 
         String authorName = StringUtils.hasText(currentUserName) ? currentUserName : "An administrator";
         postAndBroadcastSystemMessage(channel, currentUserId, authorName,
-                authorName + " deleted the channel", Map.of("action", "CHANNEL_DELETED", "channelId", channelId.toString()));
+                authorName + " deleted the channel",
+                Map.of("action", "CHANNEL_DELETED", "channelId", channelId.toString()));
 
         memberRepository.deleteByCompanyIdAndChannelId(companyId, channelId);
         messageRepository.deleteByCompanyIdAndChannelId(companyId, channelId);
@@ -400,7 +411,8 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional
-    public List<ChatMemberResponse> addChannelMembers(UUID channelId, AddChannelMembersRequest request, UUID companyId, UUID currentUserId, String currentUserName) {
+    public List<ChatMemberResponse> addChannelMembers(UUID channelId, AddChannelMembersRequest request, UUID companyId,
+            UUID currentUserId, String currentUserName) {
         ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
 
         if (request == null || request.getMemberUserIds() == null || request.getMemberUserIds().isEmpty()) {
@@ -411,9 +423,11 @@ public class ChatServiceImpl implements ChatService {
         ChatMemberRole role = request.getRole() != null ? request.getRole() : ChatMemberRole.MEMBER;
 
         for (UUID memberUserId : request.getMemberUserIds()) {
-            if (memberUserId == null) continue;
+            if (memberUserId == null)
+                continue;
 
-            Optional<ChatChannelMember> existing = memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, memberUserId);
+            Optional<ChatChannelMember> existing = memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId,
+                    channelId, memberUserId);
             if (existing.isEmpty()) {
                 ChatChannelMember newMember = ChatChannelMember.builder()
                         .channel(channel)
@@ -442,7 +456,8 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional
-    public void removeChannelMember(UUID channelId, UUID memberUserId, UUID companyId, UUID currentUserId, String currentUserName) {
+    public void removeChannelMember(UUID channelId, UUID memberUserId, UUID companyId, UUID currentUserId,
+            String currentUserName) {
         ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
 
         if (memberUserId == null) {
@@ -458,7 +473,8 @@ public class ChatServiceImpl implements ChatService {
             throw new AccessDeniedException("Only channel administrators can remove members");
         }
 
-        ChatChannelMember member = memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, memberUserId)
+        ChatChannelMember member = memberRepository
+                .findByCompanyIdAndChannelIdAndUserId(companyId, channelId, memberUserId)
                 .orElseThrow(() -> new InvalidRequestException("User is not a member of this channel"));
 
         memberRepository.delete(member);
@@ -476,7 +492,8 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional
-    public ChatMemberResponse updateMemberRole(UUID channelId, UUID memberUserId, UpdateMemberRoleRequest request, UUID companyId, UUID currentUserId, String currentUserName) {
+    public ChatMemberResponse updateMemberRole(UUID channelId, UUID memberUserId, UpdateMemberRoleRequest request,
+            UUID companyId, UUID currentUserId, String currentUserName) {
         ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
 
         if (memberUserId == null || request == null || request.getRole() == null) {
@@ -487,12 +504,14 @@ public class ChatServiceImpl implements ChatService {
             throw new AccessDeniedException("Only channel administrators can change member roles");
         }
 
-        ChatChannelMember member = memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, memberUserId)
+        ChatChannelMember member = memberRepository
+                .findByCompanyIdAndChannelIdAndUserId(companyId, channelId, memberUserId)
                 .orElseThrow(() -> new InvalidRequestException("User is not a member of this channel"));
 
         // Demoting an admin: verify not the last admin
         if (member.getRole() == ChatMemberRole.ADMIN && request.getRole() == ChatMemberRole.MEMBER) {
-            long adminCount = memberRepository.countByCompanyIdAndChannelIdAndRole(companyId, channelId, ChatMemberRole.ADMIN);
+            long adminCount = memberRepository.countByCompanyIdAndChannelIdAndRole(companyId, channelId,
+                    ChatMemberRole.ADMIN);
             if (adminCount <= 1) {
                 throw new InvalidRequestException("Cannot demote the last administrator of the channel");
             }
@@ -504,7 +523,8 @@ public class ChatServiceImpl implements ChatService {
         String authorName = StringUtils.hasText(currentUserName) ? currentUserName : "An administrator";
         postAndBroadcastSystemMessage(channel, currentUserId, authorName,
                 authorName + " updated member role to " + request.getRole(),
-                Map.of("action", "ROLE_UPDATED", "targetUserId", memberUserId.toString(), "newRole", request.getRole().name()));
+                Map.of("action", "ROLE_UPDATED", "targetUserId", memberUserId.toString(), "newRole",
+                        request.getRole().name()));
 
         return mapToMemberResponse(saved);
     }
@@ -518,14 +538,18 @@ public class ChatServiceImpl implements ChatService {
 
         ChatChannel channel = validateChannelAccess(channelId, companyId, currentUserId);
 
-        ChatChannelMember member = memberRepository.findByCompanyIdAndChannelIdAndUserId(companyId, channelId, currentUserId)
+        ChatChannelMember member = memberRepository
+                .findByCompanyIdAndChannelIdAndUserId(companyId, channelId, currentUserId)
                 .orElseThrow(() -> new InvalidRequestException("You are not a member of this channel"));
 
-        // If member is ADMIN and leaving, check if there are other members needing promotion
+        // If member is ADMIN and leaving, check if there are other members needing
+        // promotion
         if (member.getRole() == ChatMemberRole.ADMIN) {
-            long adminCount = memberRepository.countByCompanyIdAndChannelIdAndRole(companyId, channelId, ChatMemberRole.ADMIN);
+            long adminCount = memberRepository.countByCompanyIdAndChannelIdAndRole(companyId, channelId,
+                    ChatMemberRole.ADMIN);
             if (adminCount <= 1) {
-                List<ChatChannelMember> otherMembers = memberRepository.findByCompanyIdAndChannelId(companyId, channelId)
+                List<ChatChannelMember> otherMembers = memberRepository
+                        .findByCompanyIdAndChannelId(companyId, channelId)
                         .stream()
                         .filter(m -> !m.getUserId().equals(currentUserId))
                         .toList();
@@ -574,9 +598,11 @@ public class ChatServiceImpl implements ChatService {
                 .build();
     }
 
-    private void postAndBroadcastSystemMessage(ChatChannel channel, UUID senderId, String senderName, String content, Map<String, Object> metadata) {
+    private void postAndBroadcastSystemMessage(ChatChannel channel, UUID senderId, String senderName, String content,
+            Map<String, Object> metadata) {
         try {
             ChatMessage msg = ChatMessage.builder()
+                    .id(UUID.randomUUID())
                     .companyId(channel.getCompanyId())
                     .channel(channel)
                     .senderId(senderId)
@@ -584,8 +610,12 @@ public class ChatServiceImpl implements ChatService {
                     .messageType(ChatMessageType.SYSTEM_ALERT)
                     .content(content)
                     .metadataJson(serializeMetadata(metadata))
+                    .createdAt(LocalDateTime.now())
                     .build();
             ChatMessage saved = messageRepository.save(msg);
+            if (saved == null) {
+                saved = msg;
+            }
             broadcastToChannel(channel.getCompanyId(), channel.getId(), mapToMessageResponse(saved));
         } catch (Exception ex) {
             log.warn("Failed to broadcast system message for channel {}: {}", channel.getId(), ex.getMessage());
@@ -610,7 +640,8 @@ public class ChatServiceImpl implements ChatService {
             messagingTemplate.convertAndSend(topicDestination, response);
             log.debug("Broadcasted chat message to WebSocket topic: {}", topicDestination);
         } catch (Exception ex) {
-            log.error("Failed to broadcast chat message to WebSocket destination {}: {}", topicDestination, ex.getMessage());
+            log.error("Failed to broadcast chat message to WebSocket destination {}: {}", topicDestination,
+                    ex.getMessage());
         }
     }
 
@@ -620,10 +651,12 @@ public class ChatServiceImpl implements ChatService {
         }
 
         ChatChannel channel = channelRepository.findByIdAndCompanyId(channelId, companyId)
-                .orElseThrow(() -> new InvalidRequestException("Channel not found or does not belong to your company: " + channelId));
+                .orElseThrow(() -> new InvalidRequestException(
+                        "Channel not found or does not belong to your company: " + channelId));
 
         if (currentUserId != null) {
-            boolean isMember = memberRepository.existsByCompanyIdAndChannelIdAndUserId(companyId, channelId, currentUserId);
+            boolean isMember = memberRepository.existsByCompanyIdAndChannelIdAndUserId(companyId, channelId,
+                    currentUserId);
             if (!isMember) {
                 // Auto-join if channel is GROUP
                 if (channel.getType() == ChatChannelType.GROUP) {
@@ -647,12 +680,14 @@ public class ChatServiceImpl implements ChatService {
     private ChatChannelResponse mapToChannelResponse(ChatChannel ch, UUID currentUserId) {
         long unreadCount = 0;
         if (currentUserId != null) {
-            Optional<ChatChannelMember> member = memberRepository.findByCompanyIdAndChannelIdAndUserId(ch.getCompanyId(), ch.getId(), currentUserId);
+            Optional<ChatChannelMember> member = memberRepository
+                    .findByCompanyIdAndChannelIdAndUserId(ch.getCompanyId(), ch.getId(), currentUserId);
             LocalDateTime lastRead = member.map(ChatChannelMember::getLastReadAt).orElse(null);
             if (lastRead == null) {
                 unreadCount = messageRepository.countByCompanyIdAndChannelId(ch.getCompanyId(), ch.getId());
             } else {
-                unreadCount = messageRepository.countByCompanyIdAndChannelIdAndCreatedAtAfter(ch.getCompanyId(), ch.getId(), lastRead);
+                unreadCount = messageRepository.countByCompanyIdAndChannelIdAndCreatedAtAfter(ch.getCompanyId(),
+                        ch.getId(), lastRead);
             }
         }
 
@@ -676,11 +711,14 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private ChatMessageResponse mapToMessageResponse(ChatMessage m) {
+        if (m == null) {
+            return null;
+        }
         return ChatMessageResponse.builder()
-                .id(m.getId())
+                .id(m.getId() != null ? m.getId() : UUID.randomUUID())
                 .companyId(m.getCompanyId())
-                .channelId(m.getChannel().getId())
-                .channelName(m.getChannel().getName())
+                .channelId(m.getChannel() != null ? m.getChannel().getId() : null)
+                .channelName(m.getChannel() != null ? m.getChannel().getName() : null)
                 .senderId(m.getSenderId())
                 .senderName(m.getSenderName())
                 .messageType(m.getMessageType())
@@ -688,7 +726,7 @@ public class ChatServiceImpl implements ChatService {
                 .actionStatus(m.getActionStatus())
                 .metadata(deserializeMetadata(m.getMetadataJson()))
                 .content(m.getContent())
-                .createdAt(m.getCreatedAt())
+                .createdAt(m.getCreatedAt() != null ? m.getCreatedAt() : LocalDateTime.now())
                 .updatedAt(m.getUpdatedAt())
                 .build();
     }
@@ -710,7 +748,8 @@ public class ChatServiceImpl implements ChatService {
             return Collections.emptyMap();
         }
         try {
-            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {
+            });
         } catch (Exception e) {
             log.error("Failed to deserialize chat metadata: {}", e.getMessage());
             return Collections.emptyMap();

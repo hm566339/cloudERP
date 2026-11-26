@@ -288,6 +288,7 @@ class ChatServiceTest {
         when(channelRepository.findByIdAndCompanyId(channelId, companyId)).thenReturn(Optional.of(channel));
         when(memberRepository.existsByCompanyIdAndChannelIdAndUserId(companyId, channelId, userId)).thenReturn(true);
         when(channelRepository.save(any(ChatChannel.class))).thenAnswer(i -> i.getArgument(0));
+        when(messageRepository.save(any(ChatMessage.class))).thenAnswer(i -> i.getArgument(0));
 
         UpdateChannelRequest request = UpdateChannelRequest.builder()
                 .name("New Marketing Group")
