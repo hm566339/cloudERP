@@ -208,8 +208,21 @@ export default function ChatPage() {
       setChannels((prev) => [created, ...prev]);
       setActiveChannelId(created.id);
       setIsCreateChannelOpen(false);
+
+      // If initial message was provided, reload messages so the thread reflects it immediately
+      if (channelData.initialMessage && channelData.initialMessage.trim()) {
+        chatApiService
+          .getMessages(created.id, 0, 50, currentCompanyId)
+          .then((msgs) => {
+            const pageContent = msgs?.content || msgs?.data || (Array.isArray(msgs) ? msgs : []);
+            setMessages([...pageContent].reverse());
+          })
+          .catch(() => {});
+      }
+      return created;
     } catch (err) {
       console.error('Failed to create channel:', err);
+      throw err;
     }
   };
 
@@ -363,6 +376,19 @@ export default function ChatPage() {
         isOpen={isCreateChannelOpen}
         onClose={() => setIsCreateChannelOpen(false)}
         onSubmit={handleCreateChannel}
+        existingChannels={channels}
+        companyId={currentCompanyId}
+        currentUserId={currentUserId}
+        onSelectExistingChannel={async (channelId, initialMsg) => {
+          setActiveChannelId(channelId);
+          setIsCreateChannelOpen(false);
+          if (initialMsg && initialMsg.trim()) {
+            await handleSendMessage({
+              content: initialMsg.trim(),
+              messageType: 'TEXT',
+            });
+          }
+        }}
       />
 
       {/* Request Quotation Modal */}
